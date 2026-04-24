@@ -1,44 +1,37 @@
 import os
+import re
 
 def build():
-    print("Starting build process...")
+    print("--- Build Process Started ---")
     
-    # パスの確認（デバッグ用）
-    print(f"Current working directory: {os.getcwd()}")
-    
+    # 読み込み
     try:
         with open('src/index.html', 'r', encoding='utf-8') as f:
-            html_content = f.read()
+            html = f.read()
         with open('src/style.css', 'r', encoding='utf-8') as f:
-            css_content = f.read()
+            css = f.read()
         with open('src/script.js', 'r', encoding='utf-8') as f:
-            js_content = f.read()
+            js = f.read()
     except FileNotFoundError as e:
-        print(f"Error: {e}")
+        print(f"ERROR: {e}")
         return
 
-    # CSSの埋め込み
-    # linkタグを丸ごとstyleタグに差し替える
-    css_tag = f"<style>\n{css_content}\n</style>"
-    if '<link rel="stylesheet" href="style.css">' in html_content:
-        html_content = html_content.replace('<link rel="stylesheet" href="style.css">', css_tag)
-        print("CSS successfully inlined.")
-    else:
-        print("Warning: CSS link tag not found in index.html")
+    # 【重要】CSSの置換 (linkタグをstyleタグに置換)
+    # スペースや改行のズレに強い「正規表現」という方法で探します
+    css_pattern = r'<link.*href=["\']style\.css["\'].*>'
+    css_replacement = f"<style>\n{css} \n</style>"
+    html = re.sub(css_pattern, css_replacement, html)
 
-    # JSの埋め込み
-    js_tag = f"<script>\n{js_content}\n</script>"
-    if '<script src="script.js"></script>' in html_content:
-        html_content = html_content.replace('<script src="script.js"></script>', js_tag)
-        print("JS successfully inlined.")
-    else:
-        print("Warning: JS script tag not found in index.html")
+    # 【重要】JSの置換 (scriptタグを中身入りに置換)
+    js_pattern = r'<script.*src=["\']script\.js["\'].*></script>'
+    js_replacement = f"<script>\n{js} \n</script>"
+    html = re.sub(js_pattern, js_replacement, html)
 
-    # index.htmlを上書き保存
+    # 書き出し（ルート直下の index.html へ）
     with open('index.html', 'w', encoding='utf-8') as f:
-        f.write(html_content)
-
-    print("Build finished: index.html generated.")
+        f.write(html)
+    
+    print("SUCCESS: index.html has been generated.")
 
 if __name__ == "__main__":
     build()

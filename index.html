@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.5.0 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.6.0 (Offline EFB)</title>
 
     <script>
         try {
@@ -253,7 +253,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.5.0</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.6.0</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -304,6 +304,9 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
                         <button id="btnPflPic" class="pfl-btn active" onclick="app.setPflToggle('activeDuty', 'PIC')">PIC</button>
                         <button id="btnPflSic" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'SIC')">SIC</button>
                         <button id="btnPflCop" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'COP')">COP</button>
+                    </div>
+                    <div style="margin-left: auto;">
+                        <button class="btn-secondary btn-small" id="btnPflCsv" onclick="app.copyPflToCsv()" style="font-weight: bold;">📋 CSVコピー (Shortcut用)</button>
                     </div>
                 </div>
                 <div class="pfl-scroll-wrapper">
@@ -844,14 +847,12 @@ const app = {
         if (field === 'activeDuty') {
             const oldDuty = this.state.postFlightLog.activeDuty;
             if (oldDuty !== val) {
-                // 古いDutyの時間を確実にクリア
                 if (oldDuty === 'PIC') this.state.postFlightLog.picTime = '';
                 if (oldDuty === 'SIC') this.state.postFlightLog.sicTime = '';
                 if (oldDuty === 'COP') this.state.postFlightLog.copTime = '';
                 
                 this.state.postFlightLog.activeDuty = val;
                 
-                // 現在保持しているFLT TIMEを新しいDutyに転記
                 if (this.state.postFlightLog.fltTime) {
                     if (val === 'PIC') this.state.postFlightLog.picTime = this.state.postFlightLog.fltTime;
                     if (val === 'SIC') this.state.postFlightLog.sicTime = this.state.postFlightLog.fltTime;
@@ -862,11 +863,10 @@ const app = {
             this.state.postFlightLog.domInt = val;
         }
         
-        this.calcPflTimes(); // 状態切替時は連動値を再計算（手動保護が効く）
+        this.calcPflTimes(); 
     },
     updatePfl(field, val, isDuration = false) {
         if(!this.state.postFlightLog) return;
-        // H+MM 自動フォーマッター
         if (isDuration && val.trim() !== '') {
             let clean = val.replace(/[^\d]/g, '');
             if (clean.length >= 3 && clean.length <= 4) {
@@ -885,7 +885,6 @@ const app = {
         const bi = this.state.times.bi;
         const pfl = this.state.postFlightLog;
 
-        // DEP / ARR タイム算出
         if (bo && bo.length === 4) {
             pfl.depTime = this.convertZtoLocal(bo, pfl.domInt);
         }
@@ -893,27 +892,23 @@ const app = {
             pfl.arrTime = this.convertZtoLocal(bi, pfl.domInt);
         }
 
-        // FLT TIME 算出 & 手動保護付きのDuty転記
         if (bo && bo.length === 4 && bi && bi.length === 4) {
             let m1 = this.toMin(bo);
             let m2 = this.toMin(bi);
             let diff = m2 - m1;
-            if (diff < 0) diff += 1440; // 24時間跨ぎ対応
+            if (diff < 0) diff += 1440; 
             
             let h = Math.floor(diff / 60);
             let m = String(diff % 60).padStart(2, '0');
             let newFltStr = `${h}+${m}`;
             
-            // ★ 前回算出されたFLT TIMEから「変化した場合のみ」他のDutyをクリアして自動転記
             if (pfl.fltTime !== newFltStr) {
                 pfl.fltTime = newFltStr;
                 
-                // すべてのDuty時間を一度クリア
                 pfl.picTime = '';
                 pfl.sicTime = '';
                 pfl.copTime = '';
                 
-                // アクティブなDutyにのみ自動転記
                 if (pfl.activeDuty === 'PIC') pfl.picTime = newFltStr;
                 if (pfl.activeDuty === 'SIC') pfl.sicTime = newFltStr;
                 if (pfl.activeDuty === 'COP') pfl.copTime = newFltStr;
@@ -924,7 +919,7 @@ const app = {
     },
     convertZtoLocal(zTime, domInt) {
         if (domInt === 'INT') return zTime;
-        let m = this.toMin(zTime) + 9 * 60; // +9h (JST)
+        let m = this.toMin(zTime) + 9 * 60; 
         m = m % 1440;
         return this.toHHMM(m);
     },
@@ -951,6 +946,41 @@ const app = {
                 el.value = pfl[f] || '';
             }
         });
+    },
+    
+    // ★ 追加: クリップボードへCSV形式でコピーする関数
+    async copyPflToCsv() {
+        if(!this.state.postFlightLog) return;
+        const pfl = this.state.postFlightLog;
+        
+        // CSVの列の並び順を指定
+        const fields = [
+            pfl.day, pfl.type, pfl.reg, pfl.dep, pfl.arr, 
+            pfl.depTime, pfl.arrTime, pfl.tkof, pfl.ldg, 
+            pfl.fltNumber, pfl.fltTime, pfl.picTime, pfl.sicTime, 
+            pfl.ngtPicSic, pfl.copTime, pfl.ngtCop, pfl.imc, pfl.apchType
+        ];
+        
+        // カンマ区切り文字列を作成 (未入力は空文字)
+        const csvString = fields.map(v => v || '').join(',');
+        
+        try {
+            await navigator.clipboard.writeText(csvString);
+            
+            // ボタンのUIフィードバック（2秒間表示変更）
+            const btn = document.getElementById('btnPflCsv');
+            if (btn) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ コピー完了！';
+                btn.style.background = 'var(--success-color)';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            }
+        } catch (err) {
+            alert("クリップボードへのコピーに失敗しました。\nSafariの権限設定を確認してください。");
+        }
     },
 
     toggleSettings() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; },

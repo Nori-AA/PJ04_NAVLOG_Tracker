@@ -20,7 +20,7 @@ const app = {
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' },
         actFob: '', actFod: '',
-        postFlightLog: null, // ★ POST-FLIGHT LOG用状態
+        postFlightLog: null,
         activeInput: null 
     },
 
@@ -49,7 +49,6 @@ const app = {
             });
         }
         
-        // ★ POST-FLIGHT LOG 初期化（存在しない場合は生成）
         if (!this.state.postFlightLog) {
             this.state.postFlightLog = {
                 domInt: 'DOM', activeDuty: 'PIC',
@@ -74,7 +73,7 @@ const app = {
             this.renderCrew();
             this.renderTimes();
             this.renderActualFuel();
-            this.renderPostFlightLog(); // ★ PFL描画
+            this.renderPostFlightLog();
             document.getElementById('tableBody').innerHTML = ''; 
             this.render();
         }
@@ -236,7 +235,7 @@ const app = {
         this.renderCrew();
         this.renderTimes();
         this.renderActualFuel();
-        this.renderPostFlightLog(); // ★
+        this.renderPostFlightLog();
         this.render();
         this.renderFlightMeta();
     },
@@ -309,8 +308,29 @@ const app = {
     // ★ POST-FLIGHT LOG 処理メソッド群
     setPflToggle(field, val) {
         if(!this.state.postFlightLog) return;
-        this.state.postFlightLog[field] = val;
-        this.calcPflTimes(); // 状態切替時は連動値を再計算
+        
+        if (field === 'activeDuty') {
+            const oldDuty = this.state.postFlightLog.activeDuty;
+            if (oldDuty !== val) {
+                // 古いDutyの時間を確実にクリア
+                if (oldDuty === 'PIC') this.state.postFlightLog.picTime = '';
+                if (oldDuty === 'SIC') this.state.postFlightLog.sicTime = '';
+                if (oldDuty === 'COP') this.state.postFlightLog.copTime = '';
+                
+                this.state.postFlightLog.activeDuty = val;
+                
+                // 現在保持しているFLT TIMEを新しいDutyに転記
+                if (this.state.postFlightLog.fltTime) {
+                    if (val === 'PIC') this.state.postFlightLog.picTime = this.state.postFlightLog.fltTime;
+                    if (val === 'SIC') this.state.postFlightLog.sicTime = this.state.postFlightLog.fltTime;
+                    if (val === 'COP') this.state.postFlightLog.copTime = this.state.postFlightLog.fltTime;
+                }
+            }
+        } else if (field === 'domInt') {
+            this.state.postFlightLog.domInt = val;
+        }
+        
+        this.calcPflTimes(); // 状態切替時は連動値を再計算（手動保護が効く）
     },
     updatePfl(field, val, isDuration = false) {
         if(!this.state.postFlightLog) return;
@@ -341,7 +361,7 @@ const app = {
             pfl.arrTime = this.convertZtoLocal(bi, pfl.domInt);
         }
 
-        // FLT TIME 算出 & Duty転記
+        // FLT TIME 算出 & 手動保護付きのDuty転記
         if (bo && bo.length === 4 && bi && bi.length === 4) {
             let m1 = this.toMin(bo);
             let m2 = this.toMin(bi);
@@ -350,14 +370,22 @@ const app = {
             
             let h = Math.floor(diff / 60);
             let m = String(diff % 60).padStart(2, '0');
-            let fltStr = `${h}+${m}`;
+            let newFltStr = `${h}+${m}`;
             
-            pfl.fltTime = fltStr;
-            
-            // アクティブなDutyに自動転記
-            if (pfl.activeDuty === 'PIC') pfl.picTime = fltStr;
-            if (pfl.activeDuty === 'SIC') pfl.sicTime = fltStr;
-            if (pfl.activeDuty === 'COP') pfl.copTime = fltStr;
+            // ★ 前回算出されたFLT TIMEから「変化した場合のみ」他のDutyをクリアして自動転記
+            if (pfl.fltTime !== newFltStr) {
+                pfl.fltTime = newFltStr;
+                
+                // すべてのDuty時間を一度クリア
+                pfl.picTime = '';
+                pfl.sicTime = '';
+                pfl.copTime = '';
+                
+                // アクティブなDutyにのみ自動転記
+                if (pfl.activeDuty === 'PIC') pfl.picTime = newFltStr;
+                if (pfl.activeDuty === 'SIC') pfl.sicTime = newFltStr;
+                if (pfl.activeDuty === 'COP') pfl.copTime = newFltStr;
+            }
         }
         this.saveConfig();
         this.renderPostFlightLog();
@@ -442,7 +470,7 @@ const app = {
 
     updateTime(field, val) {
         this.state.times[field] = val;
-        // ★ B/O, B/I 入力時に PFL の連動計算を実行
+        // B/O, B/I 入力時に PFL の連動計算を実行
         if (field === 'bo' || field === 'bi') {
             this.calcPflTimes();
         }
@@ -502,7 +530,6 @@ const app = {
         }
         this.state.flightMeta = meta; this.renderFlightMeta();
 
-        // ★ PFL用への自動抽出
         if (this.state.postFlightLog) {
             this.state.postFlightLog.fltNumber = meta.flt !== "---" ? meta.flt : "";
             this.state.postFlightLog.dep = meta.dep !== "---" ? meta.dep : "";
@@ -880,7 +907,6 @@ const app = {
             this.renderSettings();
             this.renderTimes();
             this.renderActualFuel();
-            // リセット直後にPFLも再初期化
             this.state.postFlightLog = { domInt: 'DOM', activeDuty: 'PIC', day: '', type: 'B767', reg: '', dep: '', arr: '', fltNumber: '', depTime: '', arrTime: '', tkof: '', ldg: '', fltTime: '', picTime: '', sicTime: '', ngtPicSic: '', copTime: '', ngtCop: '', imc: '', apchType: '' };
             this.renderPostFlightLog();
         }

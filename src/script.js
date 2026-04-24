@@ -19,17 +19,7 @@ const app = {
         crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' },
-        actFob: '', actFod: '',
-        // ★ POST-FLIGHT LOG保存用ステート
-        postFlightLog: {
-            region: 'DOM', duty: 'PIC',
-            day: '', type: 'B767', reg: '', flt: '', dep: '', arr: '',
-            depTime: '', arrTime: '', 
-            fltTime: null, picTime: null, sicTime: null, copTime: null,
-            tkof: '', ldg: '', apch: '', 
-            picNgt: null, copNgt: null, imc: null, apchTime: null,
-            memo: ''
-        },
+        actFob: '', actFod: '', // ★ 新設: ACTUAL FUEL保存用
         activeInput: null 
     },
 
@@ -47,17 +37,6 @@ const app = {
             if (this.state.actFod === undefined) this.state.actFod = '';
             if (!this.state.crew || this.state.crew.length === 0) {
                 this.state.crew = [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
-            }
-            if (!this.state.postFlightLog) {
-                this.state.postFlightLog = {
-                    region: 'DOM', duty: 'PIC',
-                    day: '', type: 'B767', reg: '', flt: '', dep: '', arr: '',
-                    depTime: '', arrTime: '', 
-                    fltTime: null, picTime: null, sicTime: null, copTime: null,
-                    tkof: '', ldg: '', apch: '', 
-                    picNgt: null, copNgt: null, imc: null, apchTime: null,
-                    memo: ''
-                };
             }
 
             this.state.waypoints.forEach(wp => {
@@ -82,8 +61,7 @@ const app = {
                 this.updateCrewPanelUI();
                 this.renderCrew();
                 this.renderTimes();
-                this.renderActualFuel();
-                this.renderPostFlightLog(); // ★ 復元
+                this.renderActualFuel(); // ★ FOB/FOD UI復元
                 document.getElementById('tableBody').innerHTML = ''; 
                 this.render();
             }
@@ -247,8 +225,7 @@ const app = {
         this.calculate();
         this.renderCrew();
         this.renderTimes();
-        this.renderActualFuel();
-        this.renderPostFlightLog();
+        this.renderActualFuel(); // ★ 読み込み時に表示
         this.render();
         this.renderFlightMeta();
     },
@@ -367,9 +344,6 @@ const app = {
 
     updateTime(field, val) {
         this.state.times[field] = val;
-        if (field === 'bo' || field === 'bi') {
-            this.calcPostFlightTimes();
-        }
         if (field === 'tkof' && this.state.waypoints.length > 0) {
             this.state.waypoints[0].actualTime = val;
             this.calculate();
@@ -385,6 +359,7 @@ const app = {
         });
     },
 
+    // ★ 新設: ACTUAL FUEL保存・復元処理
     updateActualFuel(field, val) {
         if (field === 'fob') this.state.actFob = val;
         if (field === 'fod') this.state.actFod = val;
@@ -395,145 +370,6 @@ const app = {
         if (fobEl) fobEl.value = this.state.actFob || '';
         const fodEl = document.getElementById('actFod');
         if (fodEl) fodEl.value = this.state.actFod || '';
-    },
-
-    // ★ POST-FLIGHT LOG 関連ロジック
-    parseDurationInput(str) {
-        if (!str || str.trim() === '') return null;
-        str = str.replace(/\s+/g, '');
-        if (str.includes('+')) {
-            let p = str.split('+');
-            return (parseInt(p[0]||0) * 60) + parseInt(p[1]||0);
-        }
-        let num = parseInt(str);
-        if (isNaN(num)) return null;
-        let m = num % 100;
-        let h = Math.floor(num / 100);
-        return (h * 60) + m;
-    },
-
-    formatDuration(min) {
-        if (min === null || isNaN(min)) return '';
-        let h = Math.floor(min / 60);
-        let m = min % 60;
-        return `${h}+${String(m).padStart(2, '0')}`;
-    },
-
-    calcPostFlightTimes() {
-        let bo = this.state.times.bo;
-        let bi = this.state.times.bi;
-        
-        if (bo && bo.length === 4) {
-            let boMin = this.toMin(bo);
-            if (this.state.postFlightLog.region === 'DOM') boMin = (boMin + 9 * 60) % 1440;
-            this.state.postFlightLog.depTime = this.toHHMM(boMin);
-        } else {
-            this.state.postFlightLog.depTime = '';
-        }
-        
-        if (bi && bi.length === 4) {
-            let biMin = this.toMin(bi);
-            if (this.state.postFlightLog.region === 'DOM') biMin = (biMin + 9 * 60) % 1440;
-            this.state.postFlightLog.arrTime = this.toHHMM(biMin);
-        } else {
-            this.state.postFlightLog.arrTime = '';
-        }
-
-        if (bo && bi && bo.length === 4 && bi.length === 4) {
-            let boMin = this.toMin(bo);
-            let biMin = this.toMin(bi);
-            let fltMin = biMin - boMin;
-            if (fltMin < 0) fltMin += 1440; 
-            
-            this.state.postFlightLog.fltTime = fltMin;
-            
-            let duty = this.state.postFlightLog.duty;
-            this.state.postFlightLog.picTime = null;
-            this.state.postFlightLog.sicTime = null;
-            this.state.postFlightLog.copTime = null;
-            
-            if (duty === 'PIC') this.state.postFlightLog.picTime = fltMin;
-            if (duty === 'SIC') this.state.postFlightLog.sicTime = fltMin;
-            if (duty === 'COP') this.state.postFlightLog.copTime = fltMin;
-        } else {
-            this.state.postFlightLog.fltTime = null;
-            this.state.postFlightLog.picTime = null;
-            this.state.postFlightLog.sicTime = null;
-            this.state.postFlightLog.copTime = null;
-        }
-        this.saveConfig();
-        this.renderPostFlightLog();
-    },
-
-    setLogRegion(reg) {
-        this.state.postFlightLog.region = reg;
-        this.calcPostFlightTimes();
-    },
-
-    setLogDuty(duty) {
-        this.state.postFlightLog.duty = duty;
-        this.calcPostFlightTimes();
-    },
-
-    updateLog(key, val) {
-        this.state.postFlightLog[key] = val;
-        this.saveConfig();
-    },
-
-    updateLogDuration(key, val) {
-        let mins = this.parseDurationInput(val);
-        this.state.postFlightLog[key] = mins;
-        
-        if (key === 'fltTime') {
-            let duty = this.state.postFlightLog.duty;
-            this.state.postFlightLog.picTime = null;
-            this.state.postFlightLog.sicTime = null;
-            this.state.postFlightLog.copTime = null;
-            
-            if (duty === 'PIC') this.state.postFlightLog.picTime = mins;
-            if (duty === 'SIC') this.state.postFlightLog.sicTime = mins;
-            if (duty === 'COP') this.state.postFlightLog.copTime = mins;
-        }
-        
-        this.saveConfig();
-        this.renderPostFlightLog();
-    },
-
-    renderPostFlightLog() {
-        const log = this.state.postFlightLog;
-        if (!log) return;
-        
-        document.getElementById('btn_dom').classList.toggle('active', log.region === 'DOM');
-        document.getElementById('btn_int').classList.toggle('active', log.region === 'INT');
-        document.getElementById('btn_pic').classList.toggle('active', log.duty === 'PIC');
-        document.getElementById('btn_sic').classList.toggle('active', log.duty === 'SIC');
-        document.getElementById('btn_cop').classList.toggle('active', log.duty === 'COP');
-
-        document.getElementById('log_day').value = log.day || '';
-        document.getElementById('log_type').value = log.type || 'B767';
-        document.getElementById('log_reg').value = log.reg || '';
-        document.getElementById('log_flt').value = log.flt || '';
-        document.getElementById('log_dep').value = log.dep || '';
-        document.getElementById('log_arr').value = log.arr || '';
-        
-        document.getElementById('log_depTime').value = log.depTime || '';
-        document.getElementById('log_arrTime').value = log.arrTime || '';
-        
-        document.getElementById('log_fltTime').value = this.formatDuration(log.fltTime);
-        document.getElementById('log_picTime').value = this.formatDuration(log.picTime);
-        document.getElementById('log_sicTime').value = this.formatDuration(log.sicTime);
-        document.getElementById('log_copTime').value = this.formatDuration(log.copTime);
-        
-        document.getElementById('log_tkof').value = log.tkof || '';
-        document.getElementById('log_ldg').value = log.ldg || '';
-        document.getElementById('log_apch').value = log.apch || '';
-        
-        document.getElementById('log_picNgt').value = this.formatDuration(log.picNgt);
-        document.getElementById('log_copNgt').value = this.formatDuration(log.copNgt);
-        document.getElementById('log_imc').value = this.formatDuration(log.imc);
-        document.getElementById('log_apchTime').value = this.formatDuration(log.apchTime);
-        
-        document.getElementById('log_memo').value = log.memo || '';
     },
 
     extractFlightMeta(text) {
@@ -562,14 +398,6 @@ const app = {
                 if (m) meta.altns.push({ name: m[1], fuel: parseFloat(m[2]) > 100 ? parseFloat(m[2])/1000 : parseFloat(m[2]), rsv: globalRsv });
             });
         }
-        
-        // ★ NAVLOGデータからPOST-FLIGHT LOGの初期値を自動設定
-        this.state.postFlightLog.day = meta.date;
-        this.state.postFlightLog.reg = meta.reg;
-        this.state.postFlightLog.flt = meta.flt;
-        this.state.postFlightLog.dep = meta.dep;
-        this.state.postFlightLog.arr = meta.dest;
-        
         this.state.flightMeta = meta; this.renderFlightMeta();
     },
 
@@ -888,6 +716,7 @@ const app = {
         document.getElementById('sb-dest-fuel').textContent = destFuelDisp;
         const elFuelDiff = document.getElementById('sb-dest-fuel-diff'); elFuelDiff.textContent = destFuelDiffDisp; elFuelDiff.className = destFuelClass ? `status-badge ${destFuelClass}` : 'status-badge';
 
+        // ★ 警告バッジの動的表示と背景色変更
         const sb = document.getElementById('statusBar');
         const warningEl = document.getElementById('sb-dest-fuel-warning');
         if (finalFuel !== null && this.state.destFuelThreshold > 0 && finalFuel < this.state.destFuelThreshold) {
@@ -929,12 +758,7 @@ const app = {
                 crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
                 takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
                 times: { bo: '', bi: '', tkof: '', ldg: '' },
-                actFob: '', actFod: '',
-                postFlightLog: {
-                    region: 'DOM', duty: 'PIC', day: '', type: 'B767', reg: '', flt: '', dep: '', arr: '',
-                    depTime: '', arrTime: '', fltTime: null, picTime: null, sicTime: null, copTime: null,
-                    tkof: '', ldg: '', apch: '', picNgt: null, copNgt: null, imc: null, apchTime: null, memo: ''
-                }
+                actFob: '', actFod: ''
             };
             document.getElementById('flightHeader').style.display = 'none'; document.getElementById('headerInfoCard').style.display = 'none';
             document.getElementById('crewInfoCard').style.display = 'none'; document.getElementById('tableContainer').style.display = 'none';

@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.3.2 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.3.3 (Offline EFB)</title>
 
     <script>
         try {
@@ -28,7 +28,7 @@
     --drm-bg: #0c0c0c; --drm-text: #00ff41; --input-bg: #ffffff;
     --input-border: #ccc; --actual-col-bg: #fff9e6; --memo-bg: #eef2f5;
     --sb-height: 85px; 
-    --warning-bg: #8a3324; /* 落ち着いた赤茶色（DAY） */
+    --warning-bg: #8a3324;
 }
 
 html.theme-dark {
@@ -40,7 +40,7 @@ html.theme-dark {
     --behind-color: #e57373; --modified-bg: #1e3a5f; --modified-text: #64b5f6;
     --drm-bg: #000000; --drm-text: #00e676; --input-bg: #2c2c2e;
     --input-border: #48484a; --actual-col-bg: #24221d; --memo-bg: #2c2c2e;
-    --warning-bg: #5c2a2a; /* 落ち着いた暗めの赤茶色（NGT） */
+    --warning-bg: #5c2a2a;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -81,15 +81,17 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 
 /* ★ StatusBar 基本スタイル */
 .status-bar { 
-    padding: 12px 15px; border-radius: 10px; margin-bottom: 12px; background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+    padding: 15px; border-radius: 10px; margin-bottom: 12px; background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
     position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
     transition: background-color 0.3s ease;
 }
 .status-bar.status-warning { background-color: var(--warning-bg); }
 
-/* ★ 追加指定: StatusBar タイポグラフィとバッジ */
-.status-title { font-size: 11px; opacity: 0.7; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; }
-.status-value { font-size: 22px; font-family: monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; }
+/* ★ StatusBar: インデント階層デザイン */
+.status-section { display: flex; flex-direction: column; }
+.status-title { display: block; font-size: 11px; opacity: 0.7; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; text-align: left; }
+.status-content { margin-left: 15px; }
+.status-value { font-size: 22px; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; line-height: 1; }
 .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
 
 /* 時間入力グリッド */
@@ -172,7 +174,6 @@ button { padding: 12px 18px; border: none; border-radius: 8px; background: var(-
 .input-group { display: flex; flex-direction: column; gap: 5px; }
 .input-group label { font-size: 11px; font-weight: bold; color: var(--text-muted); }
 
-/* ★ 設定パネル用カードスタイル追加 */
 .settings-wrapper { display: flex; flex-wrap: wrap; gap: 15px; }
 .settings-group { flex: 1 1 250px; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.05); }
 html.theme-dark .settings-group { background: rgba(255,255,255,0.05); }
@@ -226,7 +227,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.3.2</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.3.3</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -278,46 +279,62 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
     </div>
 
     <div class="status-bar" id="statusBar" style="display:none;">
-        <div class="status-row" style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 10px; margin-bottom: 10px;">
-            <div class="time-inputs" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <div class="time-input-wrap">
-                    <span class="time-label">B/O</span>
-                    <input type="text" id="time_bo" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bo', this.value)">
-                </div>
-                <div class="time-input-wrap">
-                    <span class="time-label">B/I</span>
-                    <input type="text" id="time_bi" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bi', this.value)">
-                </div>
-                <div class="time-input-wrap">
-                    <span class="time-label">TKOF</span>
-                    <input type="text" id="time_tkof" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('tkof', this.value)">
-                </div>
-                <div class="time-input-wrap">
-                    <span class="time-label">LDG</span>
-                    <input type="text" id="time_ldg" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('ldg', this.value)">
-                </div>
-            </div>
+        <div style="display: flex; gap: 20px; width: 100%;">
             
-            <div class="right-block" style="display: flex; flex-direction: column; align-items: flex-start; min-width: 280px;">
-                <span class="status-title">Est. Arrival (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
-                <div class="status-value-group" style="display: flex; align-items: center; gap: 8px;">
-                    <span id="sb-eta" class="status-value">--</span>
-                    <span id="sb-eta-diff" class="status-badge"></span>
+            <div class="status-col" style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+                
+                <div class="status-section">
+                    <span class="status-title">ACTUAL TIMES</span>
+                    <div class="status-content">
+                        <div class="time-inputs" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div class="time-input-wrap">
+                                <span class="time-label">B/O</span>
+                                <input type="text" id="time_bo" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bo', this.value)">
+                            </div>
+                            <div class="time-input-wrap">
+                                <span class="time-label">B/I</span>
+                                <input type="text" id="time_bi" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bi', this.value)">
+                            </div>
+                            <div class="time-input-wrap">
+                                <span class="time-label">TKOF</span>
+                                <input type="text" id="time_tkof" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('tkof', this.value)">
+                            </div>
+                            <div class="time-input-wrap">
+                                <span class="time-label">LDG</span>
+                                <input type="text" id="time_ldg" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('ldg', this.value)">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="status-row" style="display: flex; justify-content: flex-end;">
-            <div class="right-block" style="display: flex; flex-direction: column; align-items: flex-start; min-width: 280px;">
-                <span class="status-title">Fuel at Dest <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
-                <div class="status-value-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <span id="sb-dest-fuel" class="status-value">--</span>
-                    <span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span>
+                <div class="status-section">
+                    <span class="status-title">EST. ARRIVAL (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
+                    <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px;">
+                        <span id="sb-eta" class="status-value">--</span>
+                        <span id="sb-eta-diff" class="status-badge"></span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="status-col" style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+                
+                <div class="status-section">
+                    <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
+                    <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px;">
+                        <span id="sb-dest-fuel" class="status-value">--</span>
+                        <span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span>
+                    </div>
                 </div>
                 
-                <span class="status-title">Available Fuel Margin</span>
-                <div id="sb-avail-fuel-container" style="width: 100%; display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.15);"></div>
+                <div class="status-section">
+                    <span class="status-title">AVAILABLE FUEL MARGIN</span>
+                    <div class="status-content" id="sb-avail-fuel-container" style="display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.15);">
+                    </div>
+                </div>
+
             </div>
+            
         </div>
     </div>
 
@@ -622,7 +639,6 @@ const app = {
         }
         
         document.getElementById('statusBar').style.display = 'flex';
-        document.getElementById('statusBar').style.flexDirection = 'column'; // Ensure vertical stack for rows
         document.getElementById('bottomControls').style.display = 'block';
         document.getElementById('inputArea').style.display = 'none';
         document.getElementById('crewInfoCard').style.display = 'block';

@@ -38,6 +38,10 @@ body {
 
 h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-color); }
 
+/* --- 通常時のコンテナ制御（印刷用ラッパーは通常時は無視） --- */
+.print-header-container { display: block; width: 100%; }
+.print-left-col, .print-right-col { width: 100%; }
+
 .flight-header { background: var(--primary-color); color: white; border-radius: 10px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
 .fh-title { font-size: 11px; color: #95a5a6; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; font-weight: bold; letter-spacing: 0.5px; }
 .fh-details { display: flex; flex-wrap: wrap; gap: 12px 25px; }
@@ -84,25 +88,20 @@ html.theme-dark .pfl-toggle-group { background: rgba(255,255,255,0.1); }
     position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
     transition: background-color 0.3s ease;
 }
-
-/* ★ 警告スタイル */
 .status-bar.status-warning { background-color: var(--warning-bg) !important; }
 .dest-warning-badge { font-size: 10px; font-weight: bold; color: white; background-color: var(--danger-color); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 
-/* ★ StatusBar: インデント階層デザイン */
 .status-section { display: flex; flex-direction: column; }
 .status-title { display: block; font-size: 11px; opacity: 0.7; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; text-align: left; }
 .status-content { margin-left: 15px; }
 .status-value { font-size: 22px; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; line-height: 1; }
 .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
 
-/* ★ 入力フォームの共通・個別最適化 */
 .input-group-inline { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
 .input-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
 .status-input { background: transparent; border: none; color: #fff; font-size: 16px; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
 .status-input::placeholder { color: rgba(255,255,255,0.3); }
 .status-input:focus { border-bottom: 1px solid #fff; }
-/* 幅の調整 */
 .input-time { width: 60px; }
 .fuel-input { width: 75px; }
 
@@ -229,7 +228,25 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 
     body { 
         padding: 0; background: white; min-width: 100%; color: black; 
-        font-family: 'SF Mono', Consolas, Menlo, monospace; font-size: 11px; 
+        font-family: 'SF Mono', Consolas, Menlo, monospace; font-size: 10px; 
+    }
+
+    /* ★ コンテナを使った確実な2段組み制御 */
+    .print-header-container {
+        width: 100% !important;
+        display: block !important;
+    }
+    .print-header-container::after {
+        content: ""; display: table; clear: both;
+    }
+    .print-left-col {
+        float: left !important;
+        width: 53% !important;
+        padding-right: 2% !important;
+    }
+    .print-right-col {
+        float: right !important;
+        width: 45% !important;
     }
 
     /* ボックスやUI装飾の完全排除 */
@@ -239,23 +256,9 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
         background: transparent !important;
         color: black !important;
         padding: 0 !important;
-        margin: 0 !important;
-    }
-
-    /* 1ページ目の2段組み（Float）レイアウト */
-    #flightHeader, #crewInfoCard { 
-        width: 48% !important; 
-        float: left !important; 
-        clear: left !important; 
-        margin-bottom: 5mm !important; 
-        display: block !important; 
-    }
-    #headerInfoCard { 
-        width: 48% !important; 
-        float: right !important; 
-        clear: right !important; 
-        margin-bottom: 5mm !important; 
-        display: block !important; 
+        margin: 0 0 5mm 0 !important;
+        display: block !important;
+        width: 100% !important;
     }
 
     /* 各コンテンツの強制展開・折り返し */
@@ -266,21 +269,30 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
         white-space: pre-wrap !important;
         color: black !important;
         padding: 0 !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
     }
 
     /* セクションタイトルのプレーンテキスト化 */
     .fh-title, .crew-title, .drm-title {
         color: black !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         border-bottom: 1px solid black !important;
         margin-bottom: 4px !important;
         padding-bottom: 2px !important;
+        display: block !important;
     }
-    #crew-toggle-icon, #drm-toggle-icon { display: none !important; }
+    .crew-header, .drm-header { background: transparent !important; padding: 0 !important; border: none !important; }
     
-    .fh-val { color: black !important; font-size: 14px !important; }
-    .fh-label { color: #555 !important; font-size: 10px !important; }
+    .fh-val { color: black !important; font-size: 12px !important; }
+    .fh-label { color: #555 !important; font-size: 9px !important; }
+
+    /* ★ PFLテーブルのはみ出し（縮小）防止処理 */
+    .pfl-scroll-wrapper { overflow: visible !important; padding-bottom: 0 !important; }
+    .pfl-table { width: 100% !important; table-layout: fixed !important; }
+    .pfl-input { width: 100% !important; padding: 0 !important; font-size: 9px !important; text-align: center !important;}
+    .pfl-table th { font-size: 8px !important; padding: 1px !important; word-wrap: break-word !important; white-space: normal !important; }
+    .crew-table { width: 100% !important; table-layout: fixed !important; margin-left: 0 !important;}
+    .input-crew { width: 100% !important; padding: 0 !important; font-size: 10px !important;}
 
     /* ステータスバー（中間エリア）のプレーン化 */
     .status-bar { 
@@ -343,6 +355,4 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 
     /* テーブル内インプット文字サイズの最適化 */
     .input-actual, .input-actual-half, .input-ref { font-size: 10px !important; }
-    .pfl-input { font-size: 10px !important; }
-    .pfl-table th { padding: 2px !important; }
 }

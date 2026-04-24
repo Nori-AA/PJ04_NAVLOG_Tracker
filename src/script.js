@@ -413,17 +413,22 @@ const app = {
         });
     },
     
-    // ★ 追加: クリップボードへCSV形式でコピーする関数
+    // ★ クリップボードへCSV形式でコピーする関数 (PIC Name追加版)
     async copyPflToCsv() {
         if(!this.state.postFlightLog) return;
         const pfl = this.state.postFlightLog;
         
-        // CSVの列の並び順を指定
+        // CREW INFOからDUTYが'PIC'に設定されている人の名前を取得
+        const picCrew = this.state.crew.find(c => c.duty === 'PIC');
+        const picName = picCrew ? picCrew.name : '';
+        
+        // CSVの列の並び順を指定 (末尾にPIC Nameを追加)
         const fields = [
             pfl.day, pfl.type, pfl.reg, pfl.dep, pfl.arr, 
             pfl.depTime, pfl.arrTime, pfl.tkof, pfl.ldg, 
             pfl.fltNumber, pfl.fltTime, pfl.picTime, pfl.sicTime, 
-            pfl.ngtPicSic, pfl.copTime, pfl.ngtCop, pfl.imc, pfl.apchType
+            pfl.ngtPicSic, pfl.copTime, pfl.ngtCop, pfl.imc, pfl.apchType,
+            picName
         ];
         
         // カンマ区切り文字列を作成 (未入力は空文字)
@@ -432,7 +437,6 @@ const app = {
         try {
             await navigator.clipboard.writeText(csvString);
             
-            // ボタンのUIフィードバック（2秒間表示変更）
             const btn = document.getElementById('btnPflCsv');
             if (btn) {
                 const originalText = btn.innerHTML;

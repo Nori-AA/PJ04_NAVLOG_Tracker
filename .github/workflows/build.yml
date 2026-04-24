@@ -1,16 +1,19 @@
-name: Build and Deploy Offline PWA
+name: Build and Deploy
 
 on:
   push:
     branches:
-      - main  # 運用しているブランチ名に合わせてください（masterの場合もあり）
+      - main
     paths:
       - 'src/**'
       - 'build.py'
+  workflow_dispatch: # 手動実行ボタンをGitHub上に追加
 
 jobs:
   build-and-commit:
     runs-on: ubuntu-latest
+    permissions: # 権限を明示的に指定
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -28,12 +31,17 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
+          
+          # 現在の状況を確認
+          git status
+          
           git add index.html
           
-          # 差分がある場合のみコミットしてプッシュする
+          # 差分があるか確認してからコミット
           if ! git diff --staged --quiet; then
-            git commit -m "Auto-build: Inline CSS and JS into index.html [skip ci]"
-            git push
+            git commit -m "Auto-build: Update index.html [skip ci]"
+            git push origin main
+            echo "Changes pushed to GitHub."
           else
-            echo "No changes in index.html. Skipping commit."
+            echo "No changes detected in index.html. Nothing to commit."
           fi

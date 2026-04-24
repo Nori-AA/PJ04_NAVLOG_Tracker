@@ -18,7 +18,7 @@ const app = {
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
-        times: { bo: '', bi: '', tkof: '', ldg: '' }, // ★ 新設：4つの時間管理
+        times: { bo: '', bi: '', tkof: '', ldg: '' },
         activeInput: null 
     },
 
@@ -57,7 +57,7 @@ const app = {
                 document.getElementById('crewInfoCard').style.display = 'block';
                 this.updateCrewPanelUI();
                 this.renderCrew();
-                this.renderTimes(); // ★ 時間UI復元
+                this.renderTimes();
                 document.getElementById('tableBody').innerHTML = ''; 
                 this.render();
             }
@@ -296,7 +296,6 @@ const app = {
         const container = document.getElementById('altnSettingsContainer'); container.innerHTML = '';
         document.getElementById('alertThreshold').value = this.state.alertThreshold || 0;
         
-        // ★ destFuelThreshold のUI反映
         const destThEl = document.getElementById('destFuelThreshold');
         if (destThEl) destThEl.value = this.state.destFuelThreshold || 0;
 
@@ -333,15 +332,13 @@ const app = {
     
     saveConfig() {
         this.state.alertThreshold = parseFloat(document.getElementById('alertThreshold').value) || 0;
-        this.state.destFuelThreshold = parseFloat(document.getElementById('destFuelThreshold').value) || 0; // ★ 保存
+        this.state.destFuelThreshold = parseFloat(document.getElementById('destFuelThreshold').value) || 0;
         try { localStorage.setItem('navlog_v25_data', JSON.stringify(this.state)); } catch(e){}
         this.renderStatusBar(); 
     },
 
-    // ★ ステータスバーの時間管理・連動
     updateTime(field, val) {
         this.state.times[field] = val;
-        // TKOFの場合は表の最初のWPのActual Timeに自動反映し、再計算する
         if (field === 'tkof' && this.state.waypoints.length > 0) {
             this.state.waypoints[0].actualTime = val;
             this.calculate();
@@ -368,7 +365,6 @@ const app = {
         }
         const btFtMatch = text.match(/B\/T\s+(\d{2}HR\d{2}MIN)\s+F\/T\s+(\d{2}HR\d{2}MIN)/); if (btFtMatch) { meta.bt = btFtMatch[1]; meta.ft = btFtMatch[2]; }
         
-        // ★ RSV値の抽出と閾値への自動適用
         let globalRsv = 0; const rsvMatch = text.match(/^RSV\s+\d{2}\/\d{2}\s+(\d+)/m); 
         if (rsvMatch) { 
             let val = parseFloat(rsvMatch[1]); 
@@ -476,7 +472,6 @@ const app = {
         if (field === 'actualAlt' && val !== '') { let cleanVal = val.toUpperCase().replace(/^FL/, '').trim(); val = /^\d{2,3}$/.test(cleanVal) ? cleanVal + "00" : cleanVal; }
         this.state.waypoints[i][field] = val; 
         
-        // ★ 万が一1行目の時間が直接編集された場合はTKOFと同期する
         if(i === 0 && field === 'actualTime') {
             this.state.times.tkof = val;
             this.renderTimes();
@@ -542,7 +537,6 @@ const app = {
                     }
                 }
 
-                // ★ 1行目(TKOF)はreadonlyにして直接入力を防ぐ
                 const isFirstRow = (i === 0);
                 const actTimeReadonly = isFirstRow ? 'readonly' : '';
 
@@ -704,7 +698,6 @@ const app = {
         document.getElementById('sb-dest-fuel').textContent = destFuelDisp;
         const elFuelDiff = document.getElementById('sb-dest-fuel-diff'); elFuelDiff.textContent = destFuelDiffDisp; elFuelDiff.className = destFuelClass ? `status-badge ${destFuelClass}` : 'status-badge';
 
-        // ★ Dest Fuel Alert 判定と背景色変更
         const sb = document.getElementById('statusBar');
         if (finalFuel !== null && this.state.destFuelThreshold > 0 && finalFuel < this.state.destFuelThreshold) {
             sb.classList.add('status-warning');

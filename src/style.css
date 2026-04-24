@@ -70,7 +70,6 @@ html.theme-dark .pfl-toggle-group { background: rgba(255,255,255,0.1); }
 .pfl-input.wide { width: 75px; }
 .pfl-input.narrow { width: 45px; }
 
-/* ★ DATE(DAY)とREGの視認性向上のための幅拡張 */
 #pfl_day { width: 75px; }
 #pfl_reg { width: 65px; }
 
@@ -217,15 +216,133 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
     .header-portrait { display: inline; }
 }
 
+/* ★ 印刷用デザイン：完全プレーンテキスト化・A4横・2段組み・強制改ページ */
 @media print {
+    @page { size: A4 landscape; margin: 10mm; }
+    * { 
+        -webkit-print-color-adjust: exact !important; 
+        print-color-adjust: exact !important; 
+        color-adjust: exact !important; 
+    }
+
     .no-print { display: none !important; }
-    body { padding: 0; background: white; min-width: 100%; color: black; }
-    .table-container { max-height: none; overflow: visible; position: static; box-shadow: none; margin-bottom: 0; background: white; }
-    .table-container th { position: static; background: #eee; color: black; }
-    .sticky-col-wp { position: static; box-shadow: none; background: white; }
-    table { font-size: 10px; min-width: 100%; border-collapse: collapse; }
-    .table-container th, .table-container td { border: 1px solid black; padding: 5px; color: black; }
-    .input-actual, .input-actual-half, .input-ref { border: none; font-size: 10px; background: transparent; padding: 0; color: black; }
-    .card-drm, .card-crew { border: 1px solid black; box-shadow: none; background: white; }
-    .drm-content, .crew-header { color: black; background: white; max-height: none; }
+
+    body { 
+        padding: 0; background: white; min-width: 100%; color: black; 
+        font-family: 'SF Mono', Consolas, Menlo, monospace; font-size: 11px; 
+    }
+
+    /* ボックスやUI装飾の完全排除 */
+    .flight-header, .card-crew, .card-drm {
+        box-shadow: none !important;
+        border: none !important;
+        background: transparent !important;
+        color: black !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* 1ページ目の2段組み（Float）レイアウト */
+    #flightHeader, #crewInfoCard { 
+        width: 48% !important; 
+        float: left !important; 
+        clear: left !important; 
+        margin-bottom: 5mm !important; 
+        display: block !important; 
+    }
+    #headerInfoCard { 
+        width: 48% !important; 
+        float: right !important; 
+        clear: right !important; 
+        margin-bottom: 5mm !important; 
+        display: block !important; 
+    }
+
+    /* 各コンテンツの強制展開・折り返し */
+    #crewContentEl, .drm-content { display: block !important; }
+    .drm-content {
+        max-height: none !important;
+        overflow: visible !important;
+        white-space: pre-wrap !important;
+        color: black !important;
+        padding: 0 !important;
+        font-size: 11px !important;
+    }
+
+    /* セクションタイトルのプレーンテキスト化 */
+    .fh-title, .crew-title, .drm-title {
+        color: black !important;
+        font-size: 12px !important;
+        border-bottom: 1px solid black !important;
+        margin-bottom: 4px !important;
+        padding-bottom: 2px !important;
+    }
+    #crew-toggle-icon, #drm-toggle-icon { display: none !important; }
+    
+    .fh-val { color: black !important; font-size: 14px !important; }
+    .fh-label { color: #555 !important; font-size: 10px !important; }
+
+    /* ステータスバー（中間エリア）のプレーン化 */
+    .status-bar { 
+        position: static !important; 
+        box-shadow: none !important; 
+        background: transparent !important; 
+        color: black !important; 
+        padding: 0 !important; 
+        margin-bottom: 5mm !important; 
+        clear: both !important; 
+    }
+    .status-title, .status-value, .status-badge, .input-label { color: black !important; background: transparent !important; }
+    .status-badge { border: 1px solid black !important; }
+
+    /* 入力フォームのプレーンテキスト化（枠線・背景・矢印消去） */
+    input, select, textarea {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        color: black !important;
+        font-family: inherit !important;
+    }
+
+    /* NAVLOGテーブルの強制改ページ */
+    .table-container {
+        clear: both !important;
+        break-before: page !important;
+        page-break-before: always !important;
+        max-height: none !important;
+        overflow: visible !important;
+        position: static !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        background: white !important;
+        width: 100% !important;
+    }
+
+    table { font-size: 10px; width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .table-container th, .table-container td { 
+        border: 1px solid black !important; 
+        padding: 4px 2px !important; 
+        color: black !important; 
+        background: transparent !important;
+    }
+    .sticky-col-wp, .table-container th { position: static !important; background: transparent !important; color: black !important; }
+
+    /* ★ メモ行を強制的に出力 */
+    .memo-row { display: table-row !important; }
+    .memo-row td { border-top: none !important; background-color: transparent !important; }
+    .memo-textarea { 
+        width: 100% !important; 
+        min-height: 24px !important; 
+        overflow: visible !important; 
+        resize: none !important; 
+    }
+
+    /* テーブル内インプット文字サイズの最適化 */
+    .input-actual, .input-actual-half, .input-ref { font-size: 10px !important; }
+    .pfl-input { font-size: 10px !important; }
+    .pfl-table th { padding: 2px !important; }
 }

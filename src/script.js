@@ -305,7 +305,6 @@ const app = {
         this.saveConfig(); this.renderCrew();
     },
 
-    // ★ POST-FLIGHT LOG 処理メソッド群
     setPflToggle(field, val) {
         if(!this.state.postFlightLog) return;
         
@@ -413,16 +412,13 @@ const app = {
         });
     },
     
-    // ★ クリップボードへCSV形式でコピーする関数 (PIC Name追加版)
     async copyPflToCsv() {
         if(!this.state.postFlightLog) return;
         const pfl = this.state.postFlightLog;
         
-        // CREW INFOからDUTYが'PIC'に設定されている人の名前を取得
         const picCrew = this.state.crew.find(c => c.duty === 'PIC');
         const picName = picCrew ? picCrew.name : '';
         
-        // CSVの列の並び順を指定 (末尾にPIC Nameを追加)
         const fields = [
             pfl.day, pfl.type, pfl.reg, pfl.dep, pfl.arr, 
             pfl.depTime, pfl.arrTime, pfl.tkof, pfl.ldg, 
@@ -431,7 +427,6 @@ const app = {
             picName
         ];
         
-        // カンマ区切り文字列を作成 (未入力は空文字)
         const csvString = fields.map(v => v || '').join(',');
         
         try {
@@ -501,7 +496,6 @@ const app = {
 
     updateTime(field, val) {
         this.state.times[field] = val;
-        // B/O, B/I 入力時に PFL の連動計算を実行
         if (field === 'bo' || field === 'bi') {
             this.calcPflTimes();
         }
@@ -763,10 +757,10 @@ const app = {
                 const memoTr = document.createElement('tr');
                 memoTr.id = `memo-row-${i}`;
                 memoTr.style.display = wp.memoOpen ? 'table-row' : 'none';
-                memoTr.className = 'no-print'; 
+                memoTr.className = 'memo-row'; // ★ no-print から memo-row に変更
                 memoTr.innerHTML = `
                     <td colspan="12" style="padding: 6px; background-color: var(--memo-bg);">
-                        <textarea id="wp_${i}_memo" class="memo-textarea" rows="3" placeholder="${wp.name} に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
+                        <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
                     </td>
                 `;
                 tbody.appendChild(memoTr);

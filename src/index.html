@@ -1,218 +1,220 @@
-:root {
-    --bg-color: #f0f2f5; --card-bg: #ffffff; --text-color: #2c3e50;
-    --text-muted: #555555; --text-faint: #888888; --primary-color: #1a252f;
-    --accent-color: #3498db; --danger-color: #e74c3c; --alert-text: #ff6b6b;
-    --success-color: #2ecc71; --border-color: #bdc3c7; --table-header-bg: #e8ecef;
-    --ahead-bg: #d4efdf; --ahead-color: #1e8449; --behind-bg: #fadbd8;
-    --behind-color: #c0392b; --modified-bg: #e1f5fe; --modified-text: #1a252f;
-    --drm-bg: #0c0c0c; --drm-text: #00ff41; --input-bg: #ffffff;
-    --input-border: #ccc; --actual-col-bg: #fff9e6; --memo-bg: #eef2f5;
-    --sb-height: 85px; 
-    --warning-bg: #8a3324; /* 落ち着いた赤茶色（DAY） */
-}
-
-html.theme-dark {
-    --bg-color: #121212; --card-bg: #1c1c1e; --text-color: #d1d1d6;
-    --text-muted: #8e8e93; --text-faint: #636366; --primary-color: #2c2c2e; 
-    --accent-color: #2980b9; --danger-color: #d32f2f; --alert-text: #ff5252;
-    --success-color: #27ae60; --border-color: #3a3a3c; --table-header-bg: #2c2c2e;
-    --ahead-bg: #1b4332; --ahead-color: #81c784; --behind-bg: #4a1c1c;
-    --behind-color: #e57373; --modified-bg: #1e3a5f; --modified-text: #64b5f6;
-    --drm-bg: #000000; --drm-text: #00e676; --input-bg: #2c2c2e;
-    --input-border: #48484a; --actual-col-bg: #24221d; --memo-bg: #2c2c2e;
-    --warning-bg: #5c2a2a; /* 落ち着いた暗めの赤茶色（NGT） */
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-body::before {
-    content: ""; position: fixed; top: 0; left: 0; right: 0;
-    height: env(safe-area-inset-top, 0px); background-color: var(--bg-color); z-index: 1001;
-}
-
-body { 
-    font-family: -apple-system, sans-serif; background-color: var(--bg-color); color: var(--text-color); 
-    padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom) 15px; line-height: 1.4; min-width: 1000px; 
-    transition: background-color 0.3s, color 0.3s; 
-}
-
-h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-color); }
-
-.flight-header { background: var(--primary-color); color: white; border-radius: 10px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-.fh-title { font-size: 11px; color: #95a5a6; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; font-weight: bold; letter-spacing: 0.5px; }
-.fh-details { display: flex; flex-wrap: wrap; gap: 12px 25px; }
-.fh-item { display: flex; flex-direction: column; }
-.fh-label { font-size: 10px; color: var(--text-faint); font-weight: bold; text-transform: uppercase; }
-.fh-val { font-size: 16px; font-weight: bold; font-family: 'SF Mono', Menlo, monospace; color: #fff; }
-
-.card-crew { background: var(--card-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
-.crew-header { background: var(--primary-color); padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-.crew-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
-.crew-content { padding: 10px; }
-
-.crew-table { width: auto; border-collapse: collapse; margin-left: 15px; } 
-.crew-table th { font-size: 10px; color: var(--text-faint); text-align: center; padding: 4px 6px; } 
-.crew-table td { padding: 4px 6px; text-align: center; vertical-align: middle; border: none; }
-
-.card-drm { background: var(--drm-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
-.drm-header { background: #222; padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-.drm-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
-.drm-content { display: block; font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: var(--drm-text); padding: 15px; max-height: 350px; overflow: auto; -webkit-overflow-scrolling: touch; }
-
-/* ★ StatusBar レイアウト調整 */
-.status-bar { 
-    padding: 12px 15px; border-radius: 10px; margin-bottom: 12px; font-weight: bold; background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
-    position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
-    transition: background-color 0.3s ease;
-}
-.status-bar.status-warning { background-color: var(--warning-bg); }
-
-/* 左右カラム分割構造 */
-.sb-main-layout { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
-.sb-left-col { flex: 0 0 auto; }
-.sb-right-col { display: flex; flex-direction: column; gap: 12px; margin-left: auto; width: fit-content; }
-
-/* 階層構造デザイン (タイトル左揃え・値右インデント) */
-.sb-info-block { display: flex; flex-direction: column; align-items: flex-start; }
-.sb-info-title { font-size: 11px; opacity: 0.7; text-transform: uppercase; margin-bottom: 2px; text-align: left; }
-.sb-info-content { margin-left: 15px; display: flex; align-items: center; gap: 8px; }
-.sb-info-val { font-size: 24px; font-weight: 900; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; line-height: 1; }
-
-.status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
-
-#sb-avail-fuel-container { 
-    display: flex; flex-direction: column; gap: 4px; align-items: flex-start; 
-    margin-left: 15px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.15); 
-}
-
-/* 時間入力グリッド */
-.sb-times-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.time-input-wrap { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 8px; }
-.time-label { font-size: 11px; color: #aed6f1; width: 35px; text-align: left; }
-.input-time { width: 50px; background: transparent; border: none; color: #fff; font-size: 16px; font-family: monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
-.input-time::placeholder { color: rgba(255,255,255,0.3); }
-.input-time:focus { border-bottom: 1px solid #fff; }
-
-.table-container { 
-    background: var(--card-bg); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; 
-    position: relative; z-index: 10;
-}
-
-table { width: 100%; min-width: 970px; margin: 0 auto; table-layout: fixed; border-collapse: separate; border-spacing: 0; }
-
-.table-container th { 
-    background: var(--table-header-bg); position: sticky; top: calc(env(safe-area-inset-top, 10px) + var(--sb-height)); z-index: 900; 
-    font-size: 11px; color: var(--text-muted); font-weight: bold; box-shadow: 0 2px 2px rgba(0,0,0,0.05); 
-}
-
-.header-landscape { display: inline; }
-.header-portrait { display: none; }
-
-.sticky-col-wp { position: sticky; left: 0; background-color: var(--card-bg); z-index: 800; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
-.table-container th.sticky-col-wp { background-color: var(--table-header-bg); z-index: 950; }
-.table-container th, .table-container td { padding: 8px 2px; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); text-align: center; font-size: 13px; vertical-align: middle; overflow: hidden; }
-
-.col-wp   { width: 90px; min-width: 90px; }
-.col-alt  { width: 80px; min-width: 80px; }
-.col-wind { width: 95px; min-width: 95px; }
-.col-mwtp { width: 70px; min-width: 70px; }
-.col-ctme { width: 95px; min-width: 95px; }
-.col-ztme { width: 70px; min-width: 70px; }
-.col-main { width: 90px; min-width: 90px; } 
-.col-diff { width: 55px; min-width: 55px; }
-
-.col-actual { background-color: var(--actual-col-bg); }
-
-.input-crew { width: 100%; padding: 6px; border: 1px solid var(--input-border); border-radius: 4px; font-size: 13px; text-align: center; background: var(--input-bg); color: var(--text-color); }
-.input-crew:focus { background: var(--card-bg); border-color: var(--accent-color); outline: none; }
-
-.input-crew-name { text-align: left !important; padding-left: 10px; }
-
-.input-ref { width: 100%; text-align: center; border: 1px dashed transparent; background: transparent; color: var(--text-color); font-size: 12px; padding: 2px; border-radius: 4px; box-sizing: border-box; }
-.input-ref:focus { border: 1px solid var(--accent-color); background: var(--input-bg); outline: none; }
-.input-modified { font-weight: bold; color: var(--modified-text) !important; background-color: var(--modified-bg); border: 1px solid var(--accent-color); }
-
-.input-ref.input-wind { width: 75px !important; margin: 0 auto; }
-.input-ref.input-tmp { width: 36px !important; min-width: 36px !important; max-width: 36px !important; flex: 0 0 36px !important; padding: 2px 2px 2px 0 !important; text-align: right !important; }
-
-.isa-dev-text { font-size: 10px; color: var(--text-muted); text-align: left; white-space: nowrap; margin-left: 2px; flex: 0 0 auto; }
-
-.input-actual { width: 75px; height: 38px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 6px; font-size: 16px; font-weight: bold; background: var(--input-bg); color: var(--text-color); display: block; }
-.input-actual-half { width: 75px; height: 18px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 4px; font-size: 13px; font-weight: bold; background: var(--input-bg); color: var(--text-color); padding: 0; display: block; }
-.input-actual-half::placeholder { font-weight: normal; font-size: 10px; color: var(--text-faint); }
-
-input[readonly] { background-color: rgba(0, 0, 0, 0.05); color: var(--text-muted); cursor: not-allowed; border-color: transparent; }
-html.theme-dark input[readonly] { background-color: rgba(255, 255, 255, 0.05); }
-
-input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-input[type="number"] { -moz-appearance: textfield; }
-input, textarea, select { padding: 6px; border: 1px solid var(--input-border); border-radius: 4px; font-size: 14px; background-color: var(--input-bg); color: var(--text-color); }
-
-.input-stacked { display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; }
-.fuel-primary { font-size: 14px; font-weight: bold; }
-.fuel-secondary { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
-
-.wp-cell { cursor: pointer; padding: 6px 2px; border-radius: 6px; user-select: none; display: block; }
-.wp-cell:active { background-color: var(--border-color); }
-.memo-textarea { width: 100%; border: 1px solid var(--input-border); border-radius: 4px; padding: 8px; font-size: 14px; font-family: inherit; resize: vertical; outline: none; background-color: var(--input-bg); color: var(--text-color); }
-.memo-textarea:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
-
-.card-footer { background: var(--card-bg); border-radius: 10px; padding: 12px; margin-bottom: 40px; }
-.config-panel { display: flex; gap: 15px; align-items: center; justify-content: space-between; }
-button { padding: 12px 18px; border: none; border-radius: 8px; background: var(--accent-color); color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
-.btn-danger { background: var(--danger-color); }
-.btn-secondary { background: #607d8b; }
-.btn-small { padding: 6px 10px; font-size: 12px; }
-.input-group { display: flex; flex-direction: column; gap: 5px; }
-.input-group label { font-size: 11px; font-weight: bold; color: var(--text-muted); }
-
-/* ★ 設定パネル用グループスタイル */
-.settings-wrapper { display: flex; flex-wrap: wrap; gap: 15px; }
-.settings-group { flex: 1 1 250px; background: rgba(0,0,0,0.03); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; }
-html.theme-dark .settings-group { background: rgba(255,255,255,0.03); }
-.settings-group-title { font-size: 12px; font-weight: bold; color: var(--accent-color); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; text-transform: uppercase; }
-
-.clipboard-btn { display: block; width: 100%; background: #2980b9; color: white; padding: 25px; border-radius: 10px; text-align: center; font-weight: bold; font-size: 20px; cursor: pointer; box-shadow: 0 6px 12px rgba(41, 128, 185, 0.3); margin-bottom: 15px; border: none; }
-.clipboard-btn:active { background: #1c5980; transform: translateY(2px); box-shadow: 0 2px 6px rgba(41, 128, 185, 0.3); }
-.file-upload-btn { display: block; width: 100%; background: #7f8c8d; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 14px; cursor: pointer; border: none; }
-
-.altn-warning-badge { margin-left: 8px; font-size: 10px; font-weight: bold; color: var(--alert-text); background: rgba(255, 107, 107, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255, 107, 107, 0.4); white-space: nowrap; }
-
-@media screen and (max-width: 1000px), screen and (orientation: portrait) {
-    body { min-width: 810px; } 
-    table { width: 780px; min-width: 780px; max-width: 780px; }
-    .col-wp   { width: 74px; min-width: 74px; max-width: 74px; }
-    .col-alt  { width: 60px; min-width: 60px; max-width: 60px; }
-    .col-wind { width: 70px; min-width: 70px; max-width: 70px; }
-    .col-mwtp { width: 55px; min-width: 55px; max-width: 55px; }
-    .col-ctme { width: 80px; min-width: 80px; max-width: 80px; }
-    .col-ztme { width: 55px; min-width: 55px; max-width: 55px; }
-    .col-main { width: 74px; min-width: 74px; max-width: 74px; }
-    .col-diff { width: 45px; min-width: 45px; max-width: 45px; }
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    .input-ref.input-wind { width: 55px !important; }
-    .input-ref.input-tmp { width: 32px !important; min-width: 32px !important; max-width: 32px !important; flex: 0 0 32px !important; font-size: 11px !important; padding: 2px 1px !important; }
-    .isa-dev-text { font-size: 9px; }
-    
-    .input-actual { width: 65px; height: 35px; font-size: 14px; margin: 0 auto; display: block; } 
-    .input-actual-half { width: 65px; font-size: 12px; margin: 0 auto; display: block; }
-    
-    .fuel-primary { font-size: 13px; }
-    .fuel-secondary { font-size: 10px; }
+    <title>NAVLOG Tracker V25.3.1 (Offline EFB)</title>
 
-    .header-landscape { display: none; }
-    .header-portrait { display: inline; }
-}
+    <script>
+        try {
+            if (localStorage.getItem('navlog_theme') === 'dark') {
+                document.documentElement.classList.add('theme-dark');
+            }
+        } catch (e) {}
+    </script>
 
-@media print {
-    .no-print { display: none !important; }
-    body { padding: 0; background: white; min-width: 100%; color: black; }
-    .table-container { max-height: none; overflow: visible; position: static; box-shadow: none; margin-bottom: 0; background: white; }
-    .table-container th { position: static; background: #eee; color: black; }
-    .sticky-col-wp { position: static; box-shadow: none; background: white; }
-    table { font-size: 10px; min-width: 100%; border-collapse: collapse; }
-    .table-container th, .table-container td { border: 1px solid black; padding: 5px; color: black; }
-    .input-actual, .input-actual-half, .input-ref { border: none; font-size: 10px; background: transparent; padding: 0; color: black; }
-    .card-drm, .card-crew { border: 1px solid black; box-shadow: none; background: white; }
-    .drm-content, .crew-header { color: black; background: white; max-height: none; }
-}
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.3.1</h1>
+
+    <div class="flight-header" id="flightHeader" style="display: none;">
+        <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
+        <div class="fh-details">
+            <div class="fh-item"><span class="fh-label">FLIGHT</span><span class="fh-val" id="fh-flt">---</span></div>
+            <div class="fh-item"><span class="fh-label">DATE</span><span class="fh-val" id="fh-date">---</span></div>
+            <div class="fh-item"><span class="fh-label">REG</span><span class="fh-val" id="fh-reg">---</span></div>
+            <div class="fh-item"><span class="fh-label">ROUTE</span><span class="fh-val" id="fh-route">---</span></div>
+            <div class="fh-item"><span class="fh-label">ALTN</span><span class="fh-val" id="fh-altn">---</span></div>
+            <div class="fh-item"><span class="fh-label">TIME</span><span class="fh-val" id="fh-time">---</span></div>
+            <div class="fh-item"><span class="fh-label">B/T</span><span class="fh-val" id="fh-bt">---</span></div>
+            <div class="fh-item"><span class="fh-label">F/T</span><span class="fh-val" id="fh-ft">---</span></div>
+            <div class="fh-item"><span class="fh-label">TTL DIST</span><span class="fh-val" id="fh-dist">---</span></div>
+        </div>
+    </div>
+
+    <div class="card-crew no-print" id="crewInfoCard" style="display:none;">
+        <div class="crew-header" onclick="app.toggleCrew()">
+            <span class="crew-title">👨‍✈️ CREW INFO</span>
+            <span id="crew-toggle-icon" style="color: #fff; opacity: 0.7;">▼</span>
+        </div>
+        <div id="crewContentEl" class="crew-content" style="display:block;">
+            <table class="crew-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">T/O</th>
+                        <th style="width: 40px;">LDG</th>
+                        <th style="width: 90px;">DUTY</th>
+                        <th style="width: 120px;">EMP NO</th>
+                        <th style="width: 200px; text-align: left; padding-left: 10px;">NAME</th>
+                        <th style="width: 90px;">RANK</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="crewTableBody"></tbody>
+            </table>
+            <div style="text-align: left; margin-top: 10px; margin-left: 15px;">
+                <button class="btn-secondary btn-small" onclick="app.addCrew()">➕ 追加</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-drm" id="headerInfoCard" style="display:none;">
+        <div class="drm-header no-print" onclick="app.toggleHeader()">
+            <span class="drm-title">[ DISPATCH RELEASE MESSAGE ]</span>
+            <span id="drm-toggle-icon" style="color: var(--text-faint);">▼</span>
+        </div>
+        <div class="drm-content" id="headerInfoContent"></div>
+    </div>
+
+    <div class="status-bar sb-main-layout" id="statusBar" style="display:none;">
+        
+        <div class="sb-left-col">
+            <div class="sb-times-grid">
+                <div class="time-input-wrap">
+                    <span class="time-label">B/O</span>
+                    <input type="text" id="time_bo" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bo', this.value)">
+                </div>
+                <div class="time-input-wrap">
+                    <span class="time-label">B/I</span>
+                    <input type="text" id="time_bi" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bi', this.value)">
+                </div>
+                <div class="time-input-wrap">
+                    <span class="time-label">TKOF</span>
+                    <input type="text" id="time_tkof" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('tkof', this.value)">
+                </div>
+                <div class="time-input-wrap">
+                    <span class="time-label">LDG</span>
+                    <input type="text" id="time_ldg" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('ldg', this.value)">
+                </div>
+            </div>
+        </div>
+        
+        <div class="sb-right-col">
+            
+            <div class="sb-info-block">
+                <div class="sb-info-title">
+                    Est. Arrival (ETA)
+                    <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span>
+                </div>
+                <div class="sb-info-content">
+                    <span id="sb-eta" class="sb-info-val">--</span>
+                    <span id="sb-eta-diff" class="status-badge"></span>
+                </div>
+            </div>
+
+            <div class="sb-info-block">
+                <div class="sb-info-title">
+                    Fuel at Dest
+                    <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span>
+                </div>
+                <div class="sb-info-content">
+                    <span id="sb-dest-fuel" class="sb-info-val">--</span>
+                    <span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span>
+                </div>
+            </div>
+
+            <div class="sb-info-block">
+                <div class="sb-info-title">Available Fuel Margin</div>
+                <div id="sb-avail-fuel-container"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="no-print" id="inputArea" style="background: transparent;">
+        <button class="clipboard-btn" onclick="app.loadFromClipboard()">
+            📋 クリップボードから読み込む
+        </button>
+        <div style="margin-top: 20px; text-align: center;">
+            <span style="font-size: 12px; color: var(--text-faint); display: block; margin-bottom: 10px;">または手動でファイルを選択</span>
+            <label for="fileInput" class="file-upload-btn">📁 ファイルを選択</label>
+            <input type="file" id="fileInput" accept=".txt" style="display: none;" onchange="app.handleFileUpload(event)">
+        </div>
+    </div>
+
+    <div class="table-container" id="tableContainer" style="display:none;">
+        <table>
+            <thead>
+                <tr>
+                    <th class="sticky-th col-wp sticky-col-wp">WP</th>
+                    <th class="sticky-th col-alt">ALT</th>
+                    <th class="sticky-th col-wind">
+                        <span class="header-landscape">WIND / TMP<br><span style="font-size:9px; font-weight:normal;">(ISA DEV)</span></span>
+                        <span class="header-portrait">WIND<br>TMP<br><span style="font-size:9px; font-weight:normal;">(ISA DEV)</span></span>
+                    </th>
+                    <th class="sticky-th col-mwtp">MW/TP<br>WSCP</th>
+                    <th class="sticky-th col-ctme">CTME/DIST<br><span style="font-weight:normal;opacity:0.6;">RTME/RDIS</span></th>
+                    <th class="sticky-th col-ztme">ZTME<br><span style="font-weight:normal;opacity:0.6;">(DIST)</span></th>
+                    <th class="sticky-th col-main">Est.Time</th>
+                    <th class="sticky-th col-main">Est.FUEL<br><span style="font-weight:normal;opacity:0.6;">(Plan)</span></th>
+                    <th class="sticky-th col-actual no-print col-main">Act.Time</th>
+                    <th class="sticky-th col-actual no-print col-main">Act.FUEL<br><span style="font-weight:normal;opacity:0.6;font-size:9px;">TTL/CALC</span></th>
+                    <th class="sticky-th col-diff">Time<br>Diff</th>
+                    <th class="sticky-th col-diff">Fuel<br>Diff</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="card-footer no-print" id="bottomControls" style="display:none;">
+        <div class="config-panel">
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-secondary" onclick="app.toggleSettings()">⚙️ 設定 (ALTN / RSV)</button>
+                <button class="btn-secondary" id="themeToggleBtn" onclick="app.toggleTheme()">🌙 NGT</button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="window.print()">🖨️ PDF</button>
+                <button class="btn-danger" onclick="app.resetData()">🗑️ リセット</button>
+            </div>
+        </div>
+        
+        <div id="settingsPanel" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+            <div class="settings-wrapper">
+                
+                <div class="settings-group">
+                    <div class="settings-group-title">ALTN Settings</div>
+                    <div id="altnSettingsContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;"></div>
+                    <button class="btn-secondary btn-small" onclick="app.addAltn()">➕ ALTN 追加</button>
+                    
+                    <div class="input-group" style="margin-top: 15px;">
+                        <label>Margin Alert Threshold</label>
+                        <input type="number" id="alertThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title">Table Settings</div>
+                    <div class="input-group">
+                        <label>Fuel Diff Basis</label>
+                        <select id="fuelCalcBasis" style="width: 100px;" onchange="app.changeFuelBasis()">
+                            <option value="CALC">CALC</option>
+                            <option value="TTL">TTL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title">Dest Fuel Settings</div>
+                    <div class="input-group">
+                        <label>Dest Fuel Warning Threshold</label>
+                        <input type="number" id="destFuelThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
+                    </div>
+                </div>
+
+            </div>
+            <div style="margin-top: 15px; text-align: right;">
+                <button onclick="app.toggleSettings()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -8,6 +8,7 @@
     --drm-bg: #0c0c0c; --drm-text: #00ff41; --input-bg: #ffffff;
     --input-border: #ccc; --actual-col-bg: #fff9e6; --memo-bg: #eef2f5;
     --sb-height: 85px; 
+    --warning-bg: #8a3324; /* 落ち着いた赤茶色（DAY） */
 }
 
 html.theme-dark {
@@ -19,6 +20,7 @@ html.theme-dark {
     --behind-color: #e57373; --modified-bg: #1e3a5f; --modified-text: #64b5f6;
     --drm-bg: #000000; --drm-text: #00e676; --input-bg: #2c2c2e;
     --input-border: #48484a; --actual-col-bg: #24221d; --memo-bg: #2c2c2e;
+    --warning-bg: #5c2a2a; /* 落ち着いた暗めの赤茶色（NGT） */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -57,13 +59,24 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .drm-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
 .drm-content { display: block; font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: var(--drm-text); padding: 15px; max-height: 350px; overflow: auto; -webkit-overflow-scrolling: touch; }
 
+/* ★ StatusBar 変更 */
 .status-bar { 
     display: flex; flex-direction: column; gap: 8px; padding: 12px 15px; border-radius: 10px; margin-bottom: 12px; font-weight: bold; background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
     position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
+    transition: background-color 0.3s ease;
 }
+.status-bar.status-warning { background-color: var(--warning-bg); }
 
-.status-bar .row { display: flex; justify-content: space-between; align-items: flex-end; }
+.status-bar .row { display: flex; justify-content: space-between; align-items: flex-start; }
 .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; margin-left: 6px; }
+
+/* 時間入力グリッド */
+.sb-times-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.time-input-wrap { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 8px; }
+.time-label { font-size: 11px; color: #aed6f1; width: 35px; text-align: left; }
+.input-time { width: 50px; background: transparent; border: none; color: #fff; font-size: 16px; font-family: monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
+.input-time::placeholder { color: rgba(255,255,255,0.3); }
+.input-time:focus { border-bottom: 1px solid #fff; }
 
 .table-container { 
     background: var(--card-bg); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; 
@@ -112,6 +125,10 @@ table { width: 100%; min-width: 970px; margin: 0 auto; table-layout: fixed; bord
 .input-actual { width: 75px; height: 38px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 6px; font-size: 16px; font-weight: bold; background: var(--input-bg); color: var(--text-color); display: block; }
 .input-actual-half { width: 75px; height: 18px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 4px; font-size: 13px; font-weight: bold; background: var(--input-bg); color: var(--text-color); padding: 0; display: block; }
 .input-actual-half::placeholder { font-weight: normal; font-size: 10px; color: var(--text-faint); }
+
+/* ★ 読み取り専用(ロック)入力欄のスタイル */
+input[readonly] { background-color: rgba(0, 0, 0, 0.05); color: var(--text-muted); cursor: not-allowed; border-color: transparent; }
+html.theme-dark input[readonly] { background-color: rgba(255, 255, 255, 0.05); }
 
 input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }

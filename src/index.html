@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.2.5 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.3.0 (Offline EFB)</title>
 
     <script>
         try {
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.2.5</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.3.0</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -73,27 +73,50 @@
     </div>
 
     <div class="status-bar" id="statusBar" style="display:none;">
-        <div class="row">
-            <div>
+        <div class="row" style="align-items: center;">
+            <div class="sb-times-grid">
+                <div class="time-input-wrap">
+                    <span class="time-label">B/O</span>
+                    <input type="text" id="time_bo" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bo', this.value)">
+                </div>
+                <div class="time-input-wrap">
+                    <span class="time-label">B/I</span>
+                    <input type="text" id="time_bi" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bi', this.value)">
+                </div>
+                <div class="time-input-wrap">
+                    <span class="time-label">TKOF</span>
+                    <input type="text" id="time_tkof" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('tkof', this.value)">
+                </div>
+                <div class="time-input-wrap">
+                    <span class="time-label">LDG</span>
+                    <input type="text" id="time_ldg" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('ldg', this.value)">
+                </div>
+            </div>
+            
+            <div style="text-align: right;">
                 <span style="font-size: 11px; opacity: 0.7; text-transform: uppercase;">Est. Arrival (ETA)</span>
                 <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px;"></span><br>
-                <span id="sb-eta" style="font-size: 22px; font-family: monospace; letter-spacing: -0.5px;">--</span>
+                <span id="sb-eta" style="font-size: 24px; font-family: monospace; letter-spacing: -0.5px;">--</span>
                 <span id="sb-eta-diff" class="status-badge"></span>
             </div>
-            <div style="text-align: right;">
-                <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-right: 8px;"></span>
-                <span style="font-size: 11px; opacity: 0.7; text-transform: uppercase;">Fuel at Dest</span><br>
-                <span id="sb-dest-fuel" style="font-size: 22px; font-family: monospace; letter-spacing: -0.5px;">--</span>
-                <span id="sb-dest-fuel-diff" class="status-badge"></span>
+        </div>
+
+        <div class="row" style="padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); justify-content: flex-end;">
+            <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-bottom: 2px;"></span>
+                <span style="font-size: 12px; opacity: 0.7; text-transform: uppercase;">Fuel at Dest</span>
+                <div style="margin-bottom: 8px;">
+                    <span id="sb-dest-fuel" style="font-size: 28px; font-weight: 900; font-family: monospace; letter-spacing: -0.5px; color: #fff;">--</span>
+                    <span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span>
+                </div>
+                
+                <div style="width: 100%; display: flex; flex-direction: column; align-items: flex-end;">
+                    <span style="font-size: 10px; opacity: 0.6; text-transform: uppercase; margin-bottom: 4px;">Available Fuel Margin</span>
+                    <div id="sb-avail-fuel-container" style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; background: rgba(0,0,0,0.15); padding: 6px 10px; border-radius: 6px;"></div>
+                </div>
             </div>
         </div>
-        <div class="row" style="padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.15);">
-            <div style="width: 100%;">
-                <span style="font-size: 11px; opacity: 0.7; text-transform: uppercase;">Available Fuel Margin</span>
-                <div id="sb-avail-fuel-container" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;"></div>
-            </div>
-        </div>
-        <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 2px;">
+        <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 4px;">
             <span style="font-size: 10px; opacity: 0.5;">FMS CALCULATION ACTIVE</span>
         </div>
     </div>
@@ -103,7 +126,7 @@
             📋 クリップボードから読み込む
         </button>
         <div style="margin-top: 20px; text-align: center;">
-            <span style="font-size: 12px; color: var(--text-faint); display: block; margin-bottom: 10px;">または手動でファイルを選択</span>
+            <span style="font-size: 12px; color: var(--text-faint); display: block; margin-bottom: 10px;">または手持でファイルを選択</span>
             <label for="fileInput" class="file-upload-btn">📁 ファイルを選択</label>
             <input type="file" id="fileInput" accept=".txt" style="display: none;" onchange="app.handleFileUpload(event)">
         </div>
@@ -151,6 +174,12 @@
                 <div id="altnSettingsContainer" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;"></div>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <button class="btn-secondary btn-small" onclick="app.addAltn()">➕ ALTN 追加</button>
+                    
+                    <div class="input-group">
+                        <label>Dest Fuel Warning Threshold</label>
+                        <input type="number" id="destFuelThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
+                    </div>
+
                     <div class="input-group">
                         <label>Fuel Diff Basis</label>
                         <select id="fuelCalcBasis" style="width: 100px;" onchange="app.changeFuelBasis()">
@@ -159,8 +188,8 @@
                         </select>
                     </div>
                     <div class="input-group">
-                        <label>Alert Threshold</label>
-                        <input type="number" id="alertThreshold" step="0.1" value="0" style="width: 80px;" onchange="app.saveConfig()">
+                        <label>Margin Alert Threshold</label>
+                        <input type="number" id="alertThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
                     </div>
                     <button onclick="app.toggleSettings()">閉じる</button>
                 </div>

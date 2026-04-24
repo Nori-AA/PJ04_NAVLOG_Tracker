@@ -1,0 +1,39 @@
+name: Build and Deploy Offline PWA
+
+on:
+  push:
+    branches:
+      - main  # 運用しているブランチ名に合わせてください（masterの場合もあり）
+    paths:
+      - 'src/**'
+      - 'build.py'
+
+jobs:
+  build-and-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run build script
+        run: python build.py
+
+      - name: Check for changes and Commit
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          git add index.html
+          
+          # 差分がある場合のみコミットしてプッシュする
+          if ! git diff --staged --quiet; then
+            git commit -m "Auto-build: Inline CSS and JS into index.html [skip ci]"
+            git push
+          else
+            echo "No changes in index.html. Skipping commit."
+          fi

@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.4.0 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.5.0 (Offline EFB)</title>
 
     <script>
         try {
@@ -28,7 +28,7 @@
     --drm-bg: #0c0c0c; --drm-text: #00ff41; --input-bg: #ffffff;
     --input-border: #ccc; --actual-col-bg: #fff9e6; --memo-bg: #eef2f5;
     --sb-height: 85px; 
-    --warning-bg: #5c2a2a; /* 暗めの赤茶色 */
+    --warning-bg: #5c2a2a; 
 }
 
 html.theme-dark {
@@ -40,7 +40,7 @@ html.theme-dark {
     --behind-color: #e57373; --modified-bg: #1e3a5f; --modified-text: #64b5f6;
     --drm-bg: #000000; --drm-text: #00e676; --input-bg: #2c2c2e;
     --input-border: #48484a; --actual-col-bg: #24221d; --memo-bg: #2c2c2e;
-    --warning-bg: #5c2a2a; /* 暗めの赤茶色 */
+    --warning-bg: #5c2a2a; 
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -74,36 +74,50 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .crew-table th { font-size: 10px; color: var(--text-faint); text-align: center; padding: 4px 6px; } 
 .crew-table td { padding: 4px 6px; text-align: center; vertical-align: middle; border: none; }
 
+/* ★ POST-FLIGHT LOG スタイル */
+.post-flight-title { font-size: 12px; font-weight: bold; color: var(--text-color); opacity: 0.8; letter-spacing: 1px; }
+.pfl-controls { display: flex; gap: 10px; }
+.pfl-toggle-group { display: flex; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; overflow: hidden; }
+.pfl-toggle-btn { padding: 4px 10px; font-size: 11px; background: transparent; color: var(--text-color); border: none; cursor: pointer; font-weight: bold; border-right: 1px solid var(--input-border); }
+.pfl-toggle-btn:last-child { border-right: none; }
+.pfl-toggle-btn.active { background: var(--accent-color); color: #fff; }
+
+.pfl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px; margin-bottom: 10px; }
+.pfl-item { display: flex; align-items: center; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 4px; overflow: hidden; }
+.pfl-label { font-size: 10px; font-weight: bold; color: var(--text-faint); padding: 4px 6px; width: 65px; flex-shrink: 0; text-align: left; }
+.pfl-input { flex: 1; min-width: 0; background: transparent; border: none; color: var(--text-color); font-size: 13px; font-weight: bold; font-family: 'SF Mono', monospace; text-align: center; padding: 6px 0; outline: none; border-left: 1px solid var(--input-border); border-radius: 0; }
+.pfl-input:focus { background: rgba(52, 152, 219, 0.1); }
+select.pfl-input { appearance: none; -webkit-appearance: none; padding-left: 10px; }
+
 .card-drm { background: var(--drm-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
 .drm-header { background: #222; padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
 .drm-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
 .drm-content { display: block; font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: var(--drm-text); padding: 15px; max-height: 350px; overflow: auto; -webkit-overflow-scrolling: touch; }
 
-/* ★ StatusBar 基本スタイル */
+/* StatusBar 基本スタイル */
 .status-bar { 
     padding: 15px; border-radius: 10px; margin-bottom: 12px; background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
     position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
     transition: background-color 0.3s ease;
 }
 
-/* ★ 警告スタイル */
+/* 警告スタイル */
 .status-bar.status-warning { background-color: var(--warning-bg) !important; }
 .dest-warning-badge { font-size: 10px; font-weight: bold; color: white; background-color: var(--danger-color); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 
-/* ★ StatusBar: インデント階層デザイン */
+/* StatusBar: インデント階層デザイン */
 .status-section { display: flex; flex-direction: column; }
 .status-title { display: block; font-size: 11px; opacity: 0.7; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; text-align: left; }
 .status-content { margin-left: 15px; }
 .status-value { font-size: 22px; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; line-height: 1; }
 .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
 
-/* ★ 入力フォームの共通・個別最適化 */
+/* 入力フォームの共通・個別最適化 */
 .input-group-inline { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
 .input-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
 .status-input { background: transparent; border: none; color: #fff; font-size: 16px; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
 .status-input::placeholder { color: rgba(255,255,255,0.3); }
 .status-input:focus { border-bottom: 1px solid #fff; }
-/* 幅の調整 */
 .input-time { width: 60px; }
 .fuel-input { width: 75px; }
 
@@ -233,7 +247,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.4.0</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.5.0</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -273,6 +287,60 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
             <div style="text-align: left; margin-top: 10px; margin-left: 15px;">
                 <button class="btn-secondary btn-small" onclick="app.addCrew()">➕ 追加</button>
             </div>
+            
+            <hr style="margin: 20px 15px 15px; border: 0; border-top: 1px solid var(--border-color);">
+            <div class="post-flight-log" id="postFlightLog" style="margin: 0 15px 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                    <span class="post-flight-title">📋 POST-FLIGHT LOG</span>
+                    <div class="pfl-controls">
+                        <div class="pfl-toggle-group">
+                            <button id="btn_dom" class="pfl-toggle-btn active" onclick="app.setLogRegion('DOM')">DOM</button>
+                            <button id="btn_int" class="pfl-toggle-btn" onclick="app.setLogRegion('INT')">INT</button>
+                        </div>
+                        <div class="pfl-toggle-group">
+                            <button id="btn_pic" class="pfl-toggle-btn active" onclick="app.setLogDuty('PIC')">PIC</button>
+                            <button id="btn_sic" class="pfl-toggle-btn" onclick="app.setLogDuty('SIC')">SIC</button>
+                            <button id="btn_cop" class="pfl-toggle-btn" onclick="app.setLogDuty('COP')">COP</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pfl-grid">
+                    <div class="pfl-item"><span class="pfl-label">DAY</span><input type="text" id="log_day" class="pfl-input" onchange="app.updateLog('day', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">TYPE</span><input type="text" id="log_type" class="pfl-input" onchange="app.updateLog('type', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">REG</span><input type="text" id="log_reg" class="pfl-input" onchange="app.updateLog('reg', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">FLT#</span><input type="text" id="log_flt" class="pfl-input" onchange="app.updateLog('flt', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">DEP</span><input type="text" id="log_dep" class="pfl-input" onchange="app.updateLog('dep', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">ARR</span><input type="text" id="log_arr" class="pfl-input" onchange="app.updateLog('arr', this.value)"></div>
+                    
+                    <div class="pfl-item"><span class="pfl-label">DEP TIME</span><input type="text" id="log_depTime" class="pfl-input" maxlength="4" onchange="app.updateLog('depTime', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">ARR TIME</span><input type="text" id="log_arrTime" class="pfl-input" maxlength="4" onchange="app.updateLog('arrTime', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">FLT TIME</span><input type="text" id="log_fltTime" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('fltTime', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">PIC TIME</span><input type="text" id="log_picTime" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('picTime', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">SIC TIME</span><input type="text" id="log_sicTime" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('sicTime', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">COP TIME</span><input type="text" id="log_copTime" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('copTime', this.value)"></div>
+                    
+                    <div class="pfl-item"><span class="pfl-label">TKOF</span>
+                        <select id="log_tkof" class="pfl-input" onchange="app.updateLog('tkof', this.value)">
+                            <option value=""></option><option value="1">1</option><option value="N1">N1</option>
+                        </select>
+                    </div>
+                    <div class="pfl-item"><span class="pfl-label">LDG</span>
+                        <select id="log_ldg" class="pfl-input" onchange="app.updateLog('ldg', this.value)">
+                            <option value=""></option><option value="1">1</option><option value="N1">N1</option>
+                        </select>
+                    </div>
+                    <div class="pfl-item"><span class="pfl-label">APCH</span><input type="text" id="log_apch" class="pfl-input" placeholder="e.g. ILS07" onchange="app.updateLog('apch', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">PIC NGT</span><input type="text" id="log_picNgt" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('picNgt', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">COP NGT</span><input type="text" id="log_copNgt" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('copNgt', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">IMC</span><input type="text" id="log_imc" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('imc', this.value)"></div>
+                    <div class="pfl-item"><span class="pfl-label">APCH TIME</span><input type="text" id="log_apchTime" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('apchTime', this.value)"></div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <textarea id="log_memo" class="memo-textarea" rows="3" placeholder="POST-FLIGHT MEMO (Free Text)..." onchange="app.updateLog('memo', this.value)"></textarea>
+                </div>
+            </div>
+            
         </div>
     </div>
 
@@ -288,7 +356,6 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
         <div style="display: flex; gap: 20px; width: 100%; flex-wrap: wrap;">
             
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
-                
                 <div class="status-section">
                     <span class="status-title">ACTUAL TIMES</span>
                     <div class="status-content">
@@ -320,13 +387,10 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
                         <span id="sb-eta-diff" class="status-badge"></span>
                     </div>
                 </div>
-
             </div>
 
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
-                
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    
                     <div class="status-section">
                         <span class="status-title">ACTUAL FUEL</span>
                         <div class="status-content">
@@ -351,7 +415,6 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
                             <span id="sb-dest-fuel-warning"></span>
                         </div>
                     </div>
-
                 </div>
                 
                 <div class="status-section">
@@ -359,7 +422,6 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
                     <div class="status-content" id="sb-avail-fuel-container" style="width: max-content; display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.15);">
                     </div>
                 </div>
-
             </div>
             
         </div>
@@ -415,18 +477,15 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
         
         <div id="settingsPanel" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
             <div class="settings-wrapper">
-                
                 <div class="settings-group">
                     <h3 class="settings-group-title">ALTN Settings</h3>
                     <div id="altnSettingsContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;"></div>
                     <button class="btn-secondary btn-small" onclick="app.addAltn()">➕ ALTN 追加</button>
-                    
                     <div class="input-group" style="margin-top: 15px;">
                         <label>Margin Alert Threshold</label>
                         <input type="number" id="alertThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
                     </div>
                 </div>
-
                 <div class="settings-group">
                     <h3 class="settings-group-title">Table Settings</h3>
                     <div class="input-group">
@@ -437,7 +496,6 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
                         </select>
                     </div>
                 </div>
-
                 <div class="settings-group">
                     <h3 class="settings-group-title">Dest Fuel Settings</h3>
                     <div class="input-group">
@@ -445,7 +503,6 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
                         <input type="number" id="destFuelThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
                     </div>
                 </div>
-
             </div>
             <div style="margin-top: 15px; text-align: right;">
                 <button onclick="app.toggleSettings()">閉じる</button>
@@ -475,7 +532,17 @@ const app = {
         crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' },
-        actFob: '', actFod: '', // ★ 新設: ACTUAL FUEL保存用
+        actFob: '', actFod: '',
+        // ★ POST-FLIGHT LOG保存用ステート
+        postFlightLog: {
+            region: 'DOM', duty: 'PIC',
+            day: '', type: 'B767', reg: '', flt: '', dep: '', arr: '',
+            depTime: '', arrTime: '', 
+            fltTime: null, picTime: null, sicTime: null, copTime: null,
+            tkof: '', ldg: '', apch: '', 
+            picNgt: null, copNgt: null, imc: null, apchTime: null,
+            memo: ''
+        },
         activeInput: null 
     },
 
@@ -493,6 +560,17 @@ const app = {
             if (this.state.actFod === undefined) this.state.actFod = '';
             if (!this.state.crew || this.state.crew.length === 0) {
                 this.state.crew = [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
+            }
+            if (!this.state.postFlightLog) {
+                this.state.postFlightLog = {
+                    region: 'DOM', duty: 'PIC',
+                    day: '', type: 'B767', reg: '', flt: '', dep: '', arr: '',
+                    depTime: '', arrTime: '', 
+                    fltTime: null, picTime: null, sicTime: null, copTime: null,
+                    tkof: '', ldg: '', apch: '', 
+                    picNgt: null, copNgt: null, imc: null, apchTime: null,
+                    memo: ''
+                };
             }
 
             this.state.waypoints.forEach(wp => {
@@ -517,7 +595,8 @@ const app = {
                 this.updateCrewPanelUI();
                 this.renderCrew();
                 this.renderTimes();
-                this.renderActualFuel(); // ★ FOB/FOD UI復元
+                this.renderActualFuel();
+                this.renderPostFlightLog(); // ★ 復元
                 document.getElementById('tableBody').innerHTML = ''; 
                 this.render();
             }
@@ -681,7 +760,8 @@ const app = {
         this.calculate();
         this.renderCrew();
         this.renderTimes();
-        this.renderActualFuel(); // ★ 読み込み時に表示
+        this.renderActualFuel();
+        this.renderPostFlightLog();
         this.render();
         this.renderFlightMeta();
     },
@@ -800,6 +880,9 @@ const app = {
 
     updateTime(field, val) {
         this.state.times[field] = val;
+        if (field === 'bo' || field === 'bi') {
+            this.calcPostFlightTimes();
+        }
         if (field === 'tkof' && this.state.waypoints.length > 0) {
             this.state.waypoints[0].actualTime = val;
             this.calculate();
@@ -815,7 +898,6 @@ const app = {
         });
     },
 
-    // ★ 新設: ACTUAL FUEL保存・復元処理
     updateActualFuel(field, val) {
         if (field === 'fob') this.state.actFob = val;
         if (field === 'fod') this.state.actFod = val;
@@ -826,6 +908,145 @@ const app = {
         if (fobEl) fobEl.value = this.state.actFob || '';
         const fodEl = document.getElementById('actFod');
         if (fodEl) fodEl.value = this.state.actFod || '';
+    },
+
+    // ★ POST-FLIGHT LOG 関連ロジック
+    parseDurationInput(str) {
+        if (!str || str.trim() === '') return null;
+        str = str.replace(/\s+/g, '');
+        if (str.includes('+')) {
+            let p = str.split('+');
+            return (parseInt(p[0]||0) * 60) + parseInt(p[1]||0);
+        }
+        let num = parseInt(str);
+        if (isNaN(num)) return null;
+        let m = num % 100;
+        let h = Math.floor(num / 100);
+        return (h * 60) + m;
+    },
+
+    formatDuration(min) {
+        if (min === null || isNaN(min)) return '';
+        let h = Math.floor(min / 60);
+        let m = min % 60;
+        return `${h}+${String(m).padStart(2, '0')}`;
+    },
+
+    calcPostFlightTimes() {
+        let bo = this.state.times.bo;
+        let bi = this.state.times.bi;
+        
+        if (bo && bo.length === 4) {
+            let boMin = this.toMin(bo);
+            if (this.state.postFlightLog.region === 'DOM') boMin = (boMin + 9 * 60) % 1440;
+            this.state.postFlightLog.depTime = this.toHHMM(boMin);
+        } else {
+            this.state.postFlightLog.depTime = '';
+        }
+        
+        if (bi && bi.length === 4) {
+            let biMin = this.toMin(bi);
+            if (this.state.postFlightLog.region === 'DOM') biMin = (biMin + 9 * 60) % 1440;
+            this.state.postFlightLog.arrTime = this.toHHMM(biMin);
+        } else {
+            this.state.postFlightLog.arrTime = '';
+        }
+
+        if (bo && bi && bo.length === 4 && bi.length === 4) {
+            let boMin = this.toMin(bo);
+            let biMin = this.toMin(bi);
+            let fltMin = biMin - boMin;
+            if (fltMin < 0) fltMin += 1440; 
+            
+            this.state.postFlightLog.fltTime = fltMin;
+            
+            let duty = this.state.postFlightLog.duty;
+            this.state.postFlightLog.picTime = null;
+            this.state.postFlightLog.sicTime = null;
+            this.state.postFlightLog.copTime = null;
+            
+            if (duty === 'PIC') this.state.postFlightLog.picTime = fltMin;
+            if (duty === 'SIC') this.state.postFlightLog.sicTime = fltMin;
+            if (duty === 'COP') this.state.postFlightLog.copTime = fltMin;
+        } else {
+            this.state.postFlightLog.fltTime = null;
+            this.state.postFlightLog.picTime = null;
+            this.state.postFlightLog.sicTime = null;
+            this.state.postFlightLog.copTime = null;
+        }
+        this.saveConfig();
+        this.renderPostFlightLog();
+    },
+
+    setLogRegion(reg) {
+        this.state.postFlightLog.region = reg;
+        this.calcPostFlightTimes();
+    },
+
+    setLogDuty(duty) {
+        this.state.postFlightLog.duty = duty;
+        this.calcPostFlightTimes();
+    },
+
+    updateLog(key, val) {
+        this.state.postFlightLog[key] = val;
+        this.saveConfig();
+    },
+
+    updateLogDuration(key, val) {
+        let mins = this.parseDurationInput(val);
+        this.state.postFlightLog[key] = mins;
+        
+        if (key === 'fltTime') {
+            let duty = this.state.postFlightLog.duty;
+            this.state.postFlightLog.picTime = null;
+            this.state.postFlightLog.sicTime = null;
+            this.state.postFlightLog.copTime = null;
+            
+            if (duty === 'PIC') this.state.postFlightLog.picTime = mins;
+            if (duty === 'SIC') this.state.postFlightLog.sicTime = mins;
+            if (duty === 'COP') this.state.postFlightLog.copTime = mins;
+        }
+        
+        this.saveConfig();
+        this.renderPostFlightLog();
+    },
+
+    renderPostFlightLog() {
+        const log = this.state.postFlightLog;
+        if (!log) return;
+        
+        document.getElementById('btn_dom').classList.toggle('active', log.region === 'DOM');
+        document.getElementById('btn_int').classList.toggle('active', log.region === 'INT');
+        document.getElementById('btn_pic').classList.toggle('active', log.duty === 'PIC');
+        document.getElementById('btn_sic').classList.toggle('active', log.duty === 'SIC');
+        document.getElementById('btn_cop').classList.toggle('active', log.duty === 'COP');
+
+        document.getElementById('log_day').value = log.day || '';
+        document.getElementById('log_type').value = log.type || 'B767';
+        document.getElementById('log_reg').value = log.reg || '';
+        document.getElementById('log_flt').value = log.flt || '';
+        document.getElementById('log_dep').value = log.dep || '';
+        document.getElementById('log_arr').value = log.arr || '';
+        
+        document.getElementById('log_depTime').value = log.depTime || '';
+        document.getElementById('log_arrTime').value = log.arrTime || '';
+        
+        document.getElementById('log_fltTime').value = this.formatDuration(log.fltTime);
+        document.getElementById('log_picTime').value = this.formatDuration(log.picTime);
+        document.getElementById('log_sicTime').value = this.formatDuration(log.sicTime);
+        document.getElementById('log_copTime').value = this.formatDuration(log.copTime);
+        
+        document.getElementById('log_tkof').value = log.tkof || '';
+        document.getElementById('log_ldg').value = log.ldg || '';
+        document.getElementById('log_apch').value = log.apch || '';
+        
+        document.getElementById('log_picNgt').value = this.formatDuration(log.picNgt);
+        document.getElementById('log_copNgt').value = this.formatDuration(log.copNgt);
+        document.getElementById('log_imc').value = this.formatDuration(log.imc);
+        document.getElementById('log_apchTime').value = this.formatDuration(log.apchTime);
+        
+        document.getElementById('log_memo').value = log.memo || '';
     },
 
     extractFlightMeta(text) {
@@ -854,6 +1075,14 @@ const app = {
                 if (m) meta.altns.push({ name: m[1], fuel: parseFloat(m[2]) > 100 ? parseFloat(m[2])/1000 : parseFloat(m[2]), rsv: globalRsv });
             });
         }
+        
+        // ★ NAVLOGデータからPOST-FLIGHT LOGの初期値を自動設定
+        this.state.postFlightLog.day = meta.date;
+        this.state.postFlightLog.reg = meta.reg;
+        this.state.postFlightLog.flt = meta.flt;
+        this.state.postFlightLog.dep = meta.dep;
+        this.state.postFlightLog.arr = meta.dest;
+        
         this.state.flightMeta = meta; this.renderFlightMeta();
     },
 
@@ -1172,7 +1401,6 @@ const app = {
         document.getElementById('sb-dest-fuel').textContent = destFuelDisp;
         const elFuelDiff = document.getElementById('sb-dest-fuel-diff'); elFuelDiff.textContent = destFuelDiffDisp; elFuelDiff.className = destFuelClass ? `status-badge ${destFuelClass}` : 'status-badge';
 
-        // ★ 警告バッジの動的表示と背景色変更
         const sb = document.getElementById('statusBar');
         const warningEl = document.getElementById('sb-dest-fuel-warning');
         if (finalFuel !== null && this.state.destFuelThreshold > 0 && finalFuel < this.state.destFuelThreshold) {
@@ -1214,7 +1442,12 @@ const app = {
                 crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
                 takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
                 times: { bo: '', bi: '', tkof: '', ldg: '' },
-                actFob: '', actFod: ''
+                actFob: '', actFod: '',
+                postFlightLog: {
+                    region: 'DOM', duty: 'PIC', day: '', type: 'B767', reg: '', flt: '', dep: '', arr: '',
+                    depTime: '', arrTime: '', fltTime: null, picTime: null, sicTime: null, copTime: null,
+                    tkof: '', ldg: '', apch: '', picNgt: null, copNgt: null, imc: null, apchTime: null, memo: ''
+                }
             };
             document.getElementById('flightHeader').style.display = 'none'; document.getElementById('headerInfoCard').style.display = 'none';
             document.getElementById('crewInfoCard').style.display = 'none'; document.getElementById('tableContainer').style.display = 'none';

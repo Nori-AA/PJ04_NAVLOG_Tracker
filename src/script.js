@@ -44,14 +44,20 @@ const app = {
             if (!this.state.times) this.state.times = { bo: '', bi: '', tkof: '', ldg: '' };
             if (!this.state.postFlightLog) {
                 this.state.postFlightLog = {
-                    region: 'DOM', duty: 'PIC',
-                    day: '', type: 'B767', reg: '', flt: '', dep: '', arr: '',
+                    region: 'DOM', duty: 'PIC', day: '', type: 'B767', reg: '', flt: '', dep: '', arr: '',
                     depTime: '', arrTime: '', fltTime: null, picTime: null, sicTime: null, copTime: null,
                     tkof: '', ldg: '', apch: '', picNgt: null, copNgt: null, imc: null, memo: ''
                 };
             }
-            // 互換性チェック: NGT(COP)追加分
             if (this.state.postFlightLog.copNgt === undefined) this.state.postFlightLog.copNgt = null;
+
+            this.state.waypoints.forEach(wp => {
+                if (wp.actualFuel !== undefined) { wp.actualFuelCALC = wp.actualFuel; wp.actualFuelTTL = ''; delete wp.actualFuel; }
+                if (wp.isaDevNum === undefined) wp.isaDevNum = null;
+                if (wp.isaTmp === undefined) wp.isaTmp = null;
+                if (wp.mwtp === undefined) wp.mwtp = '---';
+                if (wp.wscp === undefined) wp.wscp = '---';
+            });
 
             this.renderSettings();
             if (this.state.headerInfo) {
@@ -160,72 +166,46 @@ const app = {
     processData(text) {
         this.extractFlightMeta(text);
         this.extractAndFormatHeaderInfo(text);
-        
         const waypoints = [];
         const rdisMatch = text.match(/([A-Z]{4})\s+\(RDIS\)\s+(\d{3,4}\.\d)/);
         if (rdisMatch) { waypoints.push(this.createWP(rdisMatch[1], "---", "---", "---", "00.00", "---", "0.00", 0, 0, parseFloat(rdisMatch[2]), "", "---", "---")); }
-        
         const regex = /(?:\(\s*\d+\s*\)\s+(?:-\s*){4,6}(?:\(\s*(-?\d+)\s*\))?[\s\S]{1,150}?)?(\d{2}\.\d{2})\s+[NS]\d{5}[EW]\d{5,6}[\s\.]+(\d+\.\d{2})\s+(CLM|DEC|\d{5})?\s*(\d{3}\.\d)\s*([+-]\d{2}|\.{1,2})?\s*(\d{6}|\.{1,2})?\s*([\d\/]{5}|\.{1,2})?[\s\S]{1,150}?(\d{2}\.\d{2})\s+([A-Z0-9\-]{3,})\s+\.\s+(\d{3})\s+FL.*?(?:\s+|\/)(\d{2}|\.{1,2})\s*$/gm;
-        
         let match;
         while ((match = regex.exec(text)) !== null) {
             const isaDevVal = match[1] ? match[1].replace(/\s+/g, '') : '';
-            const ctme = match[2];
-            const ztmeDisplay = match[3];
-            const ztmeMin = this.parseLegTime(ztmeDisplay);
-            const alt = match[4] || '---';
-            const plannedFuel = parseFloat(match[5]);
-            const tmp = (match[6] && !match[6].includes('.')) ? match[6] : '---';
-            let zwind = '---'; 
-            if (match[7] && !match[7].includes('.')) zwind = match[7].substring(0,3) + '/' + match[7].substring(3,6);
-            const mwtp = (match[8] && !match[8].includes('.')) ? match[8] : '---';
-            const rtme = match[9];
-            const name = match[10];
-            const dist = parseInt(match[11], 10);
-            const wscp = (match[12] && !match[12].includes('.')) ? match[12] : '---';
+            const ctme = match[2], ztmeDisplay = match[3], ztmeMin = this.parseLegTime(ztmeDisplay);
+            const alt = match[4] || '---', plannedFuel = parseFloat(match[5]), tmp = (match[6] && !match[6].includes('.')) ? match[6] : '---';
+            let zwind = '---'; if (match[7] && !match[7].includes('.')) zwind = match[7].substring(0,3) + '/' + match[7].substring(3,6);
+            const mwtp = (match[8] && !match[8].includes('.')) ? match[8] : '---', rtme = match[9], name = match[10], dist = parseInt(match[11], 10), wscp = (match[12] && !match[12].includes('.')) ? match[12] : '---';
             waypoints.push(this.createWP(name, alt, tmp, zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel, isaDevVal, mwtp, wscp));
         }
-        
         if (waypoints.length <= 1) return alert("データを抽出できませんでした。正しいNAVLOGテキストか確認してください。");
         if (waypoints.length > 1 && waypoints[1].rtme !== "---") {
             const firstWpRtmeMin = this.parseLegTime(waypoints[1].rtme);
             const firstWpZtmeMin = waypoints[1].ztmeMin;
             waypoints[0].rtme = this.formatLegTime(firstWpRtmeMin + firstWpZtmeMin);
         }
-
-        let cumDist = 0;
-        waypoints.forEach(wp => { cumDist += wp.dist; wp.cumDist = cumDist; });
-        let totalRouteDist = cumDist;
-        waypoints.forEach(wp => { wp.rdis = totalRouteDist - wp.cumDist; });
-        
+        let cumDist = 0; waypoints.forEach(wp => { cumDist += wp.dist; wp.cumDist = cumDist; });
+        let totalRouteDist = cumDist; waypoints.forEach(wp => { wp.rdis = totalRouteDist - wp.cumDist; });
         if (this.state.flightMeta) { this.state.flightMeta.dist = totalRouteDist; }
         this.state.waypoints = waypoints;
         if (this.state.flightMeta && this.state.flightMeta.altns && this.state.flightMeta.altns.length > 0) {
             this.state.altns = this.state.flightMeta.altns;
             this.renderSettings();
         }
-        
         document.getElementById('statusBar').style.display = 'flex';
         document.getElementById('bottomControls').style.display = 'block';
         document.getElementById('inputArea').style.display = 'none';
         document.getElementById('crewInfoCard').style.display = 'block';
-        this.updateCrewPanelUI();
-        this.renderCrew();
-        this.renderTimes();
-        this.renderActualFuel();
-        this.renderPostFlightLog();
-        this.render();
-        this.renderFlightMeta();
+        this.updateCrewPanelUI(); this.renderCrew(); this.renderTimes(); this.renderActualFuel(); this.renderPostFlightLog(); this.render(); this.renderFlightMeta();
     },
 
     toggleCrew() {
         this.state.crewPanelOpen = !this.state.crewPanelOpen;
-        this.saveConfig();
-        this.updateCrewPanelUI();
+        this.saveConfig(); this.updateCrewPanelUI();
     },
     updateCrewPanelUI() {
-        const c = document.getElementById('crewContentEl');
-        const icon = document.getElementById('crew-toggle-icon');
+        const c = document.getElementById('crewContentEl'), icon = document.getElementById('crew-toggle-icon');
         if (this.state.crewPanelOpen) { c.style.display = 'block'; icon.textContent = '▼'; } 
         else { c.style.display = 'none'; icon.textContent = '▶'; }
     },
@@ -235,8 +215,7 @@ const app = {
             const input = prompt(`${field.toUpperCase()} を入力:`);
             if (input !== null && input.trim() !== '') { this.state.crew[index][field] = input.trim().toUpperCase(); }
         } else { this.state.crew[index][field] = val; }
-        this.saveConfig();
-        this.renderCrew();
+        this.saveConfig(); this.renderCrew();
     },
 
     renderCrew() {
@@ -328,11 +307,11 @@ const app = {
 
     updateTime(field, val) {
         this.state.times[field] = val;
+        // B/O または B/I が更新されたら直ちにポストフライトログ計算を実行
         if (field === 'bo' || field === 'bi') { this.calcPostFlightTimes(); }
         if (field === 'tkof' && this.state.waypoints.length > 0) {
             this.state.waypoints[0].actualTime = val;
-            this.calculate();
-            this.render();
+            this.calculate(); this.render();
         } else { this.saveConfig(); }
     },
     renderTimes() {
@@ -353,7 +332,7 @@ const app = {
         if (fodEl) fodEl.value = this.state.actFod || '';
     },
 
-    // ★ POST-FLIGHT LOG 関連ロジック
+    // ★ POST-FLIGHT LOG 関連ロジック (改修版)
     parseDurationInput(str) {
         if (!str || str.trim() === '') return null;
         str = str.replace(/\s+/g, '');
@@ -375,6 +354,8 @@ const app = {
 
     calcPostFlightTimes() {
         let bo = this.state.times.bo, bi = this.state.times.bi;
+        
+        // DEP/ARR TIME の自動入力 (+9h変換含む)
         if (bo && bo.length === 4) {
             let boMin = this.toMin(bo);
             if (this.state.postFlightLog.region === 'DOM') boMin = (boMin + 9 * 60) % 1440;
@@ -387,16 +368,17 @@ const app = {
             this.state.postFlightLog.arrTime = this.toHHMM(biMin);
         } else { this.state.postFlightLog.arrTime = ''; }
 
+        // FLT TIME 計算 (24時間跨ぎ対応)
         if (bo && bi && bo.length === 4 && bi.length === 4) {
             let boMin = this.toMin(bo), biMin = this.toMin(bi);
-            let fltMin = biMin - boMin;
-            if (fltMin < 0) fltMin += 1440; 
+            let fltMin = (biMin - boMin + 1440) % 1440;
             this.state.postFlightLog.fltTime = fltMin;
+            
+            // Dutyに応じた自動転記
             let duty = this.state.postFlightLog.duty;
-            this.state.postFlightLog.picTime = null; this.state.postFlightLog.sicTime = null; this.state.postFlightLog.copTime = null;
-            if (duty === 'PIC') this.state.postFlightLog.picTime = fltMin;
-            else if (duty === 'SIC') this.state.postFlightLog.sicTime = fltMin;
-            else if (duty === 'COP') this.state.postFlightLog.copTime = fltMin;
+            this.state.postFlightLog.picTime = (duty === 'PIC') ? fltMin : null;
+            this.state.postFlightLog.sicTime = (duty === 'SIC') ? fltMin : null;
+            this.state.postFlightLog.copTime = (duty === 'COP') ? fltMin : null;
         } else {
             this.state.postFlightLog.fltTime = null;
             this.state.postFlightLog.picTime = null; this.state.postFlightLog.sicTime = null; this.state.postFlightLog.copTime = null;
@@ -410,9 +392,9 @@ const app = {
     updateLogDuration(key, val) {
         let mins = this.parseDurationInput(val);
         this.state.postFlightLog[key] = mins;
+        // FLT TIMEが手動更新された場合もDutyへ転記
         if (key === 'fltTime') {
             let duty = this.state.postFlightLog.duty;
-            this.state.postFlightLog.picTime = null; this.state.postFlightLog.sicTime = null; this.state.postFlightLog.copTime = null;
             if (duty === 'PIC') this.state.postFlightLog.picTime = mins;
             else if (duty === 'SIC') this.state.postFlightLog.sicTime = mins;
             else if (duty === 'COP') this.state.postFlightLog.copTime = mins;

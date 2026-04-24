@@ -20,7 +20,6 @@ html.theme-dark {
     --behind-color: #e57373; --modified-bg: #1e3a5f; --modified-text: #64b5f6;
     --drm-bg: #000000; --drm-text: #00e676; --input-bg: #2c2c2e;
     --input-border: #48484a; --actual-col-bg: #24221d; --memo-bg: #2c2c2e;
-    --warning-bg: #5c2a2a; 
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -54,7 +53,7 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .crew-table th { font-size: 10px; color: var(--text-faint); text-align: center; padding: 4px 6px; } 
 .crew-table td { padding: 4px 6px; text-align: center; vertical-align: middle; border: none; }
 
-/* ★ POST-FLIGHT LOG (新・横長テーブルスタイル) */
+/* ★ POST-FLIGHT LOG (横長テーブルスタイル改修版) */
 .post-flight-title { font-size: 12px; font-weight: bold; color: var(--text-color); opacity: 0.8; letter-spacing: 1px; }
 .pfl-controls { display: flex; gap: 10px; }
 .pfl-toggle-group { display: flex; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; overflow: hidden; }
@@ -62,9 +61,21 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .pfl-toggle-btn:last-child { border-right: none; }
 .pfl-toggle-btn.active { background: var(--accent-color); color: #fff; }
 
-/* 横スクロールコンテナ */
-.pfl-table-scroll-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); }
-.pfl-table-row { display: flex; min-width: max-content; }
+/* 横スクロールコンテナのパディング調整（スクロールバーの重なり解消） */
+.pfl-table-scroll-container { 
+    width: 100%; 
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch; 
+    border: 1px solid var(--border-color); 
+    border-radius: 6px; 
+    background: var(--card-bg);
+    padding-bottom: 12px; /* スクロールバー用の余白 */
+}
+.pfl-table-row { 
+    display: flex; 
+    min-width: max-content; 
+    border-bottom: 1px solid var(--border-color); /* 入力欄下の明確な仕切り線 */
+}
 
 /* 各列の基本構成 */
 .pfl-col { display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }

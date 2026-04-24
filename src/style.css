@@ -53,7 +53,7 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .crew-table th { font-size: 10px; color: var(--text-faint); text-align: center; padding: 4px 6px; } 
 .crew-table td { padding: 4px 6px; text-align: center; vertical-align: middle; border: none; }
 
-/* ★ POST-FLIGHT LOG (横長テーブルスタイル改修版) */
+/* ★ POST-FLIGHT LOG スタイル */
 .post-flight-title { font-size: 12px; font-weight: bold; color: var(--text-color); opacity: 0.8; letter-spacing: 1px; }
 .pfl-controls { display: flex; gap: 10px; }
 .pfl-toggle-group { display: flex; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; overflow: hidden; }
@@ -61,30 +61,36 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .pfl-toggle-btn:last-child { border-right: none; }
 .pfl-toggle-btn.active { background: var(--accent-color); color: #fff; }
 
-/* 横スクロールコンテナのパディング調整（スクロールバーの重なり解消） */
+/* テーブルコンテナの改修 (余白確保) */
 .pfl-table-scroll-container { 
     width: 100%; 
     overflow-x: auto; 
     -webkit-overflow-scrolling: touch; 
     border: 1px solid var(--border-color); 
     border-radius: 6px; 
-    background: var(--card-bg);
-    padding-bottom: 12px; /* スクロールバー用の余白 */
+    background: var(--card-bg); 
+    padding-bottom: 15px; /* スクロールバーとの重なり防止 */
 }
-.pfl-table-row { 
-    display: flex; 
-    min-width: max-content; 
-    border-bottom: 1px solid var(--border-color); /* 入力欄下の明確な仕切り線 */
-}
+.pfl-table-row { display: flex; min-width: max-content; }
 
-/* 各列の基本構成 */
+/* 列・仕切り線の改修 */
 .pfl-col { display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
-.pfl-th { background: var(--table-header-bg); font-size: 9px; font-weight: 900; color: var(--text-muted); text-align: center; padding: 6px 2px; border-bottom: 1px solid var(--border-color); text-transform: uppercase; white-space: nowrap; }
+.pfl-th { 
+    background: var(--table-header-bg); 
+    font-size: 9px; 
+    font-weight: 900; 
+    color: var(--text-muted); 
+    text-align: center; 
+    padding: 6px 2px; 
+    border-bottom: 2px solid var(--border-color); /* 太めの境界線 */
+    text-transform: uppercase; 
+    white-space: nowrap; 
+}
 .pfl-td { border: none; background: transparent; color: var(--text-color); font-size: 13px; font-weight: bold; font-family: 'SF Mono', monospace; text-align: center; padding: 8px 4px; outline: none; border-radius: 0; width: 100%; }
 .pfl-td:focus { background: rgba(52, 152, 219, 0.15); }
 select.pfl-td { appearance: none; -webkit-appearance: none; padding-left: 4px; text-align-last: center; }
 
-/* 項目別の最適幅設定 */
+/* 各項目の幅 */
 .col-day { width: 70px; }
 .col-type { width: 80px; }
 .col-reg { width: 80px; }
@@ -94,8 +100,6 @@ select.pfl-td { appearance: none; -webkit-appearance: none; padding-left: 4px; t
 .col-flt { width: 100px; }
 .col-dur { width: 80px; }
 .col-apch { width: 100px; }
-
-/* オプション項目の隙間 */
 .pfl-col-optional { margin-left: 30px; border-left: 1px solid var(--border-color); }
 
 .card-drm { background: var(--drm-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
@@ -103,7 +107,7 @@ select.pfl-td { appearance: none; -webkit-appearance: none; padding-left: 4px; t
 .drm-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
 .drm-content { display: block; font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: var(--drm-text); padding: 15px; max-height: 350px; overflow: auto; -webkit-overflow-scrolling: touch; }
 
-/* StatusBar 基本スタイル */
+/* StatusBar */
 .status-bar { 
     padding: 15px; border-radius: 10px; margin-bottom: 12px; background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
     position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
@@ -112,14 +116,12 @@ select.pfl-td { appearance: none; -webkit-appearance: none; padding-left: 4px; t
 .status-bar.status-warning { background-color: var(--warning-bg) !important; }
 .dest-warning-badge { font-size: 10px; font-weight: bold; color: white; background-color: var(--danger-color); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 
-/* StatusBar: インデント階層デザイン */
 .status-section { display: flex; flex-direction: column; }
 .status-title { display: block; font-size: 11px; opacity: 0.7; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; text-align: left; }
 .status-content { margin-left: 15px; }
 .status-value { font-size: 22px; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; line-height: 1; }
 .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
 
-/* 入力フォーム最適化 */
 .input-group-inline { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
 .input-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
 .status-input { background: transparent; border: none; color: #fff; font-size: 16px; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }

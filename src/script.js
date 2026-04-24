@@ -38,9 +38,9 @@ const app = {
             const parsed = JSON.parse(saved);
             this.state = { ...this.state, ...parsed };
             
+            // データ初期化・マイグレーション
             if (!this.state.altns || this.state.altns.length === 0) this.state.altns = [{name:'', fuel:0, rsv:0}];
             if (!this.state.fuelCalcBasis) this.state.fuelCalcBasis = 'CALC';
-            if (this.state.destFuelThreshold === undefined) this.state.destFuelThreshold = 0;
             if (!this.state.times) this.state.times = { bo: '', bi: '', tkof: '', ldg: '' };
             if (!this.state.postFlightLog) {
                 this.state.postFlightLog = {
@@ -50,14 +50,6 @@ const app = {
                 };
             }
             if (this.state.postFlightLog.copNgt === undefined) this.state.postFlightLog.copNgt = null;
-
-            this.state.waypoints.forEach(wp => {
-                if (wp.actualFuel !== undefined) { wp.actualFuelCALC = wp.actualFuel; wp.actualFuelTTL = ''; delete wp.actualFuel; }
-                if (wp.isaDevNum === undefined) wp.isaDevNum = null;
-                if (wp.isaTmp === undefined) wp.isaTmp = null;
-                if (wp.mwtp === undefined) wp.mwtp = '---';
-                if (wp.wscp === undefined) wp.wscp = '---';
-            });
 
             this.renderSettings();
             if (this.state.headerInfo) {
@@ -81,7 +73,6 @@ const app = {
         } else {
             this.renderSettings();
         }
-        
         this.setupFocusScrollBehavior();
         this.updateThemeButton();
         window.addEventListener('resize', this.updateStickyHeight);
@@ -118,7 +109,6 @@ const app = {
         localStorage.setItem('navlog_theme', isDark ? 'dark' : 'light');
         this.updateThemeButton();
     },
-    
     updateThemeButton() {
         const btn = document.getElementById('themeToggleBtn');
         if(btn) {
@@ -126,14 +116,12 @@ const app = {
             btn.innerHTML = isDark ? '☀️ DAY' : '🌙 NGT';
         }
     },
-
     updateStickyHeight() {
         const sb = document.getElementById('statusBar');
         if (sb && sb.style.display !== 'none') {
             document.documentElement.style.setProperty('--sb-height', sb.offsetHeight + 'px');
         }
     },
-
     scrollToRow(index) {
         const row = document.getElementById(`row-${index}`);
         if (row) {
@@ -241,7 +229,6 @@ const app = {
         });
     },
 
-    updateCrew(index, field, val) { this.state.crew[index][field] = val.toUpperCase(); this.saveConfig(); },
     updateCrewPilot(type, id) {
         if (type === 'takeoff') this.state.takeoffPilotId = id;
         if (type === 'landing') this.state.landingPilotId = id;
@@ -272,7 +259,6 @@ const app = {
         this.state.altns.forEach((altn, idx) => {
             const div = document.createElement('div'); div.className = 'input-group';
             div.innerHTML = `
-                <label style="font-size: 10px;">ALTN ${idx + 1} (AP / Fuel / RSV)</label>
                 <div style="display: flex; gap: 5px;">
                     <input type="text" id="altnName_${idx}" style="width: 55px; text-transform: uppercase;" placeholder="AP" value="${altn.name}" onchange="app.saveAltnConfig()">
                     <input type="number" id="altnFuel_${idx}" step="0.1" style="width: 65px;" placeholder="ALTN" value="${altn.fuel || ''}" onchange="app.saveAltnConfig()">
@@ -297,7 +283,6 @@ const app = {
         this.saveConfig();
     },
     changeFuelBasis() { this.state.fuelCalcBasis = document.getElementById('fuelCalcBasis').value; this.saveConfig(); this.calculate(); this.render(); },
-    
     saveConfig() {
         this.state.alertThreshold = parseFloat(document.getElementById('alertThreshold').value) || 0;
         this.state.destFuelThreshold = parseFloat(document.getElementById('destFuelThreshold').value) || 0;
@@ -332,7 +317,7 @@ const app = {
         if (fodEl) fodEl.value = this.state.actFod || '';
     },
 
-    // ★ POST-FLIGHT LOG 関連ロジック (改修版)
+    // ★ POST-FLIGHT LOG ロジック
     parseDurationInput(str) {
         if (!str || str.trim() === '') return null;
         str = str.replace(/\s+/g, '');
@@ -355,18 +340,17 @@ const app = {
     calcPostFlightTimes() {
         let bo = this.state.times.bo, bi = this.state.times.bi;
         
-        // DEP/ARR TIME の自動入力 (+9h変換含む)
+        // DEP/ARR TIME の自動入力 (+9h変換)
         if (bo && bo.length === 4) {
             let boMin = this.toMin(bo);
             if (this.state.postFlightLog.region === 'DOM') boMin = (boMin + 9 * 60) % 1440;
             this.state.postFlightLog.depTime = this.toHHMM(boMin);
-        } else { this.state.postFlightLog.depTime = ''; }
-        
+        }
         if (bi && bi.length === 4) {
             let biMin = this.toMin(bi);
             if (this.state.postFlightLog.region === 'DOM') biMin = (biMin + 9 * 60) % 1440;
             this.state.postFlightLog.arrTime = this.toHHMM(biMin);
-        } else { this.state.postFlightLog.arrTime = ''; }
+        }
 
         // FLT TIME 計算 (24時間跨ぎ対応)
         if (bo && bi && bo.length === 4 && bi.length === 4) {
@@ -374,14 +358,11 @@ const app = {
             let fltMin = (biMin - boMin + 1440) % 1440;
             this.state.postFlightLog.fltTime = fltMin;
             
-            // Dutyに応じた自動転記
+            // 現在選択されているDutyへの自動転記
             let duty = this.state.postFlightLog.duty;
             this.state.postFlightLog.picTime = (duty === 'PIC') ? fltMin : null;
             this.state.postFlightLog.sicTime = (duty === 'SIC') ? fltMin : null;
             this.state.postFlightLog.copTime = (duty === 'COP') ? fltMin : null;
-        } else {
-            this.state.postFlightLog.fltTime = null;
-            this.state.postFlightLog.picTime = null; this.state.postFlightLog.sicTime = null; this.state.postFlightLog.copTime = null;
         }
         this.saveConfig(); this.renderPostFlightLog();
     },
@@ -392,12 +373,11 @@ const app = {
     updateLogDuration(key, val) {
         let mins = this.parseDurationInput(val);
         this.state.postFlightLog[key] = mins;
-        // FLT TIMEが手動更新された場合もDutyへ転記
         if (key === 'fltTime') {
-            let duty = this.state.postFlightLog.duty;
-            if (duty === 'PIC') this.state.postFlightLog.picTime = mins;
-            else if (duty === 'SIC') this.state.postFlightLog.sicTime = mins;
-            else if (duty === 'COP') this.state.postFlightLog.copTime = mins;
+            let d = this.state.postFlightLog.duty;
+            if (d === 'PIC') this.state.postFlightLog.picTime = mins;
+            else if (d === 'SIC') this.state.postFlightLog.sicTime = mins;
+            else if (d === 'COP') this.state.postFlightLog.copTime = mins;
         }
         this.saveConfig(); this.renderPostFlightLog();
     },
@@ -409,6 +389,7 @@ const app = {
         document.getElementById('btn_pic').classList.toggle('active', log.duty === 'PIC');
         document.getElementById('btn_sic').classList.toggle('active', log.duty === 'SIC');
         document.getElementById('btn_cop').classList.toggle('active', log.duty === 'COP');
+        
         document.getElementById('log_day').value = log.day || '';
         document.getElementById('log_type').value = log.type || 'B767';
         document.getElementById('log_reg').value = log.reg || '';
@@ -417,13 +398,15 @@ const app = {
         document.getElementById('log_arr').value = log.arr || '';
         document.getElementById('log_depTime').value = log.depTime || '';
         document.getElementById('log_arrTime').value = log.arrTime || '';
-        document.getElementById('log_fltTime').value = this.formatDuration(log.fltTime);
+        
+        // H+MM 表示
         document.getElementById('log_picTime').value = this.formatDuration(log.picTime);
         document.getElementById('log_sicTime').value = this.formatDuration(log.sicTime);
         document.getElementById('log_picNgt').value = this.formatDuration(log.picNgt);
         document.getElementById('log_copTime').value = this.formatDuration(log.copTime);
         document.getElementById('log_copNgt').value = this.formatDuration(log.copNgt);
         document.getElementById('log_imc').value = this.formatDuration(log.imc);
+        
         document.getElementById('log_tkof').value = log.tkof || '';
         document.getElementById('log_ldg').value = log.ldg || '';
         document.getElementById('log_apch').value = log.apch || '';
@@ -439,23 +422,11 @@ const app = {
             meta.flt = routeMatch[1]; meta.dep = routeMatch[2]; meta.dest = routeMatch[3]; meta.altn = routeMatch[4].trim(); meta.time = routeMatch[5];
             const staMatch = meta.time.match(/(?:STA|ETA)\s+(\d{4})Z/); if (staMatch) meta.sta = staMatch[1];
         }
-        const btFtMatch = text.match(/B\/T\s+(\d{2}HR\d{2}MIN)\s+F\/T\s+(\d{2}HR\d{2}MIN)/); if (btFtMatch) { meta.bt = btFtMatch[1]; meta.ft = btFtMatch[2]; }
-        let globalRsv = 0; const rsvMatch = text.match(/^RSV\s+\d{2}\/\d{2}\s+(\d+)/m); 
-        if (rsvMatch) { 
-            let val = parseFloat(rsvMatch[1]); 
-            globalRsv = val > 100 ? val / 1000 : val; 
-            if(globalRsv > 0) this.state.destFuelThreshold = globalRsv; 
-        }
-        const altMatch = text.match(/^ALT\s+(.*)/m);
-        if (altMatch) {
-            const altnParts = altMatch[1].match(/([A-Z0-9]{4})\s+\d{2}\/\d{2}\s+(\d+)/g);
-            if (altnParts) altnParts.forEach(p => {
-                const m = p.match(/([A-Z0-9]{4})\s+\d{2}\/\d{2}\s+(\d+)/);
-                if (m) meta.altns.push({ name: m[1], fuel: parseFloat(m[2]) > 100 ? parseFloat(m[2])/1000 : parseFloat(m[2]), rsv: globalRsv });
-            });
-        }
-        this.state.postFlightLog.day = meta.date; this.state.postFlightLog.reg = meta.reg;
-        this.state.postFlightLog.flt = meta.flt; this.state.postFlightLog.dep = meta.dep; this.state.postFlightLog.arr = meta.dest;
+        this.state.postFlightLog.day = meta.date; 
+        this.state.postFlightLog.reg = meta.reg;
+        this.state.postFlightLog.flt = meta.flt;
+        this.state.postFlightLog.dep = meta.dep; 
+        this.state.postFlightLog.arr = meta.dest;
         this.state.flightMeta = meta; this.renderFlightMeta();
     },
 

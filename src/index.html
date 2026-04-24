@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.6.1 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.6.3 (Offline EFB)</title>
 
     <script>
         try {
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.6.1</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.6.3</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -69,11 +69,11 @@
                     <span class="post-flight-title">📋 POST-FLIGHT LOG (LOGBOOK SYSTEM STYLE)</span>
                     <div class="pfl-controls">
                         <div class="pfl-toggle-group">
-                            <button id="btn_dom" class="pfl-toggle-btn active" onclick="app.setLogRegion('DOM')">DOM</button>
+                            <button id="btn_dom" class="pfl-toggle-btn" onclick="app.setLogRegion('DOM')">DOM</button>
                             <button id="btn_int" class="pfl-toggle-btn" onclick="app.setLogRegion('INT')">INT</button>
                         </div>
                         <div class="pfl-toggle-group">
-                            <button id="btn_pic" class="pfl-toggle-btn active" onclick="app.setLogDuty('PIC')">PIC</button>
+                            <button id="btn_pic" class="pfl-toggle-btn" onclick="app.setLogDuty('PIC')">PIC</button>
                             <button id="btn_sic" class="pfl-toggle-btn" onclick="app.setLogDuty('SIC')">SIC</button>
                             <button id="btn_cop" class="pfl-toggle-btn" onclick="app.setLogDuty('COP')">COP</button>
                         </div>
@@ -99,7 +99,7 @@
                                 <option value=""></option><option value="1">1</option><option value="N1">N1</option>
                             </select>
                         </div>
-                        <div class="pfl-col col-flt"><span class="pfl-th">FLT NUMBER</span><input type="text" id="log_flt" class="pfl-td" onchange="app.updateLog('flt', this.value)"></div>
+                        <div class="pfl-col col-flt"><span class="pfl-th">FLT#</span><input type="text" id="log_flt" class="pfl-td" onchange="app.updateLog('flt', this.value)"></div>
                         <div class="pfl-col col-dur"><span class="pfl-th">PIC TIME</span><input type="text" id="log_picTime" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('picTime', this.value)"></div>
                         <div class="pfl-col col-dur"><span class="pfl-th">SIC TIME</span><input type="text" id="log_sicTime" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('sicTime', this.value)"></div>
                         <div class="pfl-col col-dur"><span class="pfl-th">NGT(PIC/SIC)</span><input type="text" id="log_picNgt" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('picNgt', this.value)"></div>
@@ -128,6 +128,7 @@
 
     <div class="status-bar" id="statusBar" style="display:none;">
         <div style="display: flex; gap: 20px; width: 100%; flex-wrap: wrap;">
+            
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
                 <div class="status-section">
                     <span class="status-title">ACTUAL TIMES</span>
@@ -152,14 +153,16 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="status-section">
-                    <span class="status-title">EST. ARRIVAL (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px;"></span></span>
+                    <span class="status-title">EST. ARRIVAL (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
                     <div class="status-content status-value-group" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <span id="sb-eta" class="status-value">--</span>
                         <span id="sb-eta-diff" class="status-badge"></span>
                     </div>
                 </div>
             </div>
+
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div class="status-section">
@@ -178,7 +181,7 @@
                         </div>
                     </div>
                     <div class="status-section">
-                        <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px;"></span></span>
+                        <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
                         <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <span id="sb-dest-fuel" class="status-value">--</span>
                             <span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span>

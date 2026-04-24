@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.7.1 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.6.0 (Offline EFB)</title>
 
     <script>
         try {
@@ -21,124 +21,116 @@
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.7.1</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.6.0</h1>
 
-    <div class="print-header-container">
-        
-        <div class="print-left-col">
-            <div class="flight-header" id="flightHeader" style="display: none;">
-                <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
-                <div class="fh-details">
-                    <div class="fh-item"><span class="fh-label">FLIGHT</span><span class="fh-val" id="fh-flt">---</span></div>
-                    <div class="fh-item"><span class="fh-label">DATE</span><span class="fh-val" id="fh-date">---</span></div>
-                    <div class="fh-item"><span class="fh-label">REG</span><span class="fh-val" id="fh-reg">---</span></div>
-                    <div class="fh-item"><span class="fh-label">ROUTE</span><span class="fh-val" id="fh-route">---</span></div>
-                    <div class="fh-item"><span class="fh-label">ALTN</span><span class="fh-val" id="fh-altn">---</span></div>
-                    <div class="fh-item"><span class="fh-label">TIME</span><span class="fh-val" id="fh-time">---</span></div>
-                    <div class="fh-item"><span class="fh-label">B/T</span><span class="fh-val" id="fh-bt">---</span></div>
-                    <div class="fh-item"><span class="fh-label">F/T</span><span class="fh-val" id="fh-ft">---</span></div>
-                    <div class="fh-item"><span class="fh-label">TTL DIST</span><span class="fh-val" id="fh-dist">---</span></div>
-                </div>
+    <div class="flight-header" id="flightHeader" style="display: none;">
+        <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
+        <div class="fh-details">
+            <div class="fh-item"><span class="fh-label">FLIGHT</span><span class="fh-val" id="fh-flt">---</span></div>
+            <div class="fh-item"><span class="fh-label">DATE</span><span class="fh-val" id="fh-date">---</span></div>
+            <div class="fh-item"><span class="fh-label">REG</span><span class="fh-val" id="fh-reg">---</span></div>
+            <div class="fh-item"><span class="fh-label">ROUTE</span><span class="fh-val" id="fh-route">---</span></div>
+            <div class="fh-item"><span class="fh-label">ALTN</span><span class="fh-val" id="fh-altn">---</span></div>
+            <div class="fh-item"><span class="fh-label">TIME</span><span class="fh-val" id="fh-time">---</span></div>
+            <div class="fh-item"><span class="fh-label">B/T</span><span class="fh-val" id="fh-bt">---</span></div>
+            <div class="fh-item"><span class="fh-label">F/T</span><span class="fh-val" id="fh-ft">---</span></div>
+            <div class="fh-item"><span class="fh-label">TTL DIST</span><span class="fh-val" id="fh-dist">---</span></div>
+        </div>
+    </div>
+
+    <div class="card-crew no-print" id="crewInfoCard" style="display:none;">
+        <div class="crew-header" onclick="app.toggleCrew()">
+            <span class="crew-title">👨‍✈️ CREW INFO & POST-FLIGHT LOG</span>
+            <span id="crew-toggle-icon" style="color: #fff; opacity: 0.7;">▼</span>
+        </div>
+        <div id="crewContentEl" class="crew-content" style="display:block;">
+            <table class="crew-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">T/O</th>
+                        <th style="width: 40px;">LDG</th>
+                        <th style="width: 90px;">DUTY</th>
+                        <th style="width: 120px;">EMP NO</th>
+                        <th style="width: 200px; text-align: left; padding-left: 10px;">NAME</th>
+                        <th style="width: 90px;">RANK</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="crewTableBody"></tbody>
+            </table>
+            <div style="text-align: left; margin-top: 10px; margin-left: 15px; margin-bottom: 15px;">
+                <button class="btn-secondary btn-small" onclick="app.addCrew()">➕ 追加</button>
             </div>
 
-            <div class="card-crew" id="crewInfoCard" style="display:none;">
-                <div class="crew-header" onclick="app.toggleCrew()">
-                    <span class="crew-title">👨‍✈️ CREW INFO & POST-FLIGHT LOG</span>
-                    <span id="crew-toggle-icon" style="color: #fff; opacity: 0.7;">▼</span>
+            <div class="pfl-section">
+                <div class="pfl-header-controls">
+                    <div class="pfl-toggle-group">
+                        <button id="btnPflDom" class="pfl-btn active" onclick="app.setPflToggle('domInt', 'DOM')">DOM</button>
+                        <button id="btnPflInt" class="pfl-btn" onclick="app.setPflToggle('domInt', 'INT')">INT</button>
+                    </div>
+                    <div class="pfl-toggle-group" style="margin-left: 10px;">
+                        <button id="btnPflPic" class="pfl-btn active" onclick="app.setPflToggle('activeDuty', 'PIC')">PIC</button>
+                        <button id="btnPflSic" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'SIC')">SIC</button>
+                        <button id="btnPflCop" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'COP')">COP</button>
+                    </div>
+                    <div style="margin-left: auto;">
+                        <button class="btn-secondary btn-small" id="btnPflCsv" onclick="app.copyPflToCsv()" style="font-weight: bold;">📋 CSVコピー (Shortcut用)</button>
+                    </div>
                 </div>
-                <div id="crewContentEl" class="crew-content" style="display:block;">
-                    <table class="crew-table">
+                <div class="pfl-scroll-wrapper">
+                    <table class="pfl-table">
                         <thead>
                             <tr>
-                                <th style="width: 40px;">T/O</th>
-                                <th style="width: 40px;">LDG</th>
-                                <th style="width: 90px;">DUTY</th>
-                                <th style="width: 120px;">EMP NO</th>
-                                <th style="width: 200px; text-align: left; padding-left: 10px;">NAME</th>
-                                <th style="width: 90px;">RANK</th>
-                                <th style="width: 40px;" class="no-print"></th>
+                                <th>DAY</th><th>TYPE</th><th>REG</th><th>DEP</th><th>ARR</th>
+                                <th>DEP TIME</th><th>ARR TIME</th><th>TKOF</th><th>LDG</th>
+                                <th>FLT NUMBER</th><th>FLT TIME</th><th>PIC TIME</th>
+                                <th>SIC TIME</th><th>NGT(PIC/SIC)</th><th>COP TIME</th>
+                                <th>NGT(COP)</th><th>IMC</th>
+                                <th style="min-width: 30px;"></th>
+                                <th>APCH TYPE</th>
                             </tr>
                         </thead>
-                        <tbody id="crewTableBody"></tbody>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" class="pfl-input" id="pfl_day" onchange="app.updatePfl('day', this.value)"></td>
+                                <td><input type="text" class="pfl-input narrow" id="pfl_type" onchange="app.updatePfl('type', this.value)"></td>
+                                <td><input type="text" class="pfl-input narrow" id="pfl_reg" onchange="app.updatePfl('reg', this.value)"></td>
+                                <td><input type="text" class="pfl-input narrow" id="pfl_dep" onchange="app.updatePfl('dep', this.value)"></td>
+                                <td><input type="text" class="pfl-input narrow" id="pfl_arr" onchange="app.updatePfl('arr', this.value)"></td>
+                                
+                                <td><input type="text" class="pfl-input narrow" id="pfl_depTime" inputmode="numeric" maxlength="4" onchange="app.updatePfl('depTime', this.value)"></td>
+                                <td><input type="text" class="pfl-input narrow" id="pfl_arrTime" inputmode="numeric" maxlength="4" onchange="app.updatePfl('arrTime', this.value)"></td>
+                                
+                                <td><select class="pfl-input narrow" id="pfl_tkof" onchange="app.updatePfl('tkof', this.value)"><option value=""></option><option value="1">1</option><option value="N1">N1</option></select></td>
+                                <td><select class="pfl-input narrow" id="pfl_ldg" onchange="app.updatePfl('ldg', this.value)"><option value=""></option><option value="1">1</option><option value="N1">N1</option></select></td>
+                                
+                                <td><input type="text" class="pfl-input wide" id="pfl_fltNumber" onchange="app.updatePfl('fltNumber', this.value)"></td>
+                                
+                                <td><input type="text" class="pfl-input narrow" id="pfl_fltTime" onchange="app.updatePfl('fltTime', this.value, true)"></td>
+                                <td><input type="text" class="pfl-input narrow" id="pfl_picTime" onchange="app.updatePfl('picTime', this.value, true)"></td>
+                                <td><input type="text" class="pfl-input narrow" id="pfl_sicTime" onchange="app.updatePfl('sicTime', this.value, true)"></td>
+                                <td><input type="text" class="pfl-input narrow" id="pfl_ngtPicSic" onchange="app.updatePfl('ngtPicSic', this.value, true)"></td>
+                                <td><input type="text" class="pfl-input narrow" id="pfl_copTime" onchange="app.updatePfl('copTime', this.value, true)"></td>
+                                <td><input type="text" class="pfl-input narrow" id="pfl_ngtCop" onchange="app.updatePfl('ngtCop', this.value, true)"></td>
+                                <td><input type="text" class="pfl-input narrow" id="pfl_imc" onchange="app.updatePfl('imc', this.value, true)"></td>
+                                
+                                <td></td> <td><input type="text" class="pfl-input wide" id="pfl_apchType" onchange="app.updatePfl('apchType', this.value)"></td>
+                            </tr>
+                        </tbody>
                     </table>
-                    
-                    <div style="text-align: left; margin-top: 10px; margin-left: 15px; margin-bottom: 15px;" class="no-print">
-                        <button class="btn-secondary btn-small" onclick="app.addCrew()">➕ 追加</button>
-                    </div>
+                </div>
+            </div>
+            </div>
+    </div>
 
-                    <div class="pfl-section">
-                        <div class="pfl-header-controls no-print">
-                            <div class="pfl-toggle-group">
-                                <button id="btnPflDom" class="pfl-btn active" onclick="app.setPflToggle('domInt', 'DOM')">DOM</button>
-                                <button id="btnPflInt" class="pfl-btn" onclick="app.setPflToggle('domInt', 'INT')">INT</button>
-                            </div>
-                            <div class="pfl-toggle-group" style="margin-left: 10px;">
-                                <button id="btnPflPic" class="pfl-btn active" onclick="app.setPflToggle('activeDuty', 'PIC')">PIC</button>
-                                <button id="btnPflSic" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'SIC')">SIC</button>
-                                <button id="btnPflCop" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'COP')">COP</button>
-                            </div>
-                            <div style="margin-left: auto;">
-                                <button class="btn-secondary btn-small" id="btnPflCsv" onclick="app.copyPflToCsv()" style="font-weight: bold;">📋 CSVコピー (Shortcut用)</button>
-                            </div>
-                        </div>
-                        <div class="pfl-scroll-wrapper">
-                            <table class="pfl-table">
-                                <thead>
-                                    <tr>
-                                        <th>DAY</th><th>TYPE</th><th>REG</th><th>DEP</th><th>ARR</th>
-                                        <th>DEP TIME</th><th>ARR TIME</th><th>TKOF</th><th>LDG</th>
-                                        <th>FLT NUMBER</th><th>FLT TIME</th><th>PIC TIME</th>
-                                        <th>SIC TIME</th><th>NGT(PIC/SIC)</th><th>COP TIME</th>
-                                        <th>NGT(COP)</th><th>IMC</th>
-                                        <th style="min-width: 30px;" class="no-print"></th>
-                                        <th>APCH TYPE</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><input type="text" class="pfl-input" id="pfl_day" onchange="app.updatePfl('day', this.value)"></td>
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_type" onchange="app.updatePfl('type', this.value)"></td>
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_reg" onchange="app.updatePfl('reg', this.value)"></td>
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_dep" onchange="app.updatePfl('dep', this.value)"></td>
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_arr" onchange="app.updatePfl('arr', this.value)"></td>
-                                        
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_depTime" inputmode="numeric" maxlength="4" onchange="app.updatePfl('depTime', this.value)"></td>
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_arrTime" inputmode="numeric" maxlength="4" onchange="app.updatePfl('arrTime', this.value)"></td>
-                                        
-                                        <td><select class="pfl-input narrow" id="pfl_tkof" onchange="app.updatePfl('tkof', this.value)"><option value=""></option><option value="1">1</option><option value="N1">N1</option></select></td>
-                                        <td><select class="pfl-input narrow" id="pfl_ldg" onchange="app.updatePfl('ldg', this.value)"><option value=""></option><option value="1">1</option><option value="N1">N1</option></select></td>
-                                        
-                                        <td><input type="text" class="pfl-input wide" id="pfl_fltNumber" onchange="app.updatePfl('fltNumber', this.value)"></td>
-                                        
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_fltTime" onchange="app.updatePfl('fltTime', this.value, true)"></td>
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_picTime" onchange="app.updatePfl('picTime', this.value, true)"></td>
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_sicTime" onchange="app.updatePfl('sicTime', this.value, true)"></td>
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_ngtPicSic" onchange="app.updatePfl('ngtPicSic', this.value, true)"></td>
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_copTime" onchange="app.updatePfl('copTime', this.value, true)"></td>
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_ngtCop" onchange="app.updatePfl('ngtCop', this.value, true)"></td>
-                                        <td><input type="text" class="pfl-input narrow" id="pfl_imc" onchange="app.updatePfl('imc', this.value, true)"></td>
-                                        
-                                        <td class="no-print"></td>
-                                        
-                                        <td><input type="text" class="pfl-input wide" id="pfl_apchType" onchange="app.updatePfl('apchType', this.value)"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="card-drm" id="headerInfoCard" style="display:none;">
+        <div class="drm-header no-print" onclick="app.toggleHeader()">
+            <span class="drm-title">[ DISPATCH RELEASE MESSAGE ]</span>
+            <span id="drm-toggle-icon" style="color: var(--text-faint);">▼</span>
         </div>
-        <div class="print-right-col">
-            <div class="card-drm" id="headerInfoCard" style="display:none;">
-                <div class="drm-header" onclick="app.toggleHeader()">
-                    <span class="drm-title">[ DISPATCH RELEASE MESSAGE ]</span>
-                    <span id="drm-toggle-icon" style="color: var(--text-faint);" class="no-print">▼</span>
-                </div>
-                <div class="drm-content" id="headerInfoContent"></div>
-            </div>
-        </div>
-        </div>
+        <div class="drm-content" id="headerInfoContent"></div>
+    </div>
+
     <div class="status-bar" id="statusBar" style="display:none;">
         <div style="display: flex; gap: 20px; width: 100%; flex-wrap: wrap;">
             

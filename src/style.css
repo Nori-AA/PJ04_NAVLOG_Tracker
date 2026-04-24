@@ -8,7 +8,7 @@
     --drm-bg: #0c0c0c; --drm-text: #00ff41; --input-bg: #ffffff;
     --input-border: #ccc; --actual-col-bg: #fff9e6; --memo-bg: #eef2f5;
     --sb-height: 85px; 
-    --warning-bg: #8a3324;
+    --warning-bg: #5c2a2a; /* 暗めの赤茶色 */
 }
 
 html.theme-dark {
@@ -20,7 +20,7 @@ html.theme-dark {
     --behind-color: #e57373; --modified-bg: #1e3a5f; --modified-text: #64b5f6;
     --drm-bg: #000000; --drm-text: #00e676; --input-bg: #2c2c2e;
     --input-border: #48484a; --actual-col-bg: #24221d; --memo-bg: #2c2c2e;
-    --warning-bg: #5c2a2a;
+    --warning-bg: #5c2a2a; /* 暗めの赤茶色 */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -65,7 +65,10 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
     position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
     transition: background-color 0.3s ease;
 }
-.status-bar.status-warning { background-color: var(--warning-bg); }
+
+/* ★ 警告スタイル */
+.status-bar.status-warning { background-color: var(--warning-bg) !important; }
+.dest-warning-badge { font-size: 10px; font-weight: bold; color: white; background-color: var(--danger-color); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 
 /* ★ StatusBar: インデント階層デザイン */
 .status-section { display: flex; flex-direction: column; }
@@ -74,14 +77,15 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .status-value { font-size: 22px; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; line-height: 1; }
 .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
 
-/* ★ 時間入力グリッドの最適化 */
-.time-inputs { display: grid; grid-template-columns: max-content max-content; gap: 8px; }
-.time-input-wrap { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
-.time-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
-/* 入力欄の幅を60pxに制限し、高さをスマートに */
-.input-time { width: 60px; background: transparent; border: none; color: #fff; font-size: 16px; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
-.input-time::placeholder { color: rgba(255,255,255,0.3); }
-.input-time:focus { border-bottom: 1px solid #fff; }
+/* ★ 入力フォームの共通・個別最適化 */
+.input-group-inline { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
+.input-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
+.status-input { background: transparent; border: none; color: #fff; font-size: 16px; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
+.status-input::placeholder { color: rgba(255,255,255,0.3); }
+.status-input:focus { border-bottom: 1px solid #fff; }
+/* 幅の調整 */
+.input-time { width: 60px; }
+.fuel-input { width: 75px; }
 
 .table-container { 
     background: var(--card-bg); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; 

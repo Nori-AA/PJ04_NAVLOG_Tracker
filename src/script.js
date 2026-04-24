@@ -19,6 +19,7 @@ const app = {
         crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' },
+        actFob: '', actFod: '', // ★ 新設: ACTUAL FUEL保存用
         activeInput: null 
     },
 
@@ -32,6 +33,8 @@ const app = {
             if (!this.state.fuelCalcBasis) this.state.fuelCalcBasis = 'CALC';
             if (this.state.destFuelThreshold === undefined) this.state.destFuelThreshold = 0;
             if (!this.state.times) this.state.times = { bo: '', bi: '', tkof: '', ldg: '' };
+            if (this.state.actFob === undefined) this.state.actFob = '';
+            if (this.state.actFod === undefined) this.state.actFod = '';
             if (!this.state.crew || this.state.crew.length === 0) {
                 this.state.crew = [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
             }
@@ -58,6 +61,7 @@ const app = {
                 this.updateCrewPanelUI();
                 this.renderCrew();
                 this.renderTimes();
+                this.renderActualFuel(); // ★ FOB/FOD UI復元
                 document.getElementById('tableBody').innerHTML = ''; 
                 this.render();
             }
@@ -221,6 +225,7 @@ const app = {
         this.calculate();
         this.renderCrew();
         this.renderTimes();
+        this.renderActualFuel(); // ★ 読み込み時に表示
         this.render();
         this.renderFlightMeta();
     },
@@ -352,6 +357,19 @@ const app = {
             const el = document.getElementById('time_' + f);
             if (el) el.value = this.state.times[f] || '';
         });
+    },
+
+    // ★ 新設: ACTUAL FUEL保存・復元処理
+    updateActualFuel(field, val) {
+        if (field === 'fob') this.state.actFob = val;
+        if (field === 'fod') this.state.actFod = val;
+        this.saveConfig();
+    },
+    renderActualFuel() {
+        const fobEl = document.getElementById('actFob');
+        if (fobEl) fobEl.value = this.state.actFob || '';
+        const fodEl = document.getElementById('actFod');
+        if (fodEl) fodEl.value = this.state.actFod || '';
     },
 
     extractFlightMeta(text) {
@@ -698,11 +716,15 @@ const app = {
         document.getElementById('sb-dest-fuel').textContent = destFuelDisp;
         const elFuelDiff = document.getElementById('sb-dest-fuel-diff'); elFuelDiff.textContent = destFuelDiffDisp; elFuelDiff.className = destFuelClass ? `status-badge ${destFuelClass}` : 'status-badge';
 
+        // ★ 警告バッジの動的表示と背景色変更
         const sb = document.getElementById('statusBar');
+        const warningEl = document.getElementById('sb-dest-fuel-warning');
         if (finalFuel !== null && this.state.destFuelThreshold > 0 && finalFuel < this.state.destFuelThreshold) {
             sb.classList.add('status-warning');
+            if (warningEl) warningEl.innerHTML = '<span class="dest-warning-badge">⚠️ LOW FUEL</span>';
         } else {
             sb.classList.remove('status-warning');
+            if (warningEl) warningEl.innerHTML = '';
         }
 
         const container = document.getElementById('sb-avail-fuel-container'); container.innerHTML = '';
@@ -735,7 +757,8 @@ const app = {
                 waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
                 crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
                 takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
-                times: { bo: '', bi: '', tkof: '', ldg: '' }
+                times: { bo: '', bi: '', tkof: '', ldg: '' },
+                actFob: '', actFod: ''
             };
             document.getElementById('flightHeader').style.display = 'none'; document.getElementById('headerInfoCard').style.display = 'none';
             document.getElementById('crewInfoCard').style.display = 'none'; document.getElementById('tableContainer').style.display = 'none';
@@ -744,6 +767,7 @@ const app = {
             document.getElementById('inputArea').style.display = 'block';
             this.renderSettings();
             this.renderTimes();
+            this.renderActualFuel();
         }
     }
 };

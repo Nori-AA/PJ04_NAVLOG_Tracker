@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.6.1 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.6.3 (Offline EFB)</title>
 
     <script>
         try {
@@ -73,7 +73,7 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .crew-table th { font-size: 10px; color: var(--text-faint); text-align: center; padding: 4px 6px; } 
 .crew-table td { padding: 4px 6px; text-align: center; vertical-align: middle; border: none; }
 
-/* ★ POST-FLIGHT LOG (横長テーブルスタイル改修版) */
+/* ★ POST-FLIGHT LOG スタイル */
 .post-flight-title { font-size: 12px; font-weight: bold; color: var(--text-color); opacity: 0.8; letter-spacing: 1px; }
 .pfl-controls { display: flex; gap: 10px; }
 .pfl-toggle-group { display: flex; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; overflow: hidden; }
@@ -81,30 +81,36 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .pfl-toggle-btn:last-child { border-right: none; }
 .pfl-toggle-btn.active { background: var(--accent-color); color: #fff; }
 
-/* 横スクロールコンテナのパディング調整（スクロールバーの重なり解消） */
+/* テーブルコンテナの改修 (余白確保) */
 .pfl-table-scroll-container { 
     width: 100%; 
     overflow-x: auto; 
     -webkit-overflow-scrolling: touch; 
     border: 1px solid var(--border-color); 
     border-radius: 6px; 
-    background: var(--card-bg);
-    padding-bottom: 12px; /* スクロールバー用の余白 */
+    background: var(--card-bg); 
+    padding-bottom: 15px; /* スクロールバーとの重なり防止 */
 }
-.pfl-table-row { 
-    display: flex; 
-    min-width: max-content; 
-    border-bottom: 1px solid var(--border-color); /* 入力欄下の明確な仕切り線 */
-}
+.pfl-table-row { display: flex; min-width: max-content; }
 
-/* 各列の基本構成 */
+/* 列・仕切り線の改修 */
 .pfl-col { display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
-.pfl-th { background: var(--table-header-bg); font-size: 9px; font-weight: 900; color: var(--text-muted); text-align: center; padding: 6px 2px; border-bottom: 1px solid var(--border-color); text-transform: uppercase; white-space: nowrap; }
+.pfl-th { 
+    background: var(--table-header-bg); 
+    font-size: 9px; 
+    font-weight: 900; 
+    color: var(--text-muted); 
+    text-align: center; 
+    padding: 6px 2px; 
+    border-bottom: 2px solid var(--border-color); /* 太めの境界線 */
+    text-transform: uppercase; 
+    white-space: nowrap; 
+}
 .pfl-td { border: none; background: transparent; color: var(--text-color); font-size: 13px; font-weight: bold; font-family: 'SF Mono', monospace; text-align: center; padding: 8px 4px; outline: none; border-radius: 0; width: 100%; }
 .pfl-td:focus { background: rgba(52, 152, 219, 0.15); }
 select.pfl-td { appearance: none; -webkit-appearance: none; padding-left: 4px; text-align-last: center; }
 
-/* 項目別の最適幅設定 */
+/* 各項目の幅 */
 .col-day { width: 70px; }
 .col-type { width: 80px; }
 .col-reg { width: 80px; }
@@ -114,8 +120,6 @@ select.pfl-td { appearance: none; -webkit-appearance: none; padding-left: 4px; t
 .col-flt { width: 100px; }
 .col-dur { width: 80px; }
 .col-apch { width: 100px; }
-
-/* オプション項目の隙間 */
 .pfl-col-optional { margin-left: 30px; border-left: 1px solid var(--border-color); }
 
 .card-drm { background: var(--drm-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
@@ -123,7 +127,7 @@ select.pfl-td { appearance: none; -webkit-appearance: none; padding-left: 4px; t
 .drm-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
 .drm-content { display: block; font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: var(--drm-text); padding: 15px; max-height: 350px; overflow: auto; -webkit-overflow-scrolling: touch; }
 
-/* StatusBar 基本スタイル */
+/* StatusBar */
 .status-bar { 
     padding: 15px; border-radius: 10px; margin-bottom: 12px; background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
     position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
@@ -132,14 +136,12 @@ select.pfl-td { appearance: none; -webkit-appearance: none; padding-left: 4px; t
 .status-bar.status-warning { background-color: var(--warning-bg) !important; }
 .dest-warning-badge { font-size: 10px; font-weight: bold; color: white; background-color: var(--danger-color); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 
-/* StatusBar: インデント階層デザイン */
 .status-section { display: flex; flex-direction: column; }
 .status-title { display: block; font-size: 11px; opacity: 0.7; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; text-align: left; }
 .status-content { margin-left: 15px; }
 .status-value { font-size: 22px; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; line-height: 1; }
 .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
 
-/* 入力フォーム最適化 */
 .input-group-inline { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
 .input-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
 .status-input { background: transparent; border: none; color: #fff; font-size: 16px; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
@@ -274,7 +276,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.6.1</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.6.3</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -322,11 +324,11 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
                     <span class="post-flight-title">📋 POST-FLIGHT LOG (LOGBOOK SYSTEM STYLE)</span>
                     <div class="pfl-controls">
                         <div class="pfl-toggle-group">
-                            <button id="btn_dom" class="pfl-toggle-btn active" onclick="app.setLogRegion('DOM')">DOM</button>
+                            <button id="btn_dom" class="pfl-toggle-btn" onclick="app.setLogRegion('DOM')">DOM</button>
                             <button id="btn_int" class="pfl-toggle-btn" onclick="app.setLogRegion('INT')">INT</button>
                         </div>
                         <div class="pfl-toggle-group">
-                            <button id="btn_pic" class="pfl-toggle-btn active" onclick="app.setLogDuty('PIC')">PIC</button>
+                            <button id="btn_pic" class="pfl-toggle-btn" onclick="app.setLogDuty('PIC')">PIC</button>
                             <button id="btn_sic" class="pfl-toggle-btn" onclick="app.setLogDuty('SIC')">SIC</button>
                             <button id="btn_cop" class="pfl-toggle-btn" onclick="app.setLogDuty('COP')">COP</button>
                         </div>
@@ -352,7 +354,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
                                 <option value=""></option><option value="1">1</option><option value="N1">N1</option>
                             </select>
                         </div>
-                        <div class="pfl-col col-flt"><span class="pfl-th">FLT NUMBER</span><input type="text" id="log_flt" class="pfl-td" onchange="app.updateLog('flt', this.value)"></div>
+                        <div class="pfl-col col-flt"><span class="pfl-th">FLT#</span><input type="text" id="log_flt" class="pfl-td" onchange="app.updateLog('flt', this.value)"></div>
                         <div class="pfl-col col-dur"><span class="pfl-th">PIC TIME</span><input type="text" id="log_picTime" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('picTime', this.value)"></div>
                         <div class="pfl-col col-dur"><span class="pfl-th">SIC TIME</span><input type="text" id="log_sicTime" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('sicTime', this.value)"></div>
                         <div class="pfl-col col-dur"><span class="pfl-th">NGT(PIC/SIC)</span><input type="text" id="log_picNgt" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('picNgt', this.value)"></div>
@@ -381,6 +383,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 
     <div class="status-bar" id="statusBar" style="display:none;">
         <div style="display: flex; gap: 20px; width: 100%; flex-wrap: wrap;">
+            
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
                 <div class="status-section">
                     <span class="status-title">ACTUAL TIMES</span>
@@ -405,14 +408,16 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
                         </div>
                     </div>
                 </div>
+
                 <div class="status-section">
-                    <span class="status-title">EST. ARRIVAL (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px;"></span></span>
+                    <span class="status-title">EST. ARRIVAL (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
                     <div class="status-content status-value-group" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <span id="sb-eta" class="status-value">--</span>
                         <span id="sb-eta-diff" class="status-badge"></span>
                     </div>
                 </div>
             </div>
+
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div class="status-section">
@@ -431,7 +436,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
                         </div>
                     </div>
                     <div class="status-section">
-                        <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px;"></span></span>
+                        <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
                         <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <span id="sb-dest-fuel" class="status-value">--</span>
                             <span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span>
@@ -572,9 +577,9 @@ const app = {
             const parsed = JSON.parse(saved);
             this.state = { ...this.state, ...parsed };
             
+            // データ初期化・マイグレーション
             if (!this.state.altns || this.state.altns.length === 0) this.state.altns = [{name:'', fuel:0, rsv:0}];
             if (!this.state.fuelCalcBasis) this.state.fuelCalcBasis = 'CALC';
-            if (this.state.destFuelThreshold === undefined) this.state.destFuelThreshold = 0;
             if (!this.state.times) this.state.times = { bo: '', bi: '', tkof: '', ldg: '' };
             if (!this.state.postFlightLog) {
                 this.state.postFlightLog = {
@@ -584,14 +589,6 @@ const app = {
                 };
             }
             if (this.state.postFlightLog.copNgt === undefined) this.state.postFlightLog.copNgt = null;
-
-            this.state.waypoints.forEach(wp => {
-                if (wp.actualFuel !== undefined) { wp.actualFuelCALC = wp.actualFuel; wp.actualFuelTTL = ''; delete wp.actualFuel; }
-                if (wp.isaDevNum === undefined) wp.isaDevNum = null;
-                if (wp.isaTmp === undefined) wp.isaTmp = null;
-                if (wp.mwtp === undefined) wp.mwtp = '---';
-                if (wp.wscp === undefined) wp.wscp = '---';
-            });
 
             this.renderSettings();
             if (this.state.headerInfo) {
@@ -615,7 +612,6 @@ const app = {
         } else {
             this.renderSettings();
         }
-        
         this.setupFocusScrollBehavior();
         this.updateThemeButton();
         window.addEventListener('resize', this.updateStickyHeight);
@@ -652,7 +648,6 @@ const app = {
         localStorage.setItem('navlog_theme', isDark ? 'dark' : 'light');
         this.updateThemeButton();
     },
-    
     updateThemeButton() {
         const btn = document.getElementById('themeToggleBtn');
         if(btn) {
@@ -660,14 +655,12 @@ const app = {
             btn.innerHTML = isDark ? '☀️ DAY' : '🌙 NGT';
         }
     },
-
     updateStickyHeight() {
         const sb = document.getElementById('statusBar');
         if (sb && sb.style.display !== 'none') {
             document.documentElement.style.setProperty('--sb-height', sb.offsetHeight + 'px');
         }
     },
-
     scrollToRow(index) {
         const row = document.getElementById(`row-${index}`);
         if (row) {
@@ -775,7 +768,6 @@ const app = {
         });
     },
 
-    updateCrew(index, field, val) { this.state.crew[index][field] = val.toUpperCase(); this.saveConfig(); },
     updateCrewPilot(type, id) {
         if (type === 'takeoff') this.state.takeoffPilotId = id;
         if (type === 'landing') this.state.landingPilotId = id;
@@ -806,7 +798,6 @@ const app = {
         this.state.altns.forEach((altn, idx) => {
             const div = document.createElement('div'); div.className = 'input-group';
             div.innerHTML = `
-                <label style="font-size: 10px;">ALTN ${idx + 1} (AP / Fuel / RSV)</label>
                 <div style="display: flex; gap: 5px;">
                     <input type="text" id="altnName_${idx}" style="width: 55px; text-transform: uppercase;" placeholder="AP" value="${altn.name}" onchange="app.saveAltnConfig()">
                     <input type="number" id="altnFuel_${idx}" step="0.1" style="width: 65px;" placeholder="ALTN" value="${altn.fuel || ''}" onchange="app.saveAltnConfig()">
@@ -831,7 +822,6 @@ const app = {
         this.saveConfig();
     },
     changeFuelBasis() { this.state.fuelCalcBasis = document.getElementById('fuelCalcBasis').value; this.saveConfig(); this.calculate(); this.render(); },
-    
     saveConfig() {
         this.state.alertThreshold = parseFloat(document.getElementById('alertThreshold').value) || 0;
         this.state.destFuelThreshold = parseFloat(document.getElementById('destFuelThreshold').value) || 0;
@@ -866,7 +856,7 @@ const app = {
         if (fodEl) fodEl.value = this.state.actFod || '';
     },
 
-    // ★ POST-FLIGHT LOG 関連ロジック (改修版)
+    // ★ POST-FLIGHT LOG ロジック
     parseDurationInput(str) {
         if (!str || str.trim() === '') return null;
         str = str.replace(/\s+/g, '');
@@ -889,18 +879,17 @@ const app = {
     calcPostFlightTimes() {
         let bo = this.state.times.bo, bi = this.state.times.bi;
         
-        // DEP/ARR TIME の自動入力 (+9h変換含む)
+        // DEP/ARR TIME の自動入力 (+9h変換)
         if (bo && bo.length === 4) {
             let boMin = this.toMin(bo);
             if (this.state.postFlightLog.region === 'DOM') boMin = (boMin + 9 * 60) % 1440;
             this.state.postFlightLog.depTime = this.toHHMM(boMin);
-        } else { this.state.postFlightLog.depTime = ''; }
-        
+        }
         if (bi && bi.length === 4) {
             let biMin = this.toMin(bi);
             if (this.state.postFlightLog.region === 'DOM') biMin = (biMin + 9 * 60) % 1440;
             this.state.postFlightLog.arrTime = this.toHHMM(biMin);
-        } else { this.state.postFlightLog.arrTime = ''; }
+        }
 
         // FLT TIME 計算 (24時間跨ぎ対応)
         if (bo && bi && bo.length === 4 && bi.length === 4) {
@@ -908,14 +897,11 @@ const app = {
             let fltMin = (biMin - boMin + 1440) % 1440;
             this.state.postFlightLog.fltTime = fltMin;
             
-            // Dutyに応じた自動転記
+            // 現在選択されているDutyへの自動転記
             let duty = this.state.postFlightLog.duty;
             this.state.postFlightLog.picTime = (duty === 'PIC') ? fltMin : null;
             this.state.postFlightLog.sicTime = (duty === 'SIC') ? fltMin : null;
             this.state.postFlightLog.copTime = (duty === 'COP') ? fltMin : null;
-        } else {
-            this.state.postFlightLog.fltTime = null;
-            this.state.postFlightLog.picTime = null; this.state.postFlightLog.sicTime = null; this.state.postFlightLog.copTime = null;
         }
         this.saveConfig(); this.renderPostFlightLog();
     },
@@ -926,12 +912,11 @@ const app = {
     updateLogDuration(key, val) {
         let mins = this.parseDurationInput(val);
         this.state.postFlightLog[key] = mins;
-        // FLT TIMEが手動更新された場合もDutyへ転記
         if (key === 'fltTime') {
-            let duty = this.state.postFlightLog.duty;
-            if (duty === 'PIC') this.state.postFlightLog.picTime = mins;
-            else if (duty === 'SIC') this.state.postFlightLog.sicTime = mins;
-            else if (duty === 'COP') this.state.postFlightLog.copTime = mins;
+            let d = this.state.postFlightLog.duty;
+            if (d === 'PIC') this.state.postFlightLog.picTime = mins;
+            else if (d === 'SIC') this.state.postFlightLog.sicTime = mins;
+            else if (d === 'COP') this.state.postFlightLog.copTime = mins;
         }
         this.saveConfig(); this.renderPostFlightLog();
     },
@@ -943,6 +928,7 @@ const app = {
         document.getElementById('btn_pic').classList.toggle('active', log.duty === 'PIC');
         document.getElementById('btn_sic').classList.toggle('active', log.duty === 'SIC');
         document.getElementById('btn_cop').classList.toggle('active', log.duty === 'COP');
+        
         document.getElementById('log_day').value = log.day || '';
         document.getElementById('log_type').value = log.type || 'B767';
         document.getElementById('log_reg').value = log.reg || '';
@@ -951,13 +937,15 @@ const app = {
         document.getElementById('log_arr').value = log.arr || '';
         document.getElementById('log_depTime').value = log.depTime || '';
         document.getElementById('log_arrTime').value = log.arrTime || '';
-        document.getElementById('log_fltTime').value = this.formatDuration(log.fltTime);
+        
+        // H+MM 表示
         document.getElementById('log_picTime').value = this.formatDuration(log.picTime);
         document.getElementById('log_sicTime').value = this.formatDuration(log.sicTime);
         document.getElementById('log_picNgt').value = this.formatDuration(log.picNgt);
         document.getElementById('log_copTime').value = this.formatDuration(log.copTime);
         document.getElementById('log_copNgt').value = this.formatDuration(log.copNgt);
         document.getElementById('log_imc').value = this.formatDuration(log.imc);
+        
         document.getElementById('log_tkof').value = log.tkof || '';
         document.getElementById('log_ldg').value = log.ldg || '';
         document.getElementById('log_apch').value = log.apch || '';
@@ -973,23 +961,11 @@ const app = {
             meta.flt = routeMatch[1]; meta.dep = routeMatch[2]; meta.dest = routeMatch[3]; meta.altn = routeMatch[4].trim(); meta.time = routeMatch[5];
             const staMatch = meta.time.match(/(?:STA|ETA)\s+(\d{4})Z/); if (staMatch) meta.sta = staMatch[1];
         }
-        const btFtMatch = text.match(/B\/T\s+(\d{2}HR\d{2}MIN)\s+F\/T\s+(\d{2}HR\d{2}MIN)/); if (btFtMatch) { meta.bt = btFtMatch[1]; meta.ft = btFtMatch[2]; }
-        let globalRsv = 0; const rsvMatch = text.match(/^RSV\s+\d{2}\/\d{2}\s+(\d+)/m); 
-        if (rsvMatch) { 
-            let val = parseFloat(rsvMatch[1]); 
-            globalRsv = val > 100 ? val / 1000 : val; 
-            if(globalRsv > 0) this.state.destFuelThreshold = globalRsv; 
-        }
-        const altMatch = text.match(/^ALT\s+(.*)/m);
-        if (altMatch) {
-            const altnParts = altMatch[1].match(/([A-Z0-9]{4})\s+\d{2}\/\d{2}\s+(\d+)/g);
-            if (altnParts) altnParts.forEach(p => {
-                const m = p.match(/([A-Z0-9]{4})\s+\d{2}\/\d{2}\s+(\d+)/);
-                if (m) meta.altns.push({ name: m[1], fuel: parseFloat(m[2]) > 100 ? parseFloat(m[2])/1000 : parseFloat(m[2]), rsv: globalRsv });
-            });
-        }
-        this.state.postFlightLog.day = meta.date; this.state.postFlightLog.reg = meta.reg;
-        this.state.postFlightLog.flt = meta.flt; this.state.postFlightLog.dep = meta.dep; this.state.postFlightLog.arr = meta.dest;
+        this.state.postFlightLog.day = meta.date; 
+        this.state.postFlightLog.reg = meta.reg;
+        this.state.postFlightLog.flt = meta.flt;
+        this.state.postFlightLog.dep = meta.dep; 
+        this.state.postFlightLog.arr = meta.dest;
         this.state.flightMeta = meta; this.renderFlightMeta();
     },
 

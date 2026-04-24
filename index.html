@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.2.5 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.3.0 (Offline EFB)</title>
 
     <script>
         try {
@@ -28,6 +28,7 @@
     --drm-bg: #0c0c0c; --drm-text: #00ff41; --input-bg: #ffffff;
     --input-border: #ccc; --actual-col-bg: #fff9e6; --memo-bg: #eef2f5;
     --sb-height: 85px; 
+    --warning-bg: #8a3324; /* 落ち着いた赤茶色（DAY） */
 }
 
 html.theme-dark {
@@ -39,6 +40,7 @@ html.theme-dark {
     --behind-color: #e57373; --modified-bg: #1e3a5f; --modified-text: #64b5f6;
     --drm-bg: #000000; --drm-text: #00e676; --input-bg: #2c2c2e;
     --input-border: #48484a; --actual-col-bg: #24221d; --memo-bg: #2c2c2e;
+    --warning-bg: #5c2a2a; /* 落ち着いた暗めの赤茶色（NGT） */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -77,13 +79,24 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .drm-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
 .drm-content { display: block; font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: var(--drm-text); padding: 15px; max-height: 350px; overflow: auto; -webkit-overflow-scrolling: touch; }
 
+/* ★ StatusBar 変更 */
 .status-bar { 
     display: flex; flex-direction: column; gap: 8px; padding: 12px 15px; border-radius: 10px; margin-bottom: 12px; font-weight: bold; background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
     position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
+    transition: background-color 0.3s ease;
 }
+.status-bar.status-warning { background-color: var(--warning-bg); }
 
-.status-bar .row { display: flex; justify-content: space-between; align-items: flex-end; }
+.status-bar .row { display: flex; justify-content: space-between; align-items: flex-start; }
 .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; margin-left: 6px; }
+
+/* 時間入力グリッド */
+.sb-times-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.time-input-wrap { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 8px; }
+.time-label { font-size: 11px; color: #aed6f1; width: 35px; text-align: left; }
+.input-time { width: 50px; background: transparent; border: none; color: #fff; font-size: 16px; font-family: monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
+.input-time::placeholder { color: rgba(255,255,255,0.3); }
+.input-time:focus { border-bottom: 1px solid #fff; }
 
 .table-container { 
     background: var(--card-bg); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; 
@@ -132,6 +145,10 @@ table { width: 100%; min-width: 970px; margin: 0 auto; table-layout: fixed; bord
 .input-actual { width: 75px; height: 38px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 6px; font-size: 16px; font-weight: bold; background: var(--input-bg); color: var(--text-color); display: block; }
 .input-actual-half { width: 75px; height: 18px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 4px; font-size: 13px; font-weight: bold; background: var(--input-bg); color: var(--text-color); padding: 0; display: block; }
 .input-actual-half::placeholder { font-weight: normal; font-size: 10px; color: var(--text-faint); }
+
+/* ★ 読み取り専用(ロック)入力欄のスタイル */
+input[readonly] { background-color: rgba(0, 0, 0, 0.05); color: var(--text-muted); cursor: not-allowed; border-color: transparent; }
+html.theme-dark input[readonly] { background-color: rgba(255, 255, 255, 0.05); }
 
 input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
@@ -203,7 +220,7 @@ button { padding: 12px 18px; border: none; border-radius: 8px; background: var(-
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.2.5</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.3.0</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -255,27 +272,50 @@ button { padding: 12px 18px; border: none; border-radius: 8px; background: var(-
     </div>
 
     <div class="status-bar" id="statusBar" style="display:none;">
-        <div class="row">
-            <div>
+        <div class="row" style="align-items: center;">
+            <div class="sb-times-grid">
+                <div class="time-input-wrap">
+                    <span class="time-label">B/O</span>
+                    <input type="text" id="time_bo" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bo', this.value)">
+                </div>
+                <div class="time-input-wrap">
+                    <span class="time-label">B/I</span>
+                    <input type="text" id="time_bi" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bi', this.value)">
+                </div>
+                <div class="time-input-wrap">
+                    <span class="time-label">TKOF</span>
+                    <input type="text" id="time_tkof" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('tkof', this.value)">
+                </div>
+                <div class="time-input-wrap">
+                    <span class="time-label">LDG</span>
+                    <input type="text" id="time_ldg" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('ldg', this.value)">
+                </div>
+            </div>
+            
+            <div style="text-align: right;">
                 <span style="font-size: 11px; opacity: 0.7; text-transform: uppercase;">Est. Arrival (ETA)</span>
                 <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px;"></span><br>
-                <span id="sb-eta" style="font-size: 22px; font-family: monospace; letter-spacing: -0.5px;">--</span>
+                <span id="sb-eta" style="font-size: 24px; font-family: monospace; letter-spacing: -0.5px;">--</span>
                 <span id="sb-eta-diff" class="status-badge"></span>
             </div>
-            <div style="text-align: right;">
-                <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-right: 8px;"></span>
-                <span style="font-size: 11px; opacity: 0.7; text-transform: uppercase;">Fuel at Dest</span><br>
-                <span id="sb-dest-fuel" style="font-size: 22px; font-family: monospace; letter-spacing: -0.5px;">--</span>
-                <span id="sb-dest-fuel-diff" class="status-badge"></span>
+        </div>
+
+        <div class="row" style="padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); justify-content: flex-end;">
+            <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-bottom: 2px;"></span>
+                <span style="font-size: 12px; opacity: 0.7; text-transform: uppercase;">Fuel at Dest</span>
+                <div style="margin-bottom: 8px;">
+                    <span id="sb-dest-fuel" style="font-size: 28px; font-weight: 900; font-family: monospace; letter-spacing: -0.5px; color: #fff;">--</span>
+                    <span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span>
+                </div>
+                
+                <div style="width: 100%; display: flex; flex-direction: column; align-items: flex-end;">
+                    <span style="font-size: 10px; opacity: 0.6; text-transform: uppercase; margin-bottom: 4px;">Available Fuel Margin</span>
+                    <div id="sb-avail-fuel-container" style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; background: rgba(0,0,0,0.15); padding: 6px 10px; border-radius: 6px;"></div>
+                </div>
             </div>
         </div>
-        <div class="row" style="padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.15);">
-            <div style="width: 100%;">
-                <span style="font-size: 11px; opacity: 0.7; text-transform: uppercase;">Available Fuel Margin</span>
-                <div id="sb-avail-fuel-container" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;"></div>
-            </div>
-        </div>
-        <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 2px;">
+        <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 4px;">
             <span style="font-size: 10px; opacity: 0.5;">FMS CALCULATION ACTIVE</span>
         </div>
     </div>
@@ -285,7 +325,7 @@ button { padding: 12px 18px; border: none; border-radius: 8px; background: var(-
             📋 クリップボードから読み込む
         </button>
         <div style="margin-top: 20px; text-align: center;">
-            <span style="font-size: 12px; color: var(--text-faint); display: block; margin-bottom: 10px;">または手動でファイルを選択</span>
+            <span style="font-size: 12px; color: var(--text-faint); display: block; margin-bottom: 10px;">または手持でファイルを選択</span>
             <label for="fileInput" class="file-upload-btn">📁 ファイルを選択</label>
             <input type="file" id="fileInput" accept=".txt" style="display: none;" onchange="app.handleFileUpload(event)">
         </div>
@@ -333,6 +373,12 @@ button { padding: 12px 18px; border: none; border-radius: 8px; background: var(-
                 <div id="altnSettingsContainer" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;"></div>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <button class="btn-secondary btn-small" onclick="app.addAltn()">➕ ALTN 追加</button>
+                    
+                    <div class="input-group">
+                        <label>Dest Fuel Warning Threshold</label>
+                        <input type="number" id="destFuelThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
+                    </div>
+
                     <div class="input-group">
                         <label>Fuel Diff Basis</label>
                         <select id="fuelCalcBasis" style="width: 100px;" onchange="app.changeFuelBasis()">
@@ -341,8 +387,8 @@ button { padding: 12px 18px; border: none; border-radius: 8px; background: var(-
                         </select>
                     </div>
                     <div class="input-group">
-                        <label>Alert Threshold</label>
-                        <input type="number" id="alertThreshold" step="0.1" value="0" style="width: 80px;" onchange="app.saveConfig()">
+                        <label>Margin Alert Threshold</label>
+                        <input type="number" id="alertThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
                     </div>
                     <button onclick="app.toggleSettings()">閉じる</button>
                 </div>
@@ -368,10 +414,11 @@ window.addEventListener('keydown', function(event) {
 
 const app = {
     state: { 
-        waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
+        waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
-        activeInput: null // フォーカス中の要素を記憶
+        times: { bo: '', bi: '', tkof: '', ldg: '' }, // ★ 新設：4つの時間管理
+        activeInput: null 
     },
 
     init() {
@@ -382,6 +429,8 @@ const app = {
             
             if (!this.state.altns || this.state.altns.length === 0) this.state.altns = [{name:'', fuel:0, rsv:0}];
             if (!this.state.fuelCalcBasis) this.state.fuelCalcBasis = 'CALC';
+            if (this.state.destFuelThreshold === undefined) this.state.destFuelThreshold = 0;
+            if (!this.state.times) this.state.times = { bo: '', bi: '', tkof: '', ldg: '' };
             if (!this.state.crew || this.state.crew.length === 0) {
                 this.state.crew = [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
             }
@@ -407,6 +456,7 @@ const app = {
                 document.getElementById('crewInfoCard').style.display = 'block';
                 this.updateCrewPanelUI();
                 this.renderCrew();
+                this.renderTimes(); // ★ 時間UI復元
                 document.getElementById('tableBody').innerHTML = ''; 
                 this.render();
             }
@@ -569,6 +619,7 @@ const app = {
         document.getElementById('tableBody').innerHTML = ''; 
         this.calculate();
         this.renderCrew();
+        this.renderTimes();
         this.render();
         this.renderFlightMeta();
     },
@@ -643,6 +694,11 @@ const app = {
     renderSettings() {
         const container = document.getElementById('altnSettingsContainer'); container.innerHTML = '';
         document.getElementById('alertThreshold').value = this.state.alertThreshold || 0;
+        
+        // ★ destFuelThreshold のUI反映
+        const destThEl = document.getElementById('destFuelThreshold');
+        if (destThEl) destThEl.value = this.state.destFuelThreshold || 0;
+
         const basisEl = document.getElementById('fuelCalcBasis'); if(basisEl) basisEl.value = this.state.fuelCalcBasis || 'CALC';
 
         this.state.altns.forEach((altn, idx) => {
@@ -673,10 +729,31 @@ const app = {
         this.saveConfig();
     },
     changeFuelBasis() { this.state.fuelCalcBasis = document.getElementById('fuelCalcBasis').value; this.saveConfig(); this.calculate(); this.render(); },
+    
     saveConfig() {
         this.state.alertThreshold = parseFloat(document.getElementById('alertThreshold').value) || 0;
+        this.state.destFuelThreshold = parseFloat(document.getElementById('destFuelThreshold').value) || 0; // ★ 保存
         try { localStorage.setItem('navlog_v25_data', JSON.stringify(this.state)); } catch(e){}
         this.renderStatusBar(); 
+    },
+
+    // ★ ステータスバーの時間管理・連動
+    updateTime(field, val) {
+        this.state.times[field] = val;
+        // TKOFの場合は表の最初のWPのActual Timeに自動反映し、再計算する
+        if (field === 'tkof' && this.state.waypoints.length > 0) {
+            this.state.waypoints[0].actualTime = val;
+            this.calculate();
+            this.render();
+        } else {
+            this.saveConfig();
+        }
+    },
+    renderTimes() {
+        ['bo', 'bi', 'tkof', 'ldg'].forEach(f => {
+            const el = document.getElementById('time_' + f);
+            if (el) el.value = this.state.times[f] || '';
+        });
     },
 
     extractFlightMeta(text) {
@@ -689,7 +766,15 @@ const app = {
             const staMatch = meta.time.match(/(?:STA|ETA)\s+(\d{4})Z/); if (staMatch) meta.sta = staMatch[1];
         }
         const btFtMatch = text.match(/B\/T\s+(\d{2}HR\d{2}MIN)\s+F\/T\s+(\d{2}HR\d{2}MIN)/); if (btFtMatch) { meta.bt = btFtMatch[1]; meta.ft = btFtMatch[2]; }
-        let globalRsv = 0; const rsvMatch = text.match(/^RSV\s+\d{2}\/\d{2}\s+(\d+)/m); if (rsvMatch) { let val = parseFloat(rsvMatch[1]); globalRsv = val > 100 ? val / 1000 : val; }
+        
+        // ★ RSV値の抽出と閾値への自動適用
+        let globalRsv = 0; const rsvMatch = text.match(/^RSV\s+\d{2}\/\d{2}\s+(\d+)/m); 
+        if (rsvMatch) { 
+            let val = parseFloat(rsvMatch[1]); 
+            globalRsv = val > 100 ? val / 1000 : val; 
+            if(globalRsv > 0) this.state.destFuelThreshold = globalRsv; 
+        }
+        
         const altMatch = text.match(/^ALT\s+(.*)/m);
         if (altMatch) {
             const altnParts = altMatch[1].match(/([A-Z0-9]{4})\s+\d{2}\/\d{2}\s+(\d+)/g);
@@ -747,7 +832,7 @@ const app = {
             }
             if (line.includes('-FUEL PLAN')) { inFuelPlan = true; formattedLines.push('■ FUEL PLAN'); continue; }
             if (inFuelPlan) {
-                if (line.includes('TIME') && line.includes('FUEL')) { formattedLines.push('     DEST   TIME   FUEL     DEST   TIME   FUEL     REMARKS\n----------------------------------------------------------------------'); continue; }
+                if (line.includes('TIME') && line.includes('FUEL')) { formattedLines.push('     DEST   TIME   FUEL      DEST   TIME   FUEL      REMARKS\n----------------------------------------------------------------------'); continue; }
                 if (line.startsWith('FOD=') || line.startsWith('CPT') || line.startsWith('DIV') || line.startsWith('TXI') || line.startsWith('CRIT F')) { formattedLines.push(line); continue; }
                 const keyMatch = ['BOF','CON','RSV','ALT','TAX','REQ','PCF','EXT','FOB'].find(k => line.startsWith(k));
                 if (keyMatch) {
@@ -788,7 +873,16 @@ const app = {
 
     update(i, field, val) {
         if (field === 'actualAlt' && val !== '') { let cleanVal = val.toUpperCase().replace(/^FL/, '').trim(); val = /^\d{2,3}$/.test(cleanVal) ? cleanVal + "00" : cleanVal; }
-        this.state.waypoints[i][field] = val; this.calculate(); this.render();
+        this.state.waypoints[i][field] = val; 
+        
+        // ★ 万が一1行目の時間が直接編集された場合はTKOFと同期する
+        if(i === 0 && field === 'actualTime') {
+            this.state.times.tkof = val;
+            this.renderTimes();
+        }
+        
+        this.calculate(); 
+        this.render();
     },
 
     calculate() {
@@ -847,6 +941,10 @@ const app = {
                     }
                 }
 
+                // ★ 1行目(TKOF)はreadonlyにして直接入力を防ぐ
+                const isFirstRow = (i === 0);
+                const actTimeReadonly = isFirstRow ? 'readonly' : '';
+
                 const tr = document.createElement('tr');
                 tr.id = `row-${i}`;
                 tr.innerHTML = `
@@ -867,7 +965,7 @@ const app = {
                     <td class="log-td col-ztme" style="white-space: nowrap;">${wp.ztmeDisplay}<br><span style="color: var(--text-faint); font-size:10px;">(${wp.dist})</span></td>
                     <td class="log-td col-main" style="font-size:15px; font-weight:bold;" id="wp_${i}_estTime">${wp.estTimeDisplay}</td>
                     <td class="log-td col-main"><div class="fuel-primary" id="wp_${i}_estFuel">${wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--'}</div><div class="fuel-secondary">(${wp.plannedFuel.toFixed(1)})</div></td>
-                    <td class="log-td col-actual no-print col-main"><input type="text" id="wp_${i}_actTime" class="input-actual" inputmode="numeric" maxlength="4" value="${wp.actualTime || ''}" onchange="app.update(${i}, 'actualTime', this.value)"></td>
+                    <td class="log-td col-actual no-print col-main"><input type="text" id="wp_${i}_actTime" class="input-actual" inputmode="numeric" maxlength="4" value="${wp.actualTime || ''}" ${actTimeReadonly} onchange="app.update(${i}, 'actualTime', this.value)"></td>
                     <td class="log-td col-actual no-print col-main">
                         <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
                             <input type="number" id="wp_${i}_actFuelTTL" class="input-actual-half" inputmode="decimal" step="0.1" placeholder="TTL" value="${wp.actualFuelTTL || ''}" onchange="app.update(${i}, 'actualFuelTTL', this.value)">
@@ -1005,6 +1103,14 @@ const app = {
         document.getElementById('sb-dest-fuel').textContent = destFuelDisp;
         const elFuelDiff = document.getElementById('sb-dest-fuel-diff'); elFuelDiff.textContent = destFuelDiffDisp; elFuelDiff.className = destFuelClass ? `status-badge ${destFuelClass}` : 'status-badge';
 
+        // ★ Dest Fuel Alert 判定と背景色変更
+        const sb = document.getElementById('statusBar');
+        if (finalFuel !== null && this.state.destFuelThreshold > 0 && finalFuel < this.state.destFuelThreshold) {
+            sb.classList.add('status-warning');
+        } else {
+            sb.classList.remove('status-warning');
+        }
+
         const container = document.getElementById('sb-avail-fuel-container'); container.innerHTML = '';
         let validAltnCount = 0;
         
@@ -1014,14 +1120,14 @@ const app = {
                     validAltnCount++; const totalReq = parseFloat(altn.fuel) + parseFloat(altn.rsv); const avail = finalFuel - totalReq;
                     const isLow = avail < this.state.alertThreshold; const warningBadge = isLow ? `<span class="altn-warning-badge">⚠️ LOW FUEL</span>` : '';
                     const div = document.createElement('div'); div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.flexWrap = 'wrap'; div.style.marginBottom = '2px';
-                    div.innerHTML = `<span style="font-size: 16px; color: ${isLow ? 'var(--alert-text)' : '#f1c40f'};">[${altn.name}] ${avail.toFixed(1)}</span>${warningBadge}<span style="font-size: 11px; font-weight: normal; margin-left: 10px; opacity: 0.7;">( [${altn.name}] ${totalReq.toFixed(1)} (= ALTN:${parseFloat(altn.fuel).toFixed(1)} + RSV:${parseFloat(altn.rsv).toFixed(1)}) )</span>`;
+                    div.innerHTML = `<span style="font-size: 14px; color: ${isLow ? 'var(--alert-text)' : '#f1c40f'};">[${altn.name}] ${avail.toFixed(1)}</span>${warningBadge}<span style="font-size: 10px; font-weight: normal; margin-left: 8px; opacity: 0.7;">( [${altn.name}] ${totalReq.toFixed(1)} (= ALTN:${parseFloat(altn.fuel).toFixed(1)} + RSV:${parseFloat(altn.rsv).toFixed(1)}) )</span>`;
                     container.appendChild(div);
                 }
             });
             if (validAltnCount === 0) {
                 const avail = finalFuel; const isLow = avail < this.state.alertThreshold; const warningBadge = isLow ? `<span class="altn-warning-badge">⚠️ LOW FUEL</span>` : '';
                 const div = document.createElement('div'); div.style.display = 'flex'; div.style.alignItems = 'center';
-                div.innerHTML = `<span style="font-size: 16px; color: ${isLow ? 'var(--alert-text)' : '#f1c40f'};">${avail.toFixed(1)}</span>${warningBadge}`;
+                div.innerHTML = `<span style="font-size: 14px; color: ${isLow ? 'var(--alert-text)' : '#f1c40f'};">${avail.toFixed(1)}</span>${warningBadge}`;
                 container.appendChild(div);
             }
         }
@@ -1032,9 +1138,10 @@ const app = {
         if(confirm("フライトデータを完全に削除し、初期状態に戻しますか？")) {
             localStorage.removeItem('navlog_v25_data');
             this.state = { 
-                waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
+                waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
                 crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
-                takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true
+                takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
+                times: { bo: '', bi: '', tkof: '', ldg: '' }
             };
             document.getElementById('flightHeader').style.display = 'none'; document.getElementById('headerInfoCard').style.display = 'none';
             document.getElementById('crewInfoCard').style.display = 'none'; document.getElementById('tableContainer').style.display = 'none';
@@ -1042,14 +1149,12 @@ const app = {
             document.getElementById('settingsPanel').style.display = 'none'; document.getElementById('defaultTitle').style.display = 'block';
             document.getElementById('inputArea').style.display = 'block';
             this.renderSettings();
+            this.renderTimes();
         }
     }
 };
 
 window.onload = () => app.init();
-</script>
-</body>
-</html>
 </script>
 </body>
 </html>

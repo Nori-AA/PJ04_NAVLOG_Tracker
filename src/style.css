@@ -74,10 +74,12 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .status-value { font-size: 22px; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; line-height: 1; }
 .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
 
-/* 時間入力グリッド */
-.time-input-wrap { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 8px; }
+/* ★ 時間入力グリッドの最適化 */
+.time-inputs { display: grid; grid-template-columns: max-content max-content; gap: 8px; }
+.time-input-wrap { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
 .time-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
-.input-time { width: 50px; background: transparent; border: none; color: #fff; font-size: 16px; font-family: monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
+/* 入力欄の幅を60pxに制限し、高さをスマートに */
+.input-time { width: 60px; background: transparent; border: none; color: #fff; font-size: 16px; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
 .input-time::placeholder { color: rgba(255,255,255,0.3); }
 .input-time:focus { border-bottom: 1px solid #fff; }
 

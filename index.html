@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.3.4 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.4.0 (Offline EFB)</title>
 
     <script>
         try {
@@ -28,7 +28,7 @@
     --drm-bg: #0c0c0c; --drm-text: #00ff41; --input-bg: #ffffff;
     --input-border: #ccc; --actual-col-bg: #fff9e6; --memo-bg: #eef2f5;
     --sb-height: 85px; 
-    --warning-bg: #8a3324;
+    --warning-bg: #5c2a2a; /* 暗めの赤茶色 */
 }
 
 html.theme-dark {
@@ -40,7 +40,7 @@ html.theme-dark {
     --behind-color: #e57373; --modified-bg: #1e3a5f; --modified-text: #64b5f6;
     --drm-bg: #000000; --drm-text: #00e676; --input-bg: #2c2c2e;
     --input-border: #48484a; --actual-col-bg: #24221d; --memo-bg: #2c2c2e;
-    --warning-bg: #5c2a2a;
+    --warning-bg: #5c2a2a; /* 暗めの赤茶色 */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -85,7 +85,10 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
     position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
     transition: background-color 0.3s ease;
 }
-.status-bar.status-warning { background-color: var(--warning-bg); }
+
+/* ★ 警告スタイル */
+.status-bar.status-warning { background-color: var(--warning-bg) !important; }
+.dest-warning-badge { font-size: 10px; font-weight: bold; color: white; background-color: var(--danger-color); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 
 /* ★ StatusBar: インデント階層デザイン */
 .status-section { display: flex; flex-direction: column; }
@@ -94,14 +97,15 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .status-value { font-size: 22px; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; line-height: 1; }
 .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
 
-/* ★ 時間入力グリッドの最適化 */
-.time-inputs { display: grid; grid-template-columns: max-content max-content; gap: 8px; }
-.time-input-wrap { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
-.time-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
-/* 入力欄の幅を60pxに制限し、高さをスマートに */
-.input-time { width: 60px; background: transparent; border: none; color: #fff; font-size: 16px; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
-.input-time::placeholder { color: rgba(255,255,255,0.3); }
-.input-time:focus { border-bottom: 1px solid #fff; }
+/* ★ 入力フォームの共通・個別最適化 */
+.input-group-inline { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
+.input-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
+.status-input { background: transparent; border: none; color: #fff; font-size: 16px; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
+.status-input::placeholder { color: rgba(255,255,255,0.3); }
+.status-input:focus { border-bottom: 1px solid #fff; }
+/* 幅の調整 */
+.input-time { width: 60px; }
+.fuel-input { width: 75px; }
 
 .table-container { 
     background: var(--card-bg); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; 
@@ -229,7 +233,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.3.4</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.4.0</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -281,29 +285,29 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
     </div>
 
     <div class="status-bar" id="statusBar" style="display:none;">
-        <div style="display: flex; gap: 20px; width: 100%;">
+        <div style="display: flex; gap: 20px; width: 100%; flex-wrap: wrap;">
             
-            <div class="status-col" style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+            <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
                 
                 <div class="status-section">
                     <span class="status-title">ACTUAL TIMES</span>
                     <div class="status-content">
-                        <div class="time-inputs">
-                            <div class="time-input-wrap">
-                                <span class="time-label">B/O</span>
-                                <input type="text" id="time_bo" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bo', this.value)">
+                        <div class="time-inputs" style="display: grid; grid-template-columns: max-content max-content; gap: 8px;">
+                            <div class="input-group-inline">
+                                <span class="input-label">B/O</span>
+                                <input type="text" id="time_bo" class="status-input input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bo', this.value)">
                             </div>
-                            <div class="time-input-wrap">
-                                <span class="time-label">B/I</span>
-                                <input type="text" id="time_bi" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bi', this.value)">
+                            <div class="input-group-inline">
+                                <span class="input-label">B/I</span>
+                                <input type="text" id="time_bi" class="status-input input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('bi', this.value)">
                             </div>
-                            <div class="time-input-wrap">
-                                <span class="time-label">TKOF</span>
-                                <input type="text" id="time_tkof" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('tkof', this.value)">
+                            <div class="input-group-inline">
+                                <span class="input-label">TKOF</span>
+                                <input type="text" id="time_tkof" class="status-input input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('tkof', this.value)">
                             </div>
-                            <div class="time-input-wrap">
-                                <span class="time-label">LDG</span>
-                                <input type="text" id="time_ldg" class="input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('ldg', this.value)">
+                            <div class="input-group-inline">
+                                <span class="input-label">LDG</span>
+                                <input type="text" id="time_ldg" class="status-input input-time" inputmode="numeric" maxlength="4" placeholder="----" onchange="app.updateTime('ldg', this.value)">
                             </div>
                         </div>
                     </div>
@@ -311,7 +315,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 
                 <div class="status-section">
                     <span class="status-title">EST. ARRIVAL (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
-                    <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px;">
+                    <div class="status-content status-value-group" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <span id="sb-eta" class="status-value">--</span>
                         <span id="sb-eta-diff" class="status-badge"></span>
                     </div>
@@ -319,19 +323,40 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 
             </div>
 
-            <div class="status-col" style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+            <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
                 
-                <div class="status-section">
-                    <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
-                    <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px;">
-                        <span id="sb-dest-fuel" class="status-value">--</span>
-                        <span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    
+                    <div class="status-section">
+                        <span class="status-title">ACTUAL FUEL</span>
+                        <div class="status-content">
+                            <div class="fuel-inputs" style="display: grid; grid-template-columns: max-content max-content; gap: 8px;">
+                                <div class="input-group-inline">
+                                    <span class="input-label">FOB</span>
+                                    <input type="number" step="0.1" id="actFob" class="status-input fuel-input" onchange="app.updateActualFuel('fob', this.value)">
+                                </div>
+                                <div class="input-group-inline">
+                                    <span class="input-label">FOD</span>
+                                    <input type="number" step="0.1" id="actFod" class="status-input fuel-input" onchange="app.updateActualFuel('fod', this.value)">
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <div class="status-section">
+                        <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
+                        <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span id="sb-dest-fuel" class="status-value">--</span>
+                            <span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span>
+                            <span id="sb-dest-fuel-warning"></span>
+                        </div>
+                    </div>
+
                 </div>
                 
                 <div class="status-section">
                     <span class="status-title">AVAILABLE FUEL MARGIN</span>
-                    <div class="status-content" id="sb-avail-fuel-container" style="display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.15);">
+                    <div class="status-content" id="sb-avail-fuel-container" style="width: max-content; display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.15);">
                     </div>
                 </div>
 
@@ -450,6 +475,7 @@ const app = {
         crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' },
+        actFob: '', actFod: '', // ★ 新設: ACTUAL FUEL保存用
         activeInput: null 
     },
 
@@ -463,6 +489,8 @@ const app = {
             if (!this.state.fuelCalcBasis) this.state.fuelCalcBasis = 'CALC';
             if (this.state.destFuelThreshold === undefined) this.state.destFuelThreshold = 0;
             if (!this.state.times) this.state.times = { bo: '', bi: '', tkof: '', ldg: '' };
+            if (this.state.actFob === undefined) this.state.actFob = '';
+            if (this.state.actFod === undefined) this.state.actFod = '';
             if (!this.state.crew || this.state.crew.length === 0) {
                 this.state.crew = [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
             }
@@ -489,6 +517,7 @@ const app = {
                 this.updateCrewPanelUI();
                 this.renderCrew();
                 this.renderTimes();
+                this.renderActualFuel(); // ★ FOB/FOD UI復元
                 document.getElementById('tableBody').innerHTML = ''; 
                 this.render();
             }
@@ -652,6 +681,7 @@ const app = {
         this.calculate();
         this.renderCrew();
         this.renderTimes();
+        this.renderActualFuel(); // ★ 読み込み時に表示
         this.render();
         this.renderFlightMeta();
     },
@@ -783,6 +813,19 @@ const app = {
             const el = document.getElementById('time_' + f);
             if (el) el.value = this.state.times[f] || '';
         });
+    },
+
+    // ★ 新設: ACTUAL FUEL保存・復元処理
+    updateActualFuel(field, val) {
+        if (field === 'fob') this.state.actFob = val;
+        if (field === 'fod') this.state.actFod = val;
+        this.saveConfig();
+    },
+    renderActualFuel() {
+        const fobEl = document.getElementById('actFob');
+        if (fobEl) fobEl.value = this.state.actFob || '';
+        const fodEl = document.getElementById('actFod');
+        if (fodEl) fodEl.value = this.state.actFod || '';
     },
 
     extractFlightMeta(text) {
@@ -1129,11 +1172,15 @@ const app = {
         document.getElementById('sb-dest-fuel').textContent = destFuelDisp;
         const elFuelDiff = document.getElementById('sb-dest-fuel-diff'); elFuelDiff.textContent = destFuelDiffDisp; elFuelDiff.className = destFuelClass ? `status-badge ${destFuelClass}` : 'status-badge';
 
+        // ★ 警告バッジの動的表示と背景色変更
         const sb = document.getElementById('statusBar');
+        const warningEl = document.getElementById('sb-dest-fuel-warning');
         if (finalFuel !== null && this.state.destFuelThreshold > 0 && finalFuel < this.state.destFuelThreshold) {
             sb.classList.add('status-warning');
+            if (warningEl) warningEl.innerHTML = '<span class="dest-warning-badge">⚠️ LOW FUEL</span>';
         } else {
             sb.classList.remove('status-warning');
+            if (warningEl) warningEl.innerHTML = '';
         }
 
         const container = document.getElementById('sb-avail-fuel-container'); container.innerHTML = '';
@@ -1166,7 +1213,8 @@ const app = {
                 waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
                 crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
                 takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
-                times: { bo: '', bi: '', tkof: '', ldg: '' }
+                times: { bo: '', bi: '', tkof: '', ldg: '' },
+                actFob: '', actFod: ''
             };
             document.getElementById('flightHeader').style.display = 'none'; document.getElementById('headerInfoCard').style.display = 'none';
             document.getElementById('crewInfoCard').style.display = 'none'; document.getElementById('tableContainer').style.display = 'none';
@@ -1175,6 +1223,7 @@ const app = {
             document.getElementById('inputArea').style.display = 'block';
             this.renderSettings();
             this.renderTimes();
+            this.renderActualFuel();
         }
     }
 };

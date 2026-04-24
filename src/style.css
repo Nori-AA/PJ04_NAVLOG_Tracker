@@ -1,941 +1,348 @@
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed:', err));
-    });
+:root {
+    --bg-color: #f0f2f5; --card-bg: #ffffff; --text-color: #2c3e50;
+    --text-muted: #555555; --text-faint: #888888; --primary-color: #1a252f;
+    --accent-color: #3498db; --danger-color: #e74c3c; --alert-text: #ff6b6b;
+    --success-color: #2ecc71; --border-color: #bdc3c7; --table-header-bg: #e8ecef;
+    --ahead-bg: #d4efdf; --ahead-color: #1e8449; --behind-bg: #fadbd8;
+    --behind-color: #c0392b; --modified-bg: #e1f5fe; --modified-text: #1a252f;
+    --drm-bg: #0c0c0c; --drm-text: #00ff41; --input-bg: #ffffff;
+    --input-border: #ccc; --actual-col-bg: #fff9e6; --memo-bg: #eef2f5;
+    --sb-height: 85px; 
+    --warning-bg: #5c2a2a; /* 暗めの赤茶色 */
 }
 
-// Enter（完了）キー押下時にキーボードを即座に引っ込める機能
-window.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter' || event.keyCode === 13) {
-        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT')) {
-            document.activeElement.blur();
-        }
+html.theme-dark {
+    --bg-color: #121212; --card-bg: #1c1c1e; --text-color: #d1d1d6;
+    --text-muted: #8e8e93; --text-faint: #636366; --primary-color: #2c2c2e; 
+    --accent-color: #2980b9; --danger-color: #d32f2f; --alert-text: #ff5252;
+    --success-color: #27ae60; --border-color: #3a3a3c; --table-header-bg: #2c2c2e;
+    --ahead-bg: #1b4332; --ahead-color: #81c784; --behind-bg: #4a1c1c;
+    --behind-color: #e57373; --modified-bg: #1e3a5f; --modified-text: #64b5f6;
+    --drm-bg: #000000; --drm-text: #00e676; --input-bg: #2c2c2e;
+    --input-border: #48484a; --actual-col-bg: #24221d; --memo-bg: #2c2c2e;
+    --warning-bg: #5c2a2a; /* 暗めの赤茶色 */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body::before {
+    content: ""; position: fixed; top: 0; left: 0; right: 0;
+    height: env(safe-area-inset-top, 0px); background-color: var(--bg-color); z-index: 1001;
+}
+
+body { 
+    font-family: -apple-system, sans-serif; background-color: var(--bg-color); color: var(--text-color); 
+    padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom) 15px; line-height: 1.4; min-width: 1000px; 
+    transition: background-color 0.3s, color 0.3s; 
+}
+
+h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-color); }
+
+.flight-header { background: var(--primary-color); color: white; border-radius: 10px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+.fh-title { font-size: 11px; color: #95a5a6; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; font-weight: bold; letter-spacing: 0.5px; }
+.fh-details { display: flex; flex-wrap: wrap; gap: 12px 25px; }
+.fh-item { display: flex; flex-direction: column; }
+.fh-label { font-size: 10px; color: var(--text-faint); font-weight: bold; text-transform: uppercase; }
+.fh-val { font-size: 16px; font-weight: bold; font-family: 'SF Mono', Menlo, monospace; color: #fff; }
+
+.card-crew { background: var(--card-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
+.crew-header { background: var(--primary-color); padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+.crew-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
+.crew-content { padding: 10px; }
+
+.crew-table { width: auto; border-collapse: collapse; margin-left: 15px; } 
+.crew-table th { font-size: 10px; color: var(--text-faint); text-align: center; padding: 4px 6px; } 
+.crew-table td { padding: 4px 6px; text-align: center; vertical-align: middle; border: none; }
+
+/* POST FLIGHT LOG STYLES */
+.pfl-section { margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 15px; padding-left: 15px; }
+.pfl-header-controls { display: flex; margin-bottom: 8px; align-items: center; }
+.pfl-toggle-group { display: flex; background: rgba(0,0,0,0.1); border-radius: 6px; padding: 3px; }
+html.theme-dark .pfl-toggle-group { background: rgba(255,255,255,0.1); }
+.pfl-btn { background: transparent; color: var(--text-color); border: none; padding: 4px 12px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+.pfl-btn.active { background: var(--accent-color); color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.pfl-scroll-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
+.pfl-table { width: max-content; border-collapse: collapse; text-align: center; }
+.pfl-table th { font-size: 9px; color: var(--text-faint); padding: 0 4px 4px 4px; font-weight: normal; }
+.pfl-table td { padding: 0 2px; border: none; }
+.pfl-input { width: 55px; text-align: center; font-size: 12px; padding: 5px 2px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); border-radius: 4px; font-family: 'SF Mono', monospace; }
+.pfl-input:focus { border-color: var(--accent-color); outline: none; }
+.pfl-input.wide { width: 75px; }
+.pfl-input.narrow { width: 45px; }
+
+#pfl_day { width: 75px; }
+#pfl_reg { width: 65px; }
+
+.card-drm { background: var(--drm-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
+.drm-header { background: #222; padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+.drm-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
+.drm-content { display: block; font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: var(--drm-text); padding: 15px; max-height: 350px; overflow: auto; -webkit-overflow-scrolling: touch; }
+
+/* ★ StatusBar 基本スタイル */
+.status-bar { 
+    padding: 15px; border-radius: 10px; margin-bottom: 12px; background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+    position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
+    transition: background-color 0.3s ease;
+}
+
+/* ★ 警告スタイル */
+.status-bar.status-warning { background-color: var(--warning-bg) !important; }
+.dest-warning-badge { font-size: 10px; font-weight: bold; color: white; background-color: var(--danger-color); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+
+/* ★ StatusBar: インデント階層デザイン */
+.status-section { display: flex; flex-direction: column; }
+.status-title { display: block; font-size: 11px; opacity: 0.7; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; text-align: left; }
+.status-content { margin-left: 15px; }
+.status-value { font-size: 22px; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; line-height: 1; }
+.status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
+
+/* ★ 入力フォームの共通・個別最適化 */
+.input-group-inline { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
+.input-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
+.status-input { background: transparent; border: none; color: #fff; font-size: 16px; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
+.status-input::placeholder { color: rgba(255,255,255,0.3); }
+.status-input:focus { border-bottom: 1px solid #fff; }
+/* 幅の調整 */
+.input-time { width: 60px; }
+.fuel-input { width: 75px; }
+
+.table-container { 
+    background: var(--card-bg); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; 
+    position: relative; z-index: 10;
+}
+
+table { width: 100%; min-width: 970px; margin: 0 auto; table-layout: fixed; border-collapse: separate; border-spacing: 0; }
+
+.table-container th { 
+    background: var(--table-header-bg); position: sticky; top: calc(env(safe-area-inset-top, 10px) + var(--sb-height)); z-index: 900; 
+    font-size: 11px; color: var(--text-muted); font-weight: bold; box-shadow: 0 2px 2px rgba(0,0,0,0.05); 
+}
+
+.header-landscape { display: inline; }
+.header-portrait { display: none; }
+
+.sticky-col-wp { position: sticky; left: 0; background-color: var(--card-bg); z-index: 800; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+.table-container th.sticky-col-wp { background-color: var(--table-header-bg); z-index: 950; }
+.table-container th, .table-container td { padding: 8px 2px; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); text-align: center; font-size: 13px; vertical-align: middle; overflow: hidden; }
+
+.col-wp   { width: 90px; min-width: 90px; }
+.col-alt  { width: 80px; min-width: 80px; }
+.col-wind { width: 95px; min-width: 95px; }
+.col-mwtp { width: 70px; min-width: 70px; }
+.col-ctme { width: 95px; min-width: 95px; }
+.col-ztme { width: 70px; min-width: 70px; }
+.col-main { width: 90px; min-width: 90px; } 
+.col-diff { width: 55px; min-width: 55px; }
+
+.col-actual { background-color: var(--actual-col-bg); }
+
+.input-crew { width: 100%; padding: 6px; border: 1px solid var(--input-border); border-radius: 4px; font-size: 13px; text-align: center; background: var(--input-bg); color: var(--text-color); }
+.input-crew:focus { background: var(--card-bg); border-color: var(--accent-color); outline: none; }
+
+.input-crew-name { text-align: left !important; padding-left: 10px; }
+
+.input-ref { width: 100%; text-align: center; border: 1px dashed transparent; background: transparent; color: var(--text-color); font-size: 12px; padding: 2px; border-radius: 4px; box-sizing: border-box; }
+.input-ref:focus { border: 1px solid var(--accent-color); background: var(--input-bg); outline: none; }
+.input-modified { font-weight: bold; color: var(--modified-text) !important; background-color: var(--modified-bg); border: 1px solid var(--accent-color); }
+
+.input-ref.input-wind { width: 75px !important; margin: 0 auto; }
+.input-ref.input-tmp { width: 36px !important; min-width: 36px !important; max-width: 36px !important; flex: 0 0 36px !important; padding: 2px 2px 2px 0 !important; text-align: right !important; }
+
+.isa-dev-text { font-size: 10px; color: var(--text-muted); text-align: left; white-space: nowrap; margin-left: 2px; flex: 0 0 auto; }
+
+.input-actual { width: 75px; height: 38px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 6px; font-size: 16px; font-weight: bold; background: var(--input-bg); color: var(--text-color); display: block; }
+.input-actual-half { width: 75px; height: 18px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 4px; font-size: 13px; font-weight: bold; background: var(--input-bg); color: var(--text-color); padding: 0; display: block; }
+.input-actual-half::placeholder { font-weight: normal; font-size: 10px; color: var(--text-faint); }
+
+input[readonly] { background-color: rgba(0, 0, 0, 0.05); color: var(--text-muted); cursor: not-allowed; border-color: transparent; }
+html.theme-dark input[readonly] { background-color: rgba(255, 255, 255, 0.05); }
+
+input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+input, textarea, select { padding: 6px; border: 1px solid var(--input-border); border-radius: 4px; font-size: 14px; background-color: var(--input-bg); color: var(--text-color); }
+
+.input-stacked { display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; }
+.fuel-primary { font-size: 14px; font-weight: bold; }
+.fuel-secondary { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+
+.wp-cell { cursor: pointer; padding: 6px 2px; border-radius: 6px; user-select: none; display: block; }
+.wp-cell:active { background-color: var(--border-color); }
+.memo-textarea { width: 100%; border: 1px solid var(--input-border); border-radius: 4px; padding: 8px; font-size: 14px; font-family: inherit; resize: vertical; outline: none; background-color: var(--input-bg); color: var(--text-color); }
+.memo-textarea:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
+
+.card-footer { background: var(--card-bg); border-radius: 10px; padding: 12px; margin-bottom: 40px; }
+.config-panel { display: flex; gap: 15px; align-items: center; justify-content: space-between; }
+button { padding: 12px 18px; border: none; border-radius: 8px; background: var(--accent-color); color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
+.btn-danger { background: var(--danger-color); }
+.btn-secondary { background: #607d8b; }
+.btn-small { padding: 6px 10px; font-size: 12px; }
+.input-group { display: flex; flex-direction: column; gap: 5px; }
+.input-group label { font-size: 11px; font-weight: bold; color: var(--text-muted); }
+
+.settings-wrapper { display: flex; flex-wrap: wrap; gap: 15px; }
+.settings-group { flex: 1 1 250px; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.05); }
+html.theme-dark .settings-group { background: rgba(255,255,255,0.05); }
+h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accent-color); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; text-transform: uppercase; margin-top: 0; }
+
+.clipboard-btn { display: block; width: 100%; background: #2980b9; color: white; padding: 25px; border-radius: 10px; text-align: center; font-weight: bold; font-size: 20px; cursor: pointer; box-shadow: 0 6px 12px rgba(41, 128, 185, 0.3); margin-bottom: 15px; border: none; }
+.clipboard-btn:active { background: #1c5980; transform: translateY(2px); box-shadow: 0 2px 6px rgba(41, 128, 185, 0.3); }
+.file-upload-btn { display: block; width: 100%; background: #7f8c8d; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 14px; cursor: pointer; border: none; }
+
+.altn-warning-badge { margin-left: 8px; font-size: 10px; font-weight: bold; color: var(--alert-text); background: rgba(255, 107, 107, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255, 107, 107, 0.4); white-space: nowrap; }
+
+@media screen and (max-width: 1000px), screen and (orientation: portrait) {
+    body { min-width: 810px; } 
+    table { width: 780px; min-width: 780px; max-width: 780px; }
+    .col-wp   { width: 74px; min-width: 74px; max-width: 74px; }
+    .col-alt  { width: 60px; min-width: 60px; max-width: 60px; }
+    .col-wind { width: 70px; min-width: 70px; max-width: 70px; }
+    .col-mwtp { width: 55px; min-width: 55px; max-width: 55px; }
+    .col-ctme { width: 80px; min-width: 80px; max-width: 80px; }
+    .col-ztme { width: 55px; min-width: 55px; max-width: 55px; }
+    .col-main { width: 74px; min-width: 74px; max-width: 74px; }
+    .col-diff { width: 45px; min-width: 45px; max-width: 45px; }
+    
+    .input-ref.input-wind { width: 55px !important; }
+    .input-ref.input-tmp { width: 32px !important; min-width: 32px !important; max-width: 32px !important; flex: 0 0 32px !important; font-size: 11px !important; padding: 2px 1px !important; }
+    .isa-dev-text { font-size: 9px; }
+    
+    .input-actual { width: 65px; height: 35px; font-size: 14px; margin: 0 auto; display: block; } 
+    .input-actual-half { width: 65px; font-size: 12px; margin: 0 auto; display: block; }
+    
+    .fuel-primary { font-size: 13px; }
+    .fuel-secondary { font-size: 10px; }
+
+    .header-landscape { display: none; }
+    .header-portrait { display: inline; }
+}
+
+/* ★ 印刷用デザイン：完全プレーンテキスト化・A4横・2段組み・強制改ページ */
+@media print {
+    @page { size: A4 landscape; margin: 10mm; }
+    * { 
+        -webkit-print-color-adjust: exact !important; 
+        print-color-adjust: exact !important; 
+        color-adjust: exact !important; 
     }
-});
 
-const app = {
-    state: { 
-        waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
-        crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
-        takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
-        times: { bo: '', bi: '', tkof: '', ldg: '' },
-        actFob: '', actFod: '',
-        postFlightLog: null,
-        activeInput: null 
-    },
+    .no-print { display: none !important; }
 
-    init() {
-        const saved = localStorage.getItem('navlog_v25_data');
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            this.state = { ...this.state, ...parsed };
-            
-            if (!this.state.altns || this.state.altns.length === 0) this.state.altns = [{name:'', fuel:0, rsv:0}];
-            if (!this.state.fuelCalcBasis) this.state.fuelCalcBasis = 'CALC';
-            if (this.state.destFuelThreshold === undefined) this.state.destFuelThreshold = 0;
-            if (!this.state.times) this.state.times = { bo: '', bi: '', tkof: '', ldg: '' };
-            if (this.state.actFob === undefined) this.state.actFob = '';
-            if (this.state.actFod === undefined) this.state.actFod = '';
-            if (!this.state.crew || this.state.crew.length === 0) {
-                this.state.crew = [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
-            }
-
-            this.state.waypoints.forEach(wp => {
-                if (wp.actualFuel !== undefined) { wp.actualFuelCALC = wp.actualFuel; wp.actualFuelTTL = ''; delete wp.actualFuel; }
-                if (wp.isaDevNum === undefined) wp.isaDevNum = null;
-                if (wp.isaTmp === undefined) wp.isaTmp = null;
-                if (wp.mwtp === undefined) wp.mwtp = '---';
-                if (wp.wscp === undefined) wp.wscp = '---';
-            });
-        }
-        
-        if (!this.state.postFlightLog) {
-            this.state.postFlightLog = {
-                domInt: 'DOM', activeDuty: 'PIC',
-                day: '', type: 'B767', reg: '', dep: '', arr: '', fltNumber: '',
-                depTime: '', arrTime: '', tkof: '', ldg: '', fltTime: '',
-                picTime: '', sicTime: '', ngtPicSic: '', copTime: '', ngtCop: '', imc: '', apchType: ''
-            };
-        }
-
-        this.renderSettings();
-        if (this.state.headerInfo) {
-            document.getElementById('headerInfoCard').style.display = 'block';
-            document.getElementById('headerInfoContent').textContent = this.state.headerInfo;
-        }
-        if (this.state.flightMeta) this.renderFlightMeta();
-        if (this.state.waypoints.length > 0) {
-            document.getElementById('statusBar').style.display = 'flex';
-            document.getElementById('bottomControls').style.display = 'block';
-            document.getElementById('inputArea').style.display = 'none';
-            document.getElementById('crewInfoCard').style.display = 'block';
-            this.updateCrewPanelUI();
-            this.renderCrew();
-            this.renderTimes();
-            this.renderActualFuel();
-            this.renderPostFlightLog();
-            document.getElementById('tableBody').innerHTML = ''; 
-            this.render();
-        }
-        
-        this.setupFocusScrollBehavior();
-        this.updateThemeButton();
-        window.addEventListener('resize', this.updateStickyHeight);
-    },
-
-    setupFocusScrollBehavior() {
-        document.addEventListener('focusin', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-                app.state.activeInput = e.target;
-                setTimeout(() => app.adjustScrollForInput(e.target), 300);
-            }
-        });
-
-        document.addEventListener('focusout', () => {
-            app.state.activeInput = null;
-        });
-
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                if (app.state.activeInput) {
-                    setTimeout(() => app.adjustScrollForInput(app.state.activeInput), 100);
-                }
-            });
-        }
-    },
-
-    adjustScrollForInput(el) {
-        if (!el) return;
-        const sb = document.getElementById('statusBar');
-        const th = document.querySelector('.table-container th');
-        const sbHeight = (sb && sb.style.display !== 'none') ? sb.offsetHeight : 0;
-        const thHeight = th ? th.offsetHeight : 0;
-        const headerOffset = sbHeight + thHeight + 20; 
-        
-        const rect = el.getBoundingClientRect();
-        const visualViewport = window.visualViewport;
-        
-        if (rect.top < headerOffset) {
-            window.scrollBy({ top: rect.top - headerOffset, behavior: 'smooth' });
-        } else if (visualViewport && rect.bottom > visualViewport.height) {
-            window.scrollBy({ top: rect.bottom - visualViewport.height + 10, behavior: 'smooth' });
-        }
-    },
-
-    toggleTheme() {
-        const isDark = document.documentElement.classList.toggle('theme-dark');
-        localStorage.setItem('navlog_theme', isDark ? 'dark' : 'light');
-        this.updateThemeButton();
-    },
-    
-    updateThemeButton() {
-        const btn = document.getElementById('themeToggleBtn');
-        if(btn) {
-            const isDark = document.documentElement.classList.contains('theme-dark');
-            btn.innerHTML = isDark ? '☀️ DAY' : '🌙 NGT';
-        }
-    },
-
-    updateStickyHeight() {
-        const sb = document.getElementById('statusBar');
-        if (sb && sb.style.display !== 'none') {
-            document.documentElement.style.setProperty('--sb-height', sb.offsetHeight + 'px');
-        }
-    },
-
-    scrollToRow(index) {
-        const row = document.getElementById(`row-${index}`);
-        if (row) {
-            const sbHeight = document.getElementById('statusBar').offsetHeight || 85;
-            const thHeight = document.querySelector('.table-container th').offsetHeight || 30;
-            const offset = sbHeight + thHeight + 15; 
-            const y = row.getBoundingClientRect().top + window.scrollY - offset;
-            window.scrollTo({ top: y, behavior: 'smooth' });
-        }
-    },
-
-    async loadFromClipboard() {
-        try {
-            const text = await navigator.clipboard.readText();
-            if (!text || text.trim() === '') return alert("クリップボードが空です。");
-            this.processData(text);
-        } catch (err) {
-            alert("読み込みに失敗しました。ファイルを選択してください。");
-        }
-    },
-
-    handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => { this.processData(e.target.result); };
-        reader.readAsText(file);
-    },
-
-    processData(text) {
-        this.extractFlightMeta(text);
-        this.extractAndFormatHeaderInfo(text);
-        
-        const waypoints = [];
-        const rdisMatch = text.match(/([A-Z]{4})\s+\(RDIS\)\s+(\d{3,4}\.\d)/);
-        if (rdisMatch) { waypoints.push(this.createWP(rdisMatch[1], "---", "---", "---", "00.00", "---", "0.00", 0, 0, parseFloat(rdisMatch[2]), "", "---", "---")); }
-        
-        const regex = /(?:\(\s*\d+\s*\)\s+(?:-\s*){4,6}(?:\(\s*(-?\d+)\s*\))?[\s\S]{1,150}?)?(\d{2}\.\d{2})\s+[NS]\d{5}[EW]\d{5,6}[\s\.]+(\d+\.\d{2})\s+(CLM|DEC|\d{5})?\s*(\d{3}\.\d)\s*([+-]\d{2}|\.{1,2})?\s*(\d{6}|\.{1,2})?\s*([\d\/]{5}|\.{1,2})?[\s\S]{1,150}?(\d{2}\.\d{2})\s+([A-Z0-9\-]{3,})\s+\.\s+(\d{3})\s+FL.*?(?:\s+|\/)(\d{2}|\.{1,2})\s*$/gm;
-        
-        let match;
-        while ((match = regex.exec(text)) !== null) {
-            const isaDevVal = match[1] ? match[1].replace(/\s+/g, '') : '';
-            const ctme = match[2];
-            const ztmeDisplay = match[3];
-            const ztmeMin = this.parseLegTime(ztmeDisplay);
-            const alt = match[4] || '---';
-            const plannedFuel = parseFloat(match[5]);
-            
-            const tmp = (match[6] && !match[6].includes('.')) ? match[6] : '---';
-            let zwind = '---'; 
-            if (match[7] && !match[7].includes('.')) zwind = match[7].substring(0,3) + '/' + match[7].substring(3,6);
-            const mwtp = (match[8] && !match[8].includes('.')) ? match[8] : '---';
-            const rtme = match[9];
-            const name = match[10];
-            const dist = parseInt(match[11], 10);
-            const wscp = (match[12] && !match[12].includes('.')) ? match[12] : '---';
-
-            waypoints.push(this.createWP(name, alt, tmp, zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel, isaDevVal, mwtp, wscp));
-        }
-        
-        if (waypoints.length <= 1) return alert("データを抽出できませんでした。正しいNAVLOGテキストか確認してください。");
-        if (waypoints.length > 1 && waypoints[1].rtme !== "---") {
-            const firstWpRtmeMin = this.parseLegTime(waypoints[1].rtme);
-            const firstWpZtmeMin = waypoints[1].ztmeMin;
-            waypoints[0].rtme = this.formatLegTime(firstWpRtmeMin + firstWpZtmeMin);
-        }
-
-        let cumDist = 0;
-        waypoints.forEach(wp => { cumDist += wp.dist; wp.cumDist = cumDist; });
-        let totalRouteDist = cumDist;
-        waypoints.forEach(wp => { wp.rdis = totalRouteDist - wp.cumDist; });
-        
-        if (this.state.flightMeta) { this.state.flightMeta.dist = totalRouteDist; }
-        this.state.waypoints = waypoints;
-        if (this.state.flightMeta && this.state.flightMeta.altns && this.state.flightMeta.altns.length > 0) {
-            this.state.altns = this.state.flightMeta.altns;
-            this.renderSettings();
-        }
-        
-        document.getElementById('statusBar').style.display = 'flex';
-        document.getElementById('bottomControls').style.display = 'block';
-        document.getElementById('inputArea').style.display = 'none';
-        document.getElementById('crewInfoCard').style.display = 'block';
-        
-        this.state.crewPanelOpen = true;
-        this.updateCrewPanelUI();
-        
-        document.getElementById('tableBody').innerHTML = ''; 
-        this.calculate();
-        this.renderCrew();
-        this.renderTimes();
-        this.renderActualFuel();
-        this.renderPostFlightLog();
-        this.render();
-        this.renderFlightMeta();
-    },
-
-    toggleCrew() {
-        this.state.crewPanelOpen = !this.state.crewPanelOpen;
-        this.saveConfig();
-        this.updateCrewPanelUI();
-    },
-    
-    updateCrewPanelUI() {
-        const c = document.getElementById('crewContentEl');
-        const icon = document.getElementById('crew-toggle-icon');
-        if (this.state.crewPanelOpen) { c.style.display = 'block'; icon.textContent = '▼'; } 
-        else { c.style.display = 'none'; icon.textContent = '▶'; }
-    },
-
-    handleSelectChange(index, field, val) {
-        if (val === 'other') {
-            const input = prompt(`${field.toUpperCase()} を入力:`);
-            if (input !== null && input.trim() !== '') { this.state.crew[index][field] = input.trim().toUpperCase(); }
-        } else { this.state.crew[index][field] = val; }
-        this.saveConfig();
-        this.renderCrew();
-    },
-
-    renderCrew() {
-        const tbody = document.getElementById('crewTableBody'); tbody.innerHTML = '';
-        this.state.crew.forEach((c, i) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><input type="radio" name="takeoff_pilot" ${this.state.takeoffPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('takeoff', ${c.id})"></td>
-                <td><input type="radio" name="landing_pilot" ${this.state.landingPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('landing', ${c.id})"></td>
-                <td><select class="input-crew" onchange="app.handleSelectChange(${i}, 'duty', this.value)">
-                    <option value="${c.duty}" selected hidden>${c.duty}</option>
-                    <option value="PIC">PIC</option><option value="COP">COP</option><option value="SIC">SIC</option><option value="other">other</option>
-                </select></td>
-                <td><input type="text" class="input-crew" value="${c.empNo}" placeholder="Emp No" onchange="app.updateCrew(${i}, 'empNo', this.value)"></td>
-                <td><input type="text" class="input-crew input-crew-name" value="${c.name}" placeholder="Name" onchange="app.updateCrew(${i}, 'name', this.value)"></td>
-                <td><select class="input-crew" onchange="app.handleSelectChange(${i}, 'rank', this.value)">
-                    <option value="${c.rank}" selected hidden>${c.rank}</option>
-                    <option value="CAP">CAP</option><option value="COP">COP</option><option value="other">other</option>
-                </select></td>
-                <td>${this.state.crew.length > 2 ? `<button class="btn-danger btn-small" style="padding:2px 4px;font-size:10px;" onclick="app.removeCrew(${i})">✖</button>` : ''}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    },
-
-    updateCrew(index, field, val) { this.state.crew[index][field] = val.toUpperCase(); this.saveConfig(); },
-    updateCrewPilot(type, id) {
-        if (type === 'takeoff') this.state.takeoffPilotId = id;
-        if (type === 'landing') this.state.landingPilotId = id;
-        this.saveConfig();
-    },
-    addCrew() {
-        const newId = this.state.crew.length > 0 ? Math.max(...this.state.crew.map(c => c.id)) + 1 : 1;
-        this.state.crew.push({ id: newId, duty: '', empNo: '', name: '', rank: '' });
-        if(!this.state.crewPanelOpen) this.toggleCrew(); 
-        this.saveConfig(); this.renderCrew();
-    },
-    removeCrew(index) {
-        const id = this.state.crew[index].id;
-        if (this.state.takeoffPilotId === id) this.state.takeoffPilotId = null;
-        if (this.state.landingPilotId === id) this.state.landingPilotId = null;
-        this.state.crew.splice(index, 1);
-        this.saveConfig(); this.renderCrew();
-    },
-
-    setPflToggle(field, val) {
-        if(!this.state.postFlightLog) return;
-        
-        if (field === 'activeDuty') {
-            const oldDuty = this.state.postFlightLog.activeDuty;
-            if (oldDuty !== val) {
-                if (oldDuty === 'PIC') this.state.postFlightLog.picTime = '';
-                if (oldDuty === 'SIC') this.state.postFlightLog.sicTime = '';
-                if (oldDuty === 'COP') this.state.postFlightLog.copTime = '';
-                
-                this.state.postFlightLog.activeDuty = val;
-                
-                if (this.state.postFlightLog.fltTime) {
-                    if (val === 'PIC') this.state.postFlightLog.picTime = this.state.postFlightLog.fltTime;
-                    if (val === 'SIC') this.state.postFlightLog.sicTime = this.state.postFlightLog.fltTime;
-                    if (val === 'COP') this.state.postFlightLog.copTime = this.state.postFlightLog.fltTime;
-                }
-            }
-        } else if (field === 'domInt') {
-            this.state.postFlightLog.domInt = val;
-        }
-        
-        this.calcPflTimes(); 
-    },
-    updatePfl(field, val, isDuration = false) {
-        if(!this.state.postFlightLog) return;
-        if (isDuration && val.trim() !== '') {
-            let clean = val.replace(/[^\d]/g, '');
-            if (clean.length >= 3 && clean.length <= 4) {
-                let h = clean.length === 3 ? clean.slice(0, 1) : clean.slice(0, 2);
-                let m = clean.slice(-2);
-                val = parseInt(h, 10) + '+' + m;
-            }
-        }
-        this.state.postFlightLog[field] = val;
-        this.saveConfig();
-        this.renderPostFlightLog();
-    },
-    calcPflTimes() {
-        if(!this.state.postFlightLog) return;
-        const bo = this.state.times.bo;
-        const bi = this.state.times.bi;
-        const pfl = this.state.postFlightLog;
-
-        if (bo && bo.length === 4) {
-            pfl.depTime = this.convertZtoLocal(bo, pfl.domInt);
-        }
-        if (bi && bi.length === 4) {
-            pfl.arrTime = this.convertZtoLocal(bi, pfl.domInt);
-        }
-
-        if (bo && bo.length === 4 && bi && bi.length === 4) {
-            let m1 = this.toMin(bo);
-            let m2 = this.toMin(bi);
-            let diff = m2 - m1;
-            if (diff < 0) diff += 1440; 
-            
-            let h = Math.floor(diff / 60);
-            let m = String(diff % 60).padStart(2, '0');
-            let newFltStr = `${h}+${m}`;
-            
-            if (pfl.fltTime !== newFltStr) {
-                pfl.fltTime = newFltStr;
-                
-                pfl.picTime = '';
-                pfl.sicTime = '';
-                pfl.copTime = '';
-                
-                if (pfl.activeDuty === 'PIC') pfl.picTime = newFltStr;
-                if (pfl.activeDuty === 'SIC') pfl.sicTime = newFltStr;
-                if (pfl.activeDuty === 'COP') pfl.copTime = newFltStr;
-            }
-        }
-        this.saveConfig();
-        this.renderPostFlightLog();
-    },
-    convertZtoLocal(zTime, domInt) {
-        if (domInt === 'INT') return zTime;
-        let m = this.toMin(zTime) + 9 * 60; 
-        m = m % 1440;
-        return this.toHHMM(m);
-    },
-    renderPostFlightLog() {
-        if(!this.state.postFlightLog) return;
-        const pfl = this.state.postFlightLog;
-        
-        const btnDom = document.getElementById('btnPflDom');
-        if(btnDom) btnDom.className = pfl.domInt === 'DOM' ? 'pfl-btn active' : 'pfl-btn';
-        const btnInt = document.getElementById('btnPflInt');
-        if(btnInt) btnInt.className = pfl.domInt === 'INT' ? 'pfl-btn active' : 'pfl-btn';
-        
-        const btnPic = document.getElementById('btnPflPic');
-        if(btnPic) btnPic.className = pfl.activeDuty === 'PIC' ? 'pfl-btn active' : 'pfl-btn';
-        const btnSic = document.getElementById('btnPflSic');
-        if(btnSic) btnSic.className = pfl.activeDuty === 'SIC' ? 'pfl-btn active' : 'pfl-btn';
-        const btnCop = document.getElementById('btnPflCop');
-        if(btnCop) btnCop.className = pfl.activeDuty === 'COP' ? 'pfl-btn active' : 'pfl-btn';
-
-        const fields = ['day', 'type', 'reg', 'dep', 'arr', 'depTime', 'arrTime', 'tkof', 'ldg', 'fltNumber', 'fltTime', 'picTime', 'sicTime', 'ngtPicSic', 'copTime', 'ngtCop', 'imc', 'apchType'];
-        fields.forEach(f => {
-            const el = document.getElementById('pfl_' + f);
-            if (el && document.activeElement !== el) {
-                el.value = pfl[f] || '';
-            }
-        });
-    },
-    
-    async copyPflToCsv() {
-        if(!this.state.postFlightLog) return;
-        const pfl = this.state.postFlightLog;
-        
-        const picCrew = this.state.crew.find(c => c.duty === 'PIC');
-        const picName = picCrew ? picCrew.name : '';
-        
-        const fields = [
-            pfl.day, pfl.type, pfl.reg, pfl.dep, pfl.arr, 
-            pfl.depTime, pfl.arrTime, pfl.tkof, pfl.ldg, 
-            pfl.fltNumber, pfl.fltTime, pfl.picTime, pfl.sicTime, 
-            pfl.ngtPicSic, pfl.copTime, pfl.ngtCop, pfl.imc, pfl.apchType,
-            picName
-        ];
-        
-        const csvString = fields.map(v => v || '').join(',');
-        
-        try {
-            await navigator.clipboard.writeText(csvString);
-            
-            const btn = document.getElementById('btnPflCsv');
-            if (btn) {
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '✅ コピー完了！';
-                btn.style.background = 'var(--success-color)';
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.style.background = '';
-                }, 2000);
-            }
-        } catch (err) {
-            alert("クリップボードへのコピーに失敗しました。\nSafariの権限設定を確認してください。");
-        }
-    },
-
-    toggleSettings() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; },
-
-    renderSettings() {
-        const container = document.getElementById('altnSettingsContainer'); container.innerHTML = '';
-        document.getElementById('alertThreshold').value = this.state.alertThreshold || 0;
-        
-        const destThEl = document.getElementById('destFuelThreshold');
-        if (destThEl) destThEl.value = this.state.destFuelThreshold || 0;
-
-        const basisEl = document.getElementById('fuelCalcBasis'); if(basisEl) basisEl.value = this.state.fuelCalcBasis || 'CALC';
-
-        this.state.altns.forEach((altn, idx) => {
-            const div = document.createElement('div'); div.className = 'input-group';
-            div.innerHTML = `
-                <label style="font-size: 10px;">ALTN ${idx + 1} (AP / Fuel / RSV)</label>
-                <div style="display: flex; gap: 5px;">
-                    <input type="text" id="altnName_${idx}" style="width: 55px; text-transform: uppercase;" placeholder="AP" value="${altn.name}" onchange="app.saveAltnConfig()">
-                    <input type="number" id="altnFuel_${idx}" step="0.1" style="width: 65px;" placeholder="ALTN" value="${altn.fuel || ''}" onchange="app.saveAltnConfig()">
-                    <input type="number" id="altnRsv_${idx}" step="0.1" style="width: 65px;" placeholder="RSV" value="${altn.rsv || ''}" onchange="app.saveAltnConfig()">
-                    <button class="btn-danger btn-small" onclick="app.removeAltn(${idx})">✖</button>
-                </div>`;
-            container.appendChild(div);
-        });
-    },
-
-    addAltn() { this.state.altns.push({name:'', fuel:0, rsv:0}); this.renderSettings(); this.saveConfig(); },
-    removeAltn(idx) { this.state.altns.splice(idx, 1); this.renderSettings(); this.saveConfig(); },
-    saveAltnConfig() {
-        this.state.altns.forEach((altn, idx) => {
-            const nameEl = document.getElementById(`altnName_${idx}`);
-            if(nameEl) {
-                altn.name = nameEl.value.toUpperCase();
-                altn.fuel = parseFloat(document.getElementById(`altnFuel_${idx}`).value) || 0;
-                altn.rsv = parseFloat(document.getElementById(`altnRsv_${idx}`).value) || 0;
-            }
-        });
-        this.saveConfig();
-    },
-    changeFuelBasis() { this.state.fuelCalcBasis = document.getElementById('fuelCalcBasis').value; this.saveConfig(); this.calculate(); this.render(); },
-    
-    saveConfig() {
-        this.state.alertThreshold = parseFloat(document.getElementById('alertThreshold').value) || 0;
-        this.state.destFuelThreshold = parseFloat(document.getElementById('destFuelThreshold').value) || 0;
-        try { localStorage.setItem('navlog_v25_data', JSON.stringify(this.state)); } catch(e){}
-        this.renderStatusBar(); 
-    },
-
-    updateTime(field, val) {
-        this.state.times[field] = val;
-        if (field === 'bo' || field === 'bi') {
-            this.calcPflTimes();
-        }
-        
-        if (field === 'tkof' && this.state.waypoints.length > 0) {
-            this.state.waypoints[0].actualTime = val;
-            this.calculate();
-            this.render();
-        } else {
-            this.saveConfig();
-        }
-    },
-    renderTimes() {
-        ['bo', 'bi', 'tkof', 'ldg'].forEach(f => {
-            const el = document.getElementById('time_' + f);
-            if (el) el.value = this.state.times[f] || '';
-        });
-    },
-
-    updateActualFuel(field, val) {
-        if (field === 'fob') this.state.actFob = val;
-        if (field === 'fod') this.state.actFod = val;
-        this.saveConfig();
-    },
-    renderActualFuel() {
-        const fobEl = document.getElementById('actFob');
-        if (fobEl) fobEl.value = this.state.actFob || '';
-        const fodEl = document.getElementById('actFod');
-        if (fodEl) fodEl.value = this.state.actFod || '';
-    },
-
-    extractFlightMeta(text) {
-        let meta = { flt: "---", date: "---", reg: "---", dep: "---", dest: "---", altn: "---", time: "---", sta: null, altns: [], bt: "---", ft: "---", dist: "---" };
-        const regMatch = text.match(/COMPUTED\s+\d{4}Z\s+([A-Z0-9\-]+)/); if (regMatch) meta.reg = regMatch[1];
-        const dateMatch = text.match(/\b(\d{2}[A-Z]{3}\d{2,4})\b/); if (dateMatch) meta.date = dateMatch[1];
-        const routeMatch = text.match(/^([A-Z0-9]+)\/\d{1,3}\/\d{1,3}\s+([A-Z0-9]{4})-([A-Z0-9]{4})\s+([A-Z0-9\/\s]+?)\s+((?:STD|ETD)\s+\d{4}Z\/\d{4}L\s+(?:STA|ETA)\s+\d{4}Z\/\d{4}L)/m);
-        if (routeMatch) {
-            meta.flt = routeMatch[1]; meta.dep = routeMatch[2]; meta.dest = routeMatch[3]; meta.altn = routeMatch[4].trim(); meta.time = routeMatch[5];
-            const staMatch = meta.time.match(/(?:STA|ETA)\s+(\d{4})Z/); if (staMatch) meta.sta = staMatch[1];
-        }
-        const btFtMatch = text.match(/B\/T\s+(\d{2}HR\d{2}MIN)\s+F\/T\s+(\d{2}HR\d{2}MIN)/); if (btFtMatch) { meta.bt = btFtMatch[1]; meta.ft = btFtMatch[2]; }
-        
-        let globalRsv = 0; const rsvMatch = text.match(/^RSV\s+\d{2}\/\d{2}\s+(\d+)/m); 
-        if (rsvMatch) { 
-            let val = parseFloat(rsvMatch[1]); 
-            globalRsv = val > 100 ? val / 1000 : val; 
-            if(globalRsv > 0) this.state.destFuelThreshold = globalRsv; 
-        }
-        
-        const altMatch = text.match(/^ALT\s+(.*)/m);
-        if (altMatch) {
-            const altnParts = altMatch[1].match(/([A-Z0-9]{4})\s+\d{2}\/\d{2}\s+(\d+)/g);
-            if (altnParts) altnParts.forEach(p => {
-                const m = p.match(/([A-Z0-9]{4})\s+\d{2}\/\d{2}\s+(\d+)/);
-                if (m) meta.altns.push({ name: m[1], fuel: parseFloat(m[2]) > 100 ? parseFloat(m[2])/1000 : parseFloat(m[2]), rsv: globalRsv });
-            });
-        }
-        this.state.flightMeta = meta; this.renderFlightMeta();
-
-        if (this.state.postFlightLog) {
-            this.state.postFlightLog.fltNumber = meta.flt !== "---" ? meta.flt : "";
-            this.state.postFlightLog.dep = meta.dep !== "---" ? meta.dep : "";
-            this.state.postFlightLog.arr = meta.dest !== "---" ? meta.dest : "";
-            this.state.postFlightLog.day = meta.date !== "---" ? meta.date : "";
-            this.state.postFlightLog.reg = meta.reg !== "---" ? meta.reg : "";
-            if(!this.state.postFlightLog.type) this.state.postFlightLog.type = "B767";
-        }
-    },
-
-    renderFlightMeta() {
-        document.getElementById('defaultTitle').style.display = 'none'; document.getElementById('flightHeader').style.display = 'block';
-        document.getElementById('fh-flt').textContent = this.state.flightMeta.flt; document.getElementById('fh-date').textContent = this.state.flightMeta.date;
-        document.getElementById('fh-reg').textContent = this.state.flightMeta.reg; document.getElementById('fh-route').textContent = `${this.state.flightMeta.dep} ➔ ${this.state.flightMeta.dest}`;
-        document.getElementById('fh-altn').textContent = this.state.flightMeta.altn; document.getElementById('fh-time').textContent = this.state.flightMeta.time;
-        document.getElementById('fh-bt').textContent = this.state.flightMeta.bt || "---"; document.getElementById('fh-ft').textContent = this.state.flightMeta.ft || "---";
-        document.getElementById('fh-dist').textContent = (this.state.flightMeta.dist !== "---" ? this.state.flightMeta.dist + " NM" : "---");
-    },
-
-    toggleHeader() {
-        const c = document.getElementById('headerInfoContent'), icon = document.getElementById('drm-toggle-icon');
-        if (c.style.display === 'none') { c.style.display = 'block'; icon.textContent = '▼'; } else { c.style.display = 'none'; icon.textContent = '▶'; }
-    },
-
-    extractAndFormatHeaderInfo(text) {
-        let headerEndIndex = text.length; const rdisMatch = text.match(/([A-Z]{4})\s+\(RDIS\)\s+(\d{3}\.\d)/); if (rdisMatch) headerEndIndex = rdisMatch.index;
-        let rawHeader = text.substring(0, headerEndIndex); const lastNavLogIdx = rawHeader.lastIndexOf('NAVIGATION LOG'); if (lastNavLogIdx !== -1) rawHeader = rawHeader.substring(0, lastNavLogIdx);
-        let cleanedLines = [];
-        for (let line of rawHeader.split('\n')) {
-            const trimmed = line.trim();
-            if (trimmed.includes('ipobs-aps') || trimmed === '_' || trimmed.includes('token=') || /\d+\s*\/\s*\d+\s*ページ/.test(trimmed) || trimmed === '') continue;
-            cleanedLines.push(trimmed);
-        }
-        let formattedLines = [], inFuelPlan = false, inSummaryPlan = false, parenthesisDepth = 0;
-        for (let i = 0; i < cleanedLines.length; i++) {
-            let line = cleanedLines[i];
-            if (inFuelPlan && !line.includes('-FUEL PLAN')) {
-                const isKey = ['BOF','CON','RSV','ALT','TAX','REQ','PCF','EXT','FOB'].some(k => line.startsWith(k));
-                if (!isKey && !line.includes('TIME') && !line.startsWith('FOD=') && !line.startsWith('DIV') && !line.startsWith('TXI') && !line.startsWith('CRIT F') && !line.startsWith('CPT')) {
-                    formattedLines.push('----------------------------------------------------------------------'); inFuelPlan = false;
-                }
-            }
-            if (inSummaryPlan && !line.includes('-SUMMARY PLAN')) { if (!/^FL\d{3}/.test(line) && !line.includes('SPD')) { formattedLines.push('-------------------------------------------'); inSummaryPlan = false; } }
-            let isMajorHeader = false;
-            if (line.includes('JDP:') || line.includes('COMPANY CLEARANCE')) isMajorHeader = true;
-            else if (line.startsWith('-') && !line.startsWith('--') && parenthesisDepth === 0) isMajorHeader = true;
-            if (isMajorHeader && formattedLines.length > 0 && formattedLines[formattedLines.length - 1] !== '') formattedLines.push('');
-            let oC = (line.match(/\(/g) || []).length, cC = (line.match(/\)/g) || []).length; parenthesisDepth = Math.max(0, parenthesisDepth + (oC - cC));
-            if (line.includes('-SUMMARY PLAN')) { inSummaryPlan = true; formattedLines.push('■ SUMMARY PLAN'); continue; }
-            if (inSummaryPlan) {
-                if (line.includes('FL') && line.includes('SPD')) { formattedLines.push('     FL    SPD   TIME    FUEL    W/F    C/T\n-------------------------------------------'); continue; }
-                if (/^FL\d{3}/.test(line)) { let p = line.split(/\s+/); formattedLines.push((p[0]||"").padEnd(6,' ')+" "+(p[1]||"").padStart(4,' ')+"  "+(p[2]||"").padStart(5,' ')+"  "+(p[3]||"").padStart(7,' ')+"  "+(p[4]||"").padStart(5,' ')+"  "+(p[5]||"").padStart(5,' ')); continue; }
-                continue; 
-            }
-            if (line.includes('-FUEL PLAN')) { inFuelPlan = true; formattedLines.push('■ FUEL PLAN'); continue; }
-            if (inFuelPlan) {
-                if (line.includes('TIME') && line.includes('FUEL')) { formattedLines.push('     DEST   TIME   FUEL      DEST   TIME   FUEL      REMARKS\n----------------------------------------------------------------------'); continue; }
-                if (line.startsWith('FOD=') || line.startsWith('CPT') || line.startsWith('DIV') || line.startsWith('TXI') || line.startsWith('CRIT F')) { formattedLines.push(line); continue; }
-                const keyMatch = ['BOF','CON','RSV','ALT','TAX','REQ','PCF','EXT','FOB'].find(k => line.startsWith(k));
-                if (keyMatch) {
-                    let p = line.split(/\s+/), k = p[0], d1="", t1="", f1="", d2="", t2="", f2="", rm="";
-                    if (k==='BOF') { d1=p[1]; t1=p[2]; f1=p[3]; d2=p[4]; t2=p[5]; f2=p[6]; rm=p.slice(7).join(' '); }
-                    else if (k==='ALT') { d1=p[1]||""; t1=p[2]||""; f1=p[3]||""; if (p[4] && p[4].includes('/')) { d2="----"; t2=p[4]; f2=p[5]||""; } else { d2=p[4]||""; t2=p[5]||""; f2=p[6]||""; } }
-                    else if (k==='TAX') { f1=p[1]; f2=p[2]; } else { t1=p[1]; f1=p[2]; t2=p[3]; f2=p[4]; }
-                    formattedLines.push(`${k.padEnd(4, ' ')} ${(d1||"").padEnd(5, ' ')}  ${(t1||"").padStart(5, ' ')}  ${(f1||"").padStart(6, ' ')}   ${(d2||"").padEnd(5, ' ')}  ${(t2||"").padStart(5, ' ')}  ${(f2||"").padStart(6, ' ')}   ${rm}`);
-                    continue;
-                }
-            }
-            if (line.includes('COMPANY CLEARANCE')) formattedLines.push('■ ' + line); else formattedLines.push(line);
-        }
-        this.state.headerInfo = formattedLines.join('\n').trim();
-        if (this.state.headerInfo) { document.getElementById('headerInfoCard').style.display = 'block'; document.getElementById('headerInfoContent').textContent = this.state.headerInfo; }
-    },
-
-    createWP(name, alt, tmp, zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, fuel, isaDevVal = '', mwtp = '---', wscp = '---') {
-        let isaDevNum = null, isaTmp = null;
-        if (isaDevVal !== '' && tmp !== '---') {
-            isaDevNum = parseInt(isaDevVal, 10);
-            isaTmp = parseInt(tmp, 10) - isaDevNum; 
-        }
-        return {
-            name, plannedAlt: alt, actualAlt: '', estAltDisplay: alt, plannedTmp: tmp, actualTmp: '', estTmpDisplay: tmp,
-            plannedZwind: zwind, actualZwind: '', estZwindDisplay: zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel: fuel,
-            isaDevNum, isaTmp, mwtp, wscp,
-            actualTime: '', actualFuelTTL: '', actualFuelCALC: '', calcEstTimeMin: null, calcEstFuel: null, estTimeDisplay: '', estFuelDisplay: 0, timeDiff: null, fuelDiff: null,
-            cumDist: 0, rdis: 0, memo: '', memoOpen: false
-        };
-    },
-
-    parseLegTime(str) { if (!str || str === "---") return 0; const p = str.split('.'), h = parseInt(p[0], 10) || 0, m = parseInt(p[1], 10) || 0; return (h * 60) + m; },
-    formatLegTime(m) { return String(Math.floor(m / 60)).padStart(2, '0') + '.' + String(m % 60).padStart(2, '0'); },
-    toMin(s) { return parseInt(s.slice(0,2), 10)*60 + parseInt(s.slice(2,4), 10); },
-    toHHMM(m) { let tm = Math.round(m); return String(Math.floor(tm/60)%24).padStart(2,'0') + String(tm%60).padStart(2,'0'); },
-    diffMin(act, est) { let d = act - est; while(d > 720) d -= 1440; while(d < -720) d += 1440; return d; },
-
-    update(i, field, val) {
-        if (field === 'actualAlt' && val !== '') { let cleanVal = val.toUpperCase().replace(/^FL/, '').trim(); val = /^\d{2,3}$/.test(cleanVal) ? cleanVal + "00" : cleanVal; }
-        this.state.waypoints[i][field] = val; 
-        
-        if(i === 0 && field === 'actualTime') {
-            this.state.times.tkof = val;
-            this.renderTimes();
-        }
-        
-        this.calculate(); 
-        this.render();
-    },
-
-    calculate() {
-        let pTimeMin = null, pFuel = null, cAlt = null, oAlt = null;
-        this.state.waypoints.forEach((wp, i) => {
-            if (wp.actualAlt !== '') { wp.estAltDisplay = wp.actualAlt; cAlt = wp.actualAlt; oAlt = wp.plannedAlt; }
-            else { if (cAlt !== null && wp.plannedAlt === oAlt) wp.estAltDisplay = cAlt; else { cAlt = null; oAlt = null; wp.estAltDisplay = wp.plannedAlt; } }
-            wp.estZwindDisplay = wp.actualZwind !== '' ? wp.actualZwind : wp.plannedZwind;
-            wp.estTmpDisplay = wp.actualTmp !== '' ? wp.actualTmp : wp.plannedTmp;
-            
-            let actFuelStr = this.state.fuelCalcBasis === 'TTL' ? (wp.actualFuelTTL || '') : (wp.actualFuelCALC || '');
-            let actTimeStr = wp.actualTime || '';
-
-            if (i === 0) { 
-                wp.calcEstTimeMin = (actTimeStr && actTimeStr.length === 4) ? this.toMin(actTimeStr) : null; 
-                wp.calcEstFuel = wp.plannedFuel; 
-            } else {
-                wp.calcEstTimeMin = pTimeMin !== null ? (pTimeMin + wp.ztmeMin) % 1440 : null;
-                wp.calcEstFuel = pFuel !== null ? Math.max(0, pFuel - (this.state.waypoints[i-1].plannedFuel - wp.plannedFuel)) : wp.plannedFuel;
-            }
-            wp.estTimeDisplay = wp.calcEstTimeMin !== null ? this.toHHMM(wp.calcEstTimeMin) : '--';
-            wp.estFuelDisplay = wp.calcEstFuel;
-            
-            wp.timeDiff = (actTimeStr && actTimeStr.length === 4 && wp.calcEstTimeMin !== null) ? this.diffMin(this.toMin(actTimeStr), wp.calcEstTimeMin) : null;
-            wp.fuelDiff = (actFuelStr !== '') ? parseFloat(actFuelStr) - wp.plannedFuel : null;
-            
-            pTimeMin = (actTimeStr && actTimeStr.length === 4) ? this.toMin(actTimeStr) : wp.calcEstTimeMin;
-            pFuel = actFuelStr !== '' ? parseFloat(actFuelStr) : wp.calcEstFuel;
-        });
-        this.saveConfig();
-    },
-
-    toggleMemo(i) { this.state.waypoints[i].memoOpen = !this.state.waypoints[i].memoOpen; this.saveConfig(); document.getElementById('tableBody').innerHTML = ''; this.render(); },
-    updateMemo(i, val) { this.state.waypoints[i].memo = val; this.saveConfig(); },
-
-    render() {
-        const tbody = document.getElementById('tableBody');
-        if (!tbody) return;
-        
-        const isAlreadyRendered = tbody.children.length > 0 && tbody.children.length === this.state.waypoints.length * 2;
-
-        if (!isAlreadyRendered) {
-            tbody.innerHTML = '';
-            this.state.waypoints.forEach((wp, i) => {
-                let tClass = (wp.timeDiff !== null) ? (wp.timeDiff > 0 ? 'diff-behind' : (wp.timeDiff < 0 ? 'diff-ahead' : '')) : '';
-                let fClass = (wp.fuelDiff !== null) ? (wp.fuelDiff > 0 ? 'diff-ahead' : (wp.fuelDiff < 0 ? 'diff-behind' : '')) : '';
-                const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt, isWind = wp.actualZwind !== '', isTmp = wp.actualTmp !== '';
-                const hasMemo = wp.memo && wp.memo.trim() !== '';
-
-                let currentIsaDevDisplay = '()';
-                if (wp.isaTmp !== null) {
-                    let currentTmp = parseInt(wp.estTmpDisplay, 10);
-                    if (!isNaN(currentTmp)) {
-                        let currentIsaDevNum = currentTmp - wp.isaTmp;
-                        currentIsaDevDisplay = `(${currentIsaDevNum >= 0 ? ' ' : ''}${currentIsaDevNum})`;
-                    }
-                }
-
-                const isFirstRow = (i === 0);
-                const actTimeReadonly = isFirstRow ? 'readonly' : '';
-
-                const tr = document.createElement('tr');
-                tr.id = `row-${i}`;
-                tr.innerHTML = `
-                    <td class="log-td col-wp sticky-col-wp" style="padding: 2px;"><div class="wp-cell" onclick="app.toggleMemo(${i})"><strong>${wp.name}</strong>${hasMemo ? '<br><span style="font-size:11px;">📝</span>' : ''}</div></td>
-                    <td class="log-td col-alt"><input type="text" id="wp_${i}_alt" class="input-ref ${isAlt ? 'input-modified' : ''}" value="${wp.estAltDisplay}" onchange="app.update(${i}, 'actualAlt', this.value)"></td>
-                    <td class="log-td col-wind"><div class="input-stacked">
-                        <input type="text" id="wp_${i}_wind" class="input-ref input-wind ${isWind ? 'input-modified' : ''}" value="${wp.estZwindDisplay}" onchange="app.update(${i}, 'actualZwind', this.value)">
-                        <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                            <input type="text" id="wp_${i}_tmp" class="input-ref input-tmp ${isTmp ? 'input-modified' : ''}" value="${wp.estTmpDisplay}" onchange="app.update(${i}, 'actualTmp', this.value)">
-                            <span id="wp_${i}_isaDev" class="isa-dev-text">${currentIsaDevDisplay}</span>
-                        </div>
-                    </div></td>
-                    <td class="log-td col-mwtp">
-                        <div style="font-size: 13px; font-weight: normal; white-space: nowrap;">${wp.mwtp}</div>
-                        <div style="font-size: 11px; color: var(--text-faint);">${wp.wscp}</div>
-                    </td>
-                    <td class="log-td col-ctme" style="white-space: nowrap;">${wp.ctme} / ${wp.cumDist}<br><span style="color: var(--text-faint); font-size:10px;">${wp.rtme} / ${wp.rdis}</span></td>
-                    <td class="log-td col-ztme" style="white-space: nowrap;">${wp.ztmeDisplay}<br><span style="color: var(--text-faint); font-size:10px;">(${wp.dist})</span></td>
-                    <td class="log-td col-main" style="font-size:15px; font-weight:bold;" id="wp_${i}_estTime">${wp.estTimeDisplay}</td>
-                    <td class="log-td col-main"><div class="fuel-primary" id="wp_${i}_estFuel">${wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--'}</div><div class="fuel-secondary">(${wp.plannedFuel.toFixed(1)})</div></td>
-                    <td class="log-td col-actual no-print col-main"><input type="text" id="wp_${i}_actTime" class="input-actual" inputmode="numeric" maxlength="4" value="${wp.actualTime || ''}" ${actTimeReadonly} onchange="app.update(${i}, 'actualTime', this.value)"></td>
-                    <td class="log-td col-actual no-print col-main">
-                        <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
-                            <input type="number" id="wp_${i}_actFuelTTL" class="input-actual-half" inputmode="decimal" step="0.1" placeholder="TTL" value="${wp.actualFuelTTL || ''}" onchange="app.update(${i}, 'actualFuelTTL', this.value)">
-                            <input type="number" id="wp_${i}_actFuelCALC" class="input-actual-half" inputmode="decimal" step="0.1" placeholder="CALC" value="${wp.actualFuelCALC || ''}" onchange="app.update(${i}, 'actualFuelCALC', this.value)">
-                        </div>
-                    </td>
-                    <td class="log-td col-diff ${tClass}" id="wp_${i}_timeDiff">${wp.timeDiff !== null ? (wp.timeDiff > 0 ? '+'+wp.timeDiff : wp.timeDiff) : ''}</td>
-                    <td class="log-td col-diff ${fClass}" id="wp_${i}_fuelDiff">${wp.fuelDiff !== null ? (wp.fuelDiff > 0 ? '+'+wp.fuelDiff.toFixed(1) : wp.fuelDiff.toFixed(1)) : ''}</td>
-                `;
-                tbody.appendChild(tr);
-
-                const memoTr = document.createElement('tr');
-                memoTr.id = `memo-row-${i}`;
-                memoTr.style.display = wp.memoOpen ? 'table-row' : 'none';
-                memoTr.className = 'memo-row'; // ★ no-print から memo-row に変更
-                memoTr.innerHTML = `
-                    <td colspan="12" style="padding: 6px; background-color: var(--memo-bg);">
-                        <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
-                    </td>
-                `;
-                tbody.appendChild(memoTr);
-            });
-        } else {
-            this.state.waypoints.forEach((wp, i) => {
-                const altEl = document.getElementById(`wp_${i}_alt`);
-                if (altEl && document.activeElement !== altEl) {
-                    altEl.value = wp.estAltDisplay;
-                    if (wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt) altEl.classList.add('input-modified'); else altEl.classList.remove('input-modified');
-                }
-
-                const windEl = document.getElementById(`wp_${i}_wind`);
-                if (windEl && document.activeElement !== windEl) {
-                    windEl.value = wp.estZwindDisplay;
-                    if (wp.actualZwind !== '') windEl.classList.add('input-modified'); else windEl.classList.remove('input-modified');
-                }
-
-                const tmpEl = document.getElementById(`wp_${i}_tmp`);
-                if (tmpEl && document.activeElement !== tmpEl) {
-                    tmpEl.value = wp.estTmpDisplay;
-                    if (wp.actualTmp !== '') tmpEl.classList.add('input-modified'); else tmpEl.classList.remove('input-modified');
-                }
-
-                const isaDevEl = document.getElementById(`wp_${i}_isaDev`);
-                if (isaDevEl) {
-                    let currentIsaDevDisplay = '()';
-                    if (wp.isaTmp !== null) {
-                        let currentTmp = parseInt(wp.estTmpDisplay, 10);
-                        if (!isNaN(currentTmp)) {
-                            let currentIsaDevNum = currentTmp - wp.isaTmp;
-                            currentIsaDevDisplay = `(${currentIsaDevNum >= 0 ? ' ' : ''}${currentIsaDevNum})`;
-                        }
-                    }
-                    isaDevEl.textContent = currentIsaDevDisplay;
-                }
-
-                const estTimeEl = document.getElementById(`wp_${i}_estTime`);
-                if (estTimeEl) estTimeEl.textContent = wp.estTimeDisplay;
-
-                const estFuelEl = document.getElementById(`wp_${i}_estFuel`);
-                if (estFuelEl) estFuelEl.textContent = wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--';
-
-                const actTimeEl = document.getElementById(`wp_${i}_actTime`);
-                if (actTimeEl && document.activeElement !== actTimeEl) actTimeEl.value = wp.actualTime || '';
-
-                const actFuelTTLEl = document.getElementById(`wp_${i}_actFuelTTL`);
-                if (actFuelTTLEl && document.activeElement !== actFuelTTLEl) actFuelTTLEl.value = wp.actualFuelTTL || '';
-
-                const actFuelCALCEl = document.getElementById(`wp_${i}_actFuelCALC`);
-                if (actFuelCALCEl && document.activeElement !== actFuelCALCEl) actFuelCALCEl.value = wp.actualFuelCALC || '';
-
-                const timeDiffEl = document.getElementById(`wp_${i}_timeDiff`);
-                if (timeDiffEl) {
-                    timeDiffEl.textContent = wp.timeDiff !== null ? (wp.timeDiff > 0 ? '+'+wp.timeDiff : wp.timeDiff) : '';
-                    let tClass = (wp.timeDiff !== null) ? (wp.timeDiff > 0 ? 'diff-behind' : (wp.timeDiff < 0 ? 'diff-ahead' : '')) : '';
-                    timeDiffEl.className = `log-td col-diff ${tClass}`;
-                }
-
-                const fuelDiffEl = document.getElementById(`wp_${i}_fuelDiff`);
-                if (fuelDiffEl) {
-                    fuelDiffEl.textContent = wp.fuelDiff !== null ? (wp.fuelDiff > 0 ? '+'+wp.fuelDiff.toFixed(1) : wp.fuelDiff.toFixed(1)) : '';
-                    let fClass = (wp.fuelDiff !== null) ? (wp.fuelDiff > 0 ? 'diff-ahead' : (wp.fuelDiff < 0 ? 'diff-behind' : '')) : '';
-                    fuelDiffEl.className = `log-td col-diff ${fClass}`;
-                }
-            });
-        }
-        
-        this.renderStatusBar();
-        document.getElementById('tableContainer').style.display = 'block';
-    },
-
-    renderStatusBar() {
-        const wps = this.state.waypoints; if (!wps || wps.length === 0) return;
-        const last = wps[wps.length - 1];
-        let lastTimeIdx = -1, lastFuelIdx = -1;
-        for (let i = wps.length - 1; i >= 0; i--) {
-            if (lastTimeIdx === -1 && wps[i].actualTime && wps[i].actualTime.length === 4) lastTimeIdx = i;
-            let actFuelStr = this.state.fuelCalcBasis === 'TTL' ? (wps[i].actualFuelTTL || '') : (wps[i].actualFuelCALC || '');
-            if (lastFuelIdx === -1 && actFuelStr !== '') lastFuelIdx = i;
-        }
-
-        const elEtaLast = document.getElementById('sb-eta-last');
-        if (lastTimeIdx !== -1) { elEtaLast.textContent = `(Last: ${wps[lastTimeIdx].name})`; elEtaLast.style.display = 'inline'; elEtaLast.onclick = () => app.scrollToRow(lastTimeIdx); } 
-        else { elEtaLast.style.display = 'none'; }
-
-        const elFuelLast = document.getElementById('sb-fuel-last');
-        if (lastFuelIdx !== -1) { elFuelLast.textContent = `(Last: ${wps[lastFuelIdx].name})`; elFuelLast.style.display = 'inline'; elFuelLast.onclick = () => app.scrollToRow(lastFuelIdx); } 
-        else { elFuelLast.style.display = 'none'; }
-
-        const finalTimeMin = last.actualTime && last.actualTime.length === 4 ? this.toMin(last.actualTime) : last.calcEstTimeMin;
-        let lastActFuelStr = this.state.fuelCalcBasis === 'TTL' ? (last.actualFuelTTL || '') : (last.actualFuelCALC || '');
-        const finalFuel = lastActFuelStr !== '' ? parseFloat(lastActFuelStr) : last.calcEstFuel;
-
-        let etaDisp = '--', etaDiffDisp = '', etaClass = '';
-        if (finalTimeMin !== null && this.state.flightMeta) {
-            let timeOffset = 0;
-            if (this.state.flightMeta.time) { const match = this.state.flightMeta.time.match(/(?:STA|ETA)\s+(\d{4})Z\/(\d{4})L/); if (match) { timeOffset = this.toMin(match[2]) - this.toMin(match[1]); } }
-            let localTimeMin = (finalTimeMin + timeOffset + 2880) % 1440;
-            etaDisp = this.toHHMM(finalTimeMin) + 'Z/' + this.toHHMM(localTimeMin) + 'L';
-            if (this.state.flightMeta.sta) {
-                const staMin = this.toMin(this.state.flightMeta.sta); let diff = finalTimeMin - staMin;
-                while(diff > 720) diff -= 1440; while(diff < -720) diff += 1440;
-                if (diff < 0) { etaDiffDisp = `(${diff}m)`; etaClass = 'diff-ahead'; } 
-                else if (diff > 0) { etaDiffDisp = `(+${diff}m)`; etaClass = 'diff-behind'; } 
-                else { etaDiffDisp = '(On Time)'; }
-            }
-        }
-        document.getElementById('sb-eta').textContent = etaDisp;
-        const elEtaDiff = document.getElementById('sb-eta-diff'); elEtaDiff.textContent = etaDiffDisp; elEtaDiff.className = etaClass ? `status-badge ${etaClass}` : 'status-badge';
-        
-        let destFuelDisp = finalFuel !== null ? finalFuel.toFixed(1) : '--'; let destFuelDiffDisp = '', destFuelClass = '';
-        if (finalFuel !== null) {
-            let diff = finalFuel - last.plannedFuel;
-            if (diff > 0) { destFuelDiffDisp = `(+${diff.toFixed(1)})`; destFuelClass = 'diff-ahead'; } else if (diff < 0) { destFuelDiffDisp = `(${diff.toFixed(1)})`; destFuelClass = 'diff-behind'; } else { destFuelDiffDisp = '(±0.0)'; }
-        }
-        document.getElementById('sb-dest-fuel').textContent = destFuelDisp;
-        const elFuelDiff = document.getElementById('sb-dest-fuel-diff'); elFuelDiff.textContent = destFuelDiffDisp; elFuelDiff.className = destFuelClass ? `status-badge ${destFuelClass}` : 'status-badge';
-
-        const sb = document.getElementById('statusBar');
-        const warningEl = document.getElementById('sb-dest-fuel-warning');
-        if (finalFuel !== null && this.state.destFuelThreshold > 0 && finalFuel < this.state.destFuelThreshold) {
-            sb.classList.add('status-warning');
-            if (warningEl) warningEl.innerHTML = '<span class="dest-warning-badge">⚠️ LOW FUEL</span>';
-        } else {
-            sb.classList.remove('status-warning');
-            if (warningEl) warningEl.innerHTML = '';
-        }
-
-        const container = document.getElementById('sb-avail-fuel-container'); container.innerHTML = '';
-        let validAltnCount = 0;
-        
-        if (finalFuel !== null) {
-            this.state.altns.forEach(altn => {
-                if (altn.name && altn.name.trim() !== '') {
-                    validAltnCount++; const totalReq = parseFloat(altn.fuel) + parseFloat(altn.rsv); const avail = finalFuel - totalReq;
-                    const isLow = avail < this.state.alertThreshold; const warningBadge = isLow ? `<span class="altn-warning-badge">⚠️ LOW FUEL</span>` : '';
-                    const div = document.createElement('div'); div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.flexWrap = 'wrap'; div.style.marginBottom = '2px';
-                    div.innerHTML = `<span style="font-size: 14px; color: ${isLow ? 'var(--alert-text)' : '#f1c40f'};">[${altn.name}] ${avail.toFixed(1)}</span>${warningBadge}<span style="font-size: 10px; font-weight: normal; margin-left: 8px; opacity: 0.7;">( [${altn.name}] ${totalReq.toFixed(1)} (= ALTN:${parseFloat(altn.fuel).toFixed(1)} + RSV:${parseFloat(altn.rsv).toFixed(1)}) )</span>`;
-                    container.appendChild(div);
-                }
-            });
-            if (validAltnCount === 0) {
-                const avail = finalFuel; const isLow = avail < this.state.alertThreshold; const warningBadge = isLow ? `<span class="altn-warning-badge">⚠️ LOW FUEL</span>` : '';
-                const div = document.createElement('div'); div.style.display = 'flex'; div.style.alignItems = 'center';
-                div.innerHTML = `<span style="font-size: 14px; color: ${isLow ? 'var(--alert-text)' : '#f1c40f'};">${avail.toFixed(1)}</span>${warningBadge}`;
-                container.appendChild(div);
-            }
-        }
-        setTimeout(() => this.updateStickyHeight(), 50);
-    },
-
-    resetData() {
-        if(confirm("フライトデータを完全に削除し、初期状態に戻しますか？")) {
-            localStorage.removeItem('navlog_v25_data');
-            this.state = { 
-                waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
-                crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
-                takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
-                times: { bo: '', bi: '', tkof: '', ldg: '' },
-                actFob: '', actFod: '',
-                postFlightLog: null
-            };
-            document.getElementById('flightHeader').style.display = 'none'; document.getElementById('headerInfoCard').style.display = 'none';
-            document.getElementById('crewInfoCard').style.display = 'none'; document.getElementById('tableContainer').style.display = 'none';
-            document.getElementById('statusBar').style.display = 'none'; document.getElementById('bottomControls').style.display = 'none';
-            document.getElementById('settingsPanel').style.display = 'none'; document.getElementById('defaultTitle').style.display = 'block';
-            document.getElementById('inputArea').style.display = 'block';
-            this.renderSettings();
-            this.renderTimes();
-            this.renderActualFuel();
-            this.state.postFlightLog = { domInt: 'DOM', activeDuty: 'PIC', day: '', type: 'B767', reg: '', dep: '', arr: '', fltNumber: '', depTime: '', arrTime: '', tkof: '', ldg: '', fltTime: '', picTime: '', sicTime: '', ngtPicSic: '', copTime: '', ngtCop: '', imc: '', apchType: '' };
-            this.renderPostFlightLog();
-        }
+    body { 
+        padding: 0; background: white; min-width: 100%; color: black; 
+        font-family: 'SF Mono', Consolas, Menlo, monospace; font-size: 11px; 
     }
-};
 
-window.onload = () => app.init();
+    /* ボックスやUI装飾の完全排除 */
+    .flight-header, .card-crew, .card-drm {
+        box-shadow: none !important;
+        border: none !important;
+        background: transparent !important;
+        color: black !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* 1ページ目の2段組み（Float）レイアウト */
+    #flightHeader, #crewInfoCard { 
+        width: 48% !important; 
+        float: left !important; 
+        clear: left !important; 
+        margin-bottom: 5mm !important; 
+        display: block !important; 
+    }
+    #headerInfoCard { 
+        width: 48% !important; 
+        float: right !important; 
+        clear: right !important; 
+        margin-bottom: 5mm !important; 
+        display: block !important; 
+    }
+
+    /* 各コンテンツの強制展開・折り返し */
+    #crewContentEl, .drm-content { display: block !important; }
+    .drm-content {
+        max-height: none !important;
+        overflow: visible !important;
+        white-space: pre-wrap !important;
+        color: black !important;
+        padding: 0 !important;
+        font-size: 11px !important;
+    }
+
+    /* セクションタイトルのプレーンテキスト化 */
+    .fh-title, .crew-title, .drm-title {
+        color: black !important;
+        font-size: 12px !important;
+        border-bottom: 1px solid black !important;
+        margin-bottom: 4px !important;
+        padding-bottom: 2px !important;
+    }
+    #crew-toggle-icon, #drm-toggle-icon { display: none !important; }
+    
+    .fh-val { color: black !important; font-size: 14px !important; }
+    .fh-label { color: #555 !important; font-size: 10px !important; }
+
+    /* ステータスバー（中間エリア）のプレーン化 */
+    .status-bar { 
+        position: static !important; 
+        box-shadow: none !important; 
+        background: transparent !important; 
+        color: black !important; 
+        padding: 0 !important; 
+        margin-bottom: 5mm !important; 
+        clear: both !important; 
+    }
+    .status-title, .status-value, .status-badge, .input-label { color: black !important; background: transparent !important; }
+    .status-badge { border: 1px solid black !important; }
+
+    /* 入力フォームのプレーンテキスト化（枠線・背景・矢印消去） */
+    input, select, textarea {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        color: black !important;
+        font-family: inherit !important;
+    }
+
+    /* NAVLOGテーブルの強制改ページ */
+    .table-container {
+        clear: both !important;
+        break-before: page !important;
+        page-break-before: always !important;
+        max-height: none !important;
+        overflow: visible !important;
+        position: static !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        background: white !important;
+        width: 100% !important;
+    }
+
+    table { font-size: 10px; width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .table-container th, .table-container td { 
+        border: 1px solid black !important; 
+        padding: 4px 2px !important; 
+        color: black !important; 
+        background: transparent !important;
+    }
+    .sticky-col-wp, .table-container th { position: static !important; background: transparent !important; color: black !important; }
+
+    /* ★ メモ行を強制的に出力 */
+    .memo-row { display: table-row !important; }
+    .memo-row td { border-top: none !important; background-color: transparent !important; }
+    .memo-textarea { 
+        width: 100% !important; 
+        min-height: 24px !important; 
+        overflow: visible !important; 
+        resize: none !important; 
+    }
+
+    /* テーブル内インプット文字サイズの最適化 */
+    .input-actual, .input-actual-half, .input-ref { font-size: 10px !important; }
+    .pfl-input { font-size: 10px !important; }
+    .pfl-table th { padding: 2px !important; }
+}

@@ -210,7 +210,6 @@ const app = {
         }
         
         document.getElementById('statusBar').style.display = 'flex';
-        document.getElementById('statusBar').style.flexDirection = 'column'; // Ensure vertical stack for rows
         document.getElementById('bottomControls').style.display = 'block';
         document.getElementById('inputArea').style.display = 'none';
         document.getElementById('crewInfoCard').style.display = 'block';

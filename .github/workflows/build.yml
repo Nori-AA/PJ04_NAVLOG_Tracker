@@ -12,7 +12,6 @@ on:
 jobs:
   build-and-commit:
     runs-on: ubuntu-latest
-    # Node 20 廃止の警告を消し、Node 24 を先行利用する設定
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -31,26 +30,20 @@ jobs:
       - name: Run build script
         run: |
           python build.py
-          echo "Checking if index.html was created..."
-          ls -l index.html
+          echo "Build script output check:"
+          cat index.html | head -n 20 # 最初の20行をログに出力して確認
 
-      - name: Check for changes and Commit
+      - name: Force Commit and Push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           
           git add index.html
           
-          echo "=== GIT STATUS ==="
-          git status
-          
-          # 差分の有無を判定して詳細に報告
+          # 差分がある場合のみプッシュ、なければログを出す
           if git diff --staged --quiet; then
-            echo "RESULT: No changes detected in index.html compared to the repository version."
-            exit 0
+            echo "No changes in index.html to commit."
           else
-            echo "RESULT: Changes detected! Committing now..."
             git commit -m "Auto-build: Update index.html [skip ci]"
             git push origin main
-            echo "Push complete."
           fi

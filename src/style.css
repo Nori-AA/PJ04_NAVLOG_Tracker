@@ -70,6 +70,10 @@ html.theme-dark .pfl-toggle-group { background: rgba(255,255,255,0.1); }
 .pfl-input.wide { width: 75px; }
 .pfl-input.narrow { width: 45px; }
 
+/* ★ DATE(DAY)とREGの視認性向上のための幅拡張 */
+#pfl_day { width: 75px; }
+#pfl_reg { width: 65px; }
+
 .card-drm { background: var(--drm-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
 .drm-header { background: #222; padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
 .drm-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }

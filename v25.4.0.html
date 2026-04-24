@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.6.3 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.4.0 (Offline EFB)</title>
 
     <script>
         try {
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.6.3</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.4.0</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -40,7 +40,7 @@
 
     <div class="card-crew no-print" id="crewInfoCard" style="display:none;">
         <div class="crew-header" onclick="app.toggleCrew()">
-            <span class="crew-title">👨‍✈️ CREW INFO & LOG</span>
+            <span class="crew-title">👨‍✈️ CREW INFO</span>
             <span id="crew-toggle-icon" style="color: #fff; opacity: 0.7;">▼</span>
         </div>
         <div id="crewContentEl" class="crew-content" style="display:block;">
@@ -61,60 +61,6 @@
             <div style="text-align: left; margin-top: 10px; margin-left: 15px;">
                 <button class="btn-secondary btn-small" onclick="app.addCrew()">➕ 追加</button>
             </div>
-            
-            <hr style="margin: 20px 15px 15px; border: 0; border-top: 1px solid var(--border-color);">
-            
-            <div class="post-flight-log" id="postFlightLog" style="margin: 0 15px 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                    <span class="post-flight-title">📋 POST-FLIGHT LOG (LOGBOOK SYSTEM STYLE)</span>
-                    <div class="pfl-controls">
-                        <div class="pfl-toggle-group">
-                            <button id="btn_dom" class="pfl-toggle-btn" onclick="app.setLogRegion('DOM')">DOM</button>
-                            <button id="btn_int" class="pfl-toggle-btn" onclick="app.setLogRegion('INT')">INT</button>
-                        </div>
-                        <div class="pfl-toggle-group">
-                            <button id="btn_pic" class="pfl-toggle-btn" onclick="app.setLogDuty('PIC')">PIC</button>
-                            <button id="btn_sic" class="pfl-toggle-btn" onclick="app.setLogDuty('SIC')">SIC</button>
-                            <button id="btn_cop" class="pfl-toggle-btn" onclick="app.setLogDuty('COP')">COP</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="pfl-table-scroll-container">
-                    <div class="pfl-table-row">
-                        <div class="pfl-col col-day"><span class="pfl-th">DAY</span><input type="text" id="log_day" class="pfl-td" onchange="app.updateLog('day', this.value)"></div>
-                        <div class="pfl-col col-type"><span class="pfl-th">TYPE</span><input type="text" id="log_type" class="pfl-td" onchange="app.updateLog('type', this.value)"></div>
-                        <div class="pfl-col col-reg"><span class="pfl-th">REG</span><input type="text" id="log_reg" class="pfl-td" onchange="app.updateLog('reg', this.value)"></div>
-                        <div class="pfl-col col-apt"><span class="pfl-th">DEP</span><input type="text" id="log_dep" class="pfl-td" onchange="app.updateLog('dep', this.value)"></div>
-                        <div class="pfl-col col-apt"><span class="pfl-th">ARR</span><input type="text" id="log_arr" class="pfl-td" onchange="app.updateLog('arr', this.value)"></div>
-                        <div class="pfl-col col-time"><span class="pfl-th">DEP TIME</span><input type="text" id="log_depTime" class="pfl-td" maxlength="4" onchange="app.updateLog('depTime', this.value)"></div>
-                        <div class="pfl-col col-time"><span class="pfl-th">ARR TIME</span><input type="text" id="log_arrTime" class="pfl-td" maxlength="4" onchange="app.updateLog('arrTime', this.value)"></div>
-                        <div class="pfl-col col-cnt"><span class="pfl-th">TKOF</span>
-                            <select id="log_tkof" class="pfl-td" onchange="app.updateLog('tkof', this.value)">
-                                <option value=""></option><option value="1">1</option><option value="N1">N1</option>
-                            </select>
-                        </div>
-                        <div class="pfl-col col-cnt"><span class="pfl-th">LDG</span>
-                            <select id="log_ldg" class="pfl-td" onchange="app.updateLog('ldg', this.value)">
-                                <option value=""></option><option value="1">1</option><option value="N1">N1</option>
-                            </select>
-                        </div>
-                        <div class="pfl-col col-flt"><span class="pfl-th">FLT#</span><input type="text" id="log_flt" class="pfl-td" onchange="app.updateLog('flt', this.value)"></div>
-                        <div class="pfl-col col-dur"><span class="pfl-th">PIC TIME</span><input type="text" id="log_picTime" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('picTime', this.value)"></div>
-                        <div class="pfl-col col-dur"><span class="pfl-th">SIC TIME</span><input type="text" id="log_sicTime" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('sicTime', this.value)"></div>
-                        <div class="pfl-col col-dur"><span class="pfl-th">NGT(PIC/SIC)</span><input type="text" id="log_picNgt" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('picNgt', this.value)"></div>
-                        <div class="pfl-col col-dur"><span class="pfl-th">COP TIME</span><input type="text" id="log_copTime" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('copTime', this.value)"></div>
-                        <div class="pfl-col col-dur"><span class="pfl-th">NGT(COP)</span><input type="text" id="log_copNgt" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('copNgt', this.value)"></div>
-                        <div class="pfl-col col-dur"><span class="pfl-th">IMC</span><input type="text" id="log_imc" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('imc', this.value)"></div>
-                        
-                        <div class="pfl-col col-apch pfl-col-optional"><span class="pfl-th">APCH TYPE</span><input type="text" id="log_apch" class="pfl-td" placeholder="ILS/RNAV" onchange="app.updateLog('apch', this.value)"></div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 15px;">
-                    <textarea id="log_memo" class="memo-textarea" rows="3" placeholder="POST-FLIGHT MEMO / REMARKS..." onchange="app.updateLog('memo', this.value)"></textarea>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -130,6 +76,7 @@
         <div style="display: flex; gap: 20px; width: 100%; flex-wrap: wrap;">
             
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
+                
                 <div class="status-section">
                     <span class="status-title">ACTUAL TIMES</span>
                     <div class="status-content">
@@ -161,10 +108,13 @@
                         <span id="sb-eta-diff" class="status-badge"></span>
                     </div>
                 </div>
+
             </div>
 
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
+                
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    
                     <div class="status-section">
                         <span class="status-title">ACTUAL FUEL</span>
                         <div class="status-content">
@@ -180,6 +130,7 @@
                             </div>
                         </div>
                     </div>
+                    
                     <div class="status-section">
                         <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
                         <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -188,13 +139,17 @@
                             <span id="sb-dest-fuel-warning"></span>
                         </div>
                     </div>
+
                 </div>
+                
                 <div class="status-section">
                     <span class="status-title">AVAILABLE FUEL MARGIN</span>
                     <div class="status-content" id="sb-avail-fuel-container" style="width: max-content; display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.15);">
                     </div>
                 </div>
+
             </div>
+            
         </div>
     </div>
 
@@ -248,15 +203,18 @@
         
         <div id="settingsPanel" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
             <div class="settings-wrapper">
+                
                 <div class="settings-group">
                     <h3 class="settings-group-title">ALTN Settings</h3>
                     <div id="altnSettingsContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;"></div>
                     <button class="btn-secondary btn-small" onclick="app.addAltn()">➕ ALTN 追加</button>
+                    
                     <div class="input-group" style="margin-top: 15px;">
                         <label>Margin Alert Threshold</label>
                         <input type="number" id="alertThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
                     </div>
                 </div>
+
                 <div class="settings-group">
                     <h3 class="settings-group-title">Table Settings</h3>
                     <div class="input-group">
@@ -267,6 +225,7 @@
                         </select>
                     </div>
                 </div>
+
                 <div class="settings-group">
                     <h3 class="settings-group-title">Dest Fuel Settings</h3>
                     <div class="input-group">
@@ -274,6 +233,7 @@
                         <input type="number" id="destFuelThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
                     </div>
                 </div>
+
             </div>
             <div style="margin-top: 15px; text-align: right;">
                 <button onclick="app.toggleSettings()">閉じる</button>

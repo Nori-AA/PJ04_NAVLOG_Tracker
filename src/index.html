@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.4.0 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.5.0 (Offline EFB)</title>
 
     <script>
         try {
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.4.0</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.5.0</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -40,7 +40,7 @@
 
     <div class="card-crew no-print" id="crewInfoCard" style="display:none;">
         <div class="crew-header" onclick="app.toggleCrew()">
-            <span class="crew-title">👨‍✈️ CREW INFO</span>
+            <span class="crew-title">👨‍✈️ CREW INFO & POST-FLIGHT LOG</span>
             <span id="crew-toggle-icon" style="color: #fff; opacity: 0.7;">▼</span>
         </div>
         <div id="crewContentEl" class="crew-content" style="display:block;">
@@ -59,7 +59,82 @@
                 <tbody id="crewTableBody"></tbody>
             </table>
             <div style="text-align: left; margin-top: 10px; margin-left: 15px;">
-                <button class="btn-secondary btn-small" onclick="app.addCrew()">➕ 追加</button>
+                <button class="btn-secondary btn-small" onclick="app.addCrew()">➕ Crew 追加</button>
+            </div>
+
+            <div class="pf-container">
+                <div class="pf-header">
+                    <span class="pf-title">📝 POST-FLIGHT LOG</span>
+                    <div class="pf-controls">
+                        <div class="toggle-group">
+                            <button id="pf-dom-btn" class="toggle-btn" onclick="app.setPfMode('DOM')">DOM</button>
+                            <button id="pf-int-btn" class="toggle-btn" onclick="app.setPfMode('INT')">INT</button>
+                        </div>
+                        <div style="width: 15px;"></div>
+                        <div class="toggle-group">
+                            <button id="pf-duty-pic" class="toggle-btn" onclick="app.setPfDuty('PIC')">PIC</button>
+                            <button id="pf-duty-sic" class="toggle-btn" onclick="app.setPfDuty('SIC')">SIC</button>
+                            <button id="pf-duty-cop" class="toggle-btn" onclick="app.setPfDuty('COP')">COP</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pf-scroll-wrapper">
+                    <table class="pf-table">
+                        <thead>
+                            <tr class="pf-labels">
+                                <th style="min-width: 60px;">DAY</th>
+                                <th style="min-width: 70px;">TYPE</th>
+                                <th style="min-width: 80px;">REG</th>
+                                <th style="min-width: 60px;">DEP</th>
+                                <th style="min-width: 60px;">ARR</th>
+                                <th style="min-width: 85px;">DEP TIME</th>
+                                <th style="min-width: 85px;">ARR TIME</th>
+                                <th style="min-width: 65px;">TKOF</th>
+                                <th style="min-width: 65px;">LDG</th>
+                                <th style="min-width: 100px;">FLT NUMBER</th>
+                                <th style="min-width: 85px;">FLT TIME</th>
+                                <th style="min-width: 85px;">PIC TIME</th>
+                                <th style="min-width: 85px;">SIC TIME</th>
+                                <th style="min-width: 100px;">NGT(PIC/SIC)</th>
+                                <th style="min-width: 85px;">COP TIME</th>
+                                <th style="min-width: 85px;">NGT(COP)</th>
+                                <th style="min-width: 60px;">IMC</th>
+                                <th style="min-width: 30px; background: transparent; border: none;"></th> <th style="min-width: 100px;">APCH TYPE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="pf-inputs">
+                                <td><input type="text" id="pf-day" onchange="app.updatePf('day', this.value)"></td>
+                                <td><input type="text" id="pf-type" onchange="app.updatePf('type', this.value)"></td>
+                                <td><input type="text" id="pf-reg" onchange="app.updatePf('reg', this.value)"></td>
+                                <td><input type="text" id="pf-dep" onchange="app.updatePf('dep', this.value)"></td>
+                                <td><input type="text" id="pf-arr" onchange="app.updatePf('arr', this.value)"></td>
+                                <td><input type="text" id="pf-dep-time" inputmode="numeric" placeholder="hhmm" onchange="app.updatePfTime('depTime', this.value)"></td>
+                                <td><input type="text" id="pf-arr-time" inputmode="numeric" placeholder="hhmm" onchange="app.updatePfTime('arrTime', this.value)"></td>
+                                <td>
+                                    <select id="pf-tkof" onchange="app.updatePf('tkof', this.value)">
+                                        <option value=""></option><option value="1">1</option><option value="N1">N1</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="pf-ldg" onchange="app.updatePf('ldg', this.value)">
+                                        <option value=""></option><option value="1">1</option><option value="N1">N1</option>
+                                    </select>
+                                </td>
+                                <td><input type="text" id="pf-flt-no" onchange="app.updatePf('fltNo', this.value)"></td>
+                                <td><input type="text" id="pf-flt-time" readonly></td>
+                                <td><input type="text" id="pf-pic-time" inputmode="numeric" onchange="app.updatePfTime('picTime', this.value)"></td>
+                                <td><input type="text" id="pf-sic-time" inputmode="numeric" onchange="app.updatePfTime('sicTime', this.value)"></td>
+                                <td><input type="text" id="pf-ngt-picsic" inputmode="numeric" onchange="app.updatePfTime('ngtPicSic', this.value)"></td>
+                                <td><input type="text" id="pf-cop-time" inputmode="numeric" onchange="app.updatePfTime('copTime', this.value)"></td>
+                                <td><input type="text" id="pf-ngt-cop" inputmode="numeric" onchange="app.updatePfTime('ngtCop', this.value)"></td>
+                                <td><input type="text" id="pf-imc" inputmode="numeric" onchange="app.updatePfTime('imc', this.value)"></td>
+                                <td style="background: transparent; border: none;"></td> <td><input type="text" id="pf-apch-type" onchange="app.updatePf('apchType', this.value)"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -74,11 +149,9 @@
 
     <div class="status-bar" id="statusBar" style="display:none;">
         <div style="display: flex; gap: 20px; width: 100%; flex-wrap: wrap;">
-            
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
-                
                 <div class="status-section">
-                    <span class="status-title">ACTUAL TIMES</span>
+                    <span class="status-title">ACTUAL TIMES (UTC)</span>
                     <div class="status-content">
                         <div class="time-inputs" style="display: grid; grid-template-columns: max-content max-content; gap: 8px;">
                             <div class="input-group-inline">
@@ -100,7 +173,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="status-section">
                     <span class="status-title">EST. ARRIVAL (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
                     <div class="status-content status-value-group" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
@@ -108,13 +180,9 @@
                         <span id="sb-eta-diff" class="status-badge"></span>
                     </div>
                 </div>
-
             </div>
-
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
-                
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    
                     <div class="status-section">
                         <span class="status-title">ACTUAL FUEL</span>
                         <div class="status-content">
@@ -130,7 +198,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="status-section">
                         <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
                         <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -139,17 +206,13 @@
                             <span id="sb-dest-fuel-warning"></span>
                         </div>
                     </div>
-
                 </div>
-                
                 <div class="status-section">
                     <span class="status-title">AVAILABLE FUEL MARGIN</span>
                     <div class="status-content" id="sb-avail-fuel-container" style="width: max-content; display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.15);">
                     </div>
                 </div>
-
             </div>
-            
         </div>
     </div>
 
@@ -203,18 +266,15 @@
         
         <div id="settingsPanel" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
             <div class="settings-wrapper">
-                
                 <div class="settings-group">
                     <h3 class="settings-group-title">ALTN Settings</h3>
                     <div id="altnSettingsContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;"></div>
                     <button class="btn-secondary btn-small" onclick="app.addAltn()">➕ ALTN 追加</button>
-                    
                     <div class="input-group" style="margin-top: 15px;">
                         <label>Margin Alert Threshold</label>
                         <input type="number" id="alertThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
                     </div>
                 </div>
-
                 <div class="settings-group">
                     <h3 class="settings-group-title">Table Settings</h3>
                     <div class="input-group">
@@ -225,7 +285,6 @@
                         </select>
                     </div>
                 </div>
-
                 <div class="settings-group">
                     <h3 class="settings-group-title">Dest Fuel Settings</h3>
                     <div class="input-group">
@@ -233,7 +292,6 @@
                         <input type="number" id="destFuelThreshold" step="0.1" value="0" style="width: 100px;" onchange="app.saveConfig()">
                     </div>
                 </div>
-
             </div>
             <div style="margin-top: 15px; text-align: right;">
                 <button onclick="app.toggleSettings()">閉じる</button>

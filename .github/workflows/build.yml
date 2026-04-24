@@ -7,12 +7,16 @@ on:
     paths:
       - 'src/**'
       - 'build.py'
-  workflow_dispatch: # 手動実行ボタンをGitHub上に追加
+  workflow_dispatch:
 
 jobs:
   build-and-commit:
     runs-on: ubuntu-latest
-    permissions: # 権限を明示的に指定
+    # Node 20 廃止の警告を消し、Node 24 を先行利用する設定
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    permissions:
       contents: write
 
     steps:
@@ -25,23 +29,28 @@ jobs:
           python-version: '3.x'
 
       - name: Run build script
-        run: python build.py
+        run: |
+          python build.py
+          echo "Checking if index.html was created..."
+          ls -l index.html
 
       - name: Check for changes and Commit
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           
-          # 現在の状況を確認
-          git status
-          
           git add index.html
           
-          # 差分があるか確認してからコミット
-          if ! git diff --staged --quiet; then
+          echo "=== GIT STATUS ==="
+          git status
+          
+          # 差分の有無を判定して詳細に報告
+          if git diff --staged --quiet; then
+            echo "RESULT: No changes detected in index.html compared to the repository version."
+            exit 0
+          else
+            echo "RESULT: Changes detected! Committing now..."
             git commit -m "Auto-build: Update index.html [skip ci]"
             git push origin main
-            echo "Changes pushed to GitHub."
-          else
-            echo "No changes detected in index.html. Nothing to commit."
+            echo "Push complete."
           fi

@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.5.0 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.6.0 (Offline EFB)</title>
 
     <script>
         try {
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.5.0</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.6.0</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -72,6 +72,9 @@
                         <button id="btnPflPic" class="pfl-btn active" onclick="app.setPflToggle('activeDuty', 'PIC')">PIC</button>
                         <button id="btnPflSic" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'SIC')">SIC</button>
                         <button id="btnPflCop" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'COP')">COP</button>
+                    </div>
+                    <div style="margin-left: auto;">
+                        <button class="btn-secondary btn-small" id="btnPflCsv" onclick="app.copyPflToCsv()" style="font-weight: bold;">📋 CSVコピー (Shortcut用)</button>
                     </div>
                 </div>
                 <div class="pfl-scroll-wrapper">

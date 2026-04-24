@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.5.0 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.6.0 (Offline EFB)</title>
 
     <script>
         try {
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.5.0</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.6.0</h1>
 
     <div class="flight-header" id="flightHeader" style="display: none;">
         <div class="fh-title">✈️ FLIGHT STATUS DASHBOARD</div>
@@ -40,7 +40,7 @@
 
     <div class="card-crew no-print" id="crewInfoCard" style="display:none;">
         <div class="crew-header" onclick="app.toggleCrew()">
-            <span class="crew-title">👨‍✈️ CREW INFO</span>
+            <span class="crew-title">👨‍✈️ CREW INFO & LOG</span>
             <span id="crew-toggle-icon" style="color: #fff; opacity: 0.7;">▼</span>
         </div>
         <div id="crewContentEl" class="crew-content" style="display:block;">
@@ -63,9 +63,10 @@
             </div>
             
             <hr style="margin: 20px 15px 15px; border: 0; border-top: 1px solid var(--border-color);">
+            
             <div class="post-flight-log" id="postFlightLog" style="margin: 0 15px 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                    <span class="post-flight-title">📋 POST-FLIGHT LOG</span>
+                    <span class="post-flight-title">📋 POST-FLIGHT LOG (LOGBOOK SYSTEM STYLE)</span>
                     <div class="pfl-controls">
                         <div class="pfl-toggle-group">
                             <button id="btn_dom" class="pfl-toggle-btn active" onclick="app.setLogRegion('DOM')">DOM</button>
@@ -79,39 +80,39 @@
                     </div>
                 </div>
                 
-                <div class="pfl-grid">
-                    <div class="pfl-item"><span class="pfl-label">DAY</span><input type="text" id="log_day" class="pfl-input" onchange="app.updateLog('day', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">TYPE</span><input type="text" id="log_type" class="pfl-input" onchange="app.updateLog('type', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">REG</span><input type="text" id="log_reg" class="pfl-input" onchange="app.updateLog('reg', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">FLT#</span><input type="text" id="log_flt" class="pfl-input" onchange="app.updateLog('flt', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">DEP</span><input type="text" id="log_dep" class="pfl-input" onchange="app.updateLog('dep', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">ARR</span><input type="text" id="log_arr" class="pfl-input" onchange="app.updateLog('arr', this.value)"></div>
-                    
-                    <div class="pfl-item"><span class="pfl-label">DEP TIME</span><input type="text" id="log_depTime" class="pfl-input" maxlength="4" onchange="app.updateLog('depTime', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">ARR TIME</span><input type="text" id="log_arrTime" class="pfl-input" maxlength="4" onchange="app.updateLog('arrTime', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">FLT TIME</span><input type="text" id="log_fltTime" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('fltTime', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">PIC TIME</span><input type="text" id="log_picTime" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('picTime', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">SIC TIME</span><input type="text" id="log_sicTime" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('sicTime', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">COP TIME</span><input type="text" id="log_copTime" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('copTime', this.value)"></div>
-                    
-                    <div class="pfl-item"><span class="pfl-label">TKOF</span>
-                        <select id="log_tkof" class="pfl-input" onchange="app.updateLog('tkof', this.value)">
-                            <option value=""></option><option value="1">1</option><option value="N1">N1</option>
-                        </select>
+                <div class="pfl-table-scroll-container">
+                    <div class="pfl-table-row">
+                        <div class="pfl-col col-day"><span class="pfl-th">DAY</span><input type="text" id="log_day" class="pfl-td" onchange="app.updateLog('day', this.value)"></div>
+                        <div class="pfl-col col-type"><span class="pfl-th">TYPE</span><input type="text" id="log_type" class="pfl-td" onchange="app.updateLog('type', this.value)"></div>
+                        <div class="pfl-col col-reg"><span class="pfl-th">REG</span><input type="text" id="log_reg" class="pfl-td" onchange="app.updateLog('reg', this.value)"></div>
+                        <div class="pfl-col col-apt"><span class="pfl-th">DEP</span><input type="text" id="log_dep" class="pfl-td" onchange="app.updateLog('dep', this.value)"></div>
+                        <div class="pfl-col col-apt"><span class="pfl-th">ARR</span><input type="text" id="log_arr" class="pfl-td" onchange="app.updateLog('arr', this.value)"></div>
+                        <div class="pfl-col col-time"><span class="pfl-th">DEP TIME</span><input type="text" id="log_depTime" class="pfl-td" maxlength="4" onchange="app.updateLog('depTime', this.value)"></div>
+                        <div class="pfl-col col-time"><span class="pfl-th">ARR TIME</span><input type="text" id="log_arrTime" class="pfl-td" maxlength="4" onchange="app.updateLog('arrTime', this.value)"></div>
+                        <div class="pfl-col col-cnt"><span class="pfl-th">TKOF</span>
+                            <select id="log_tkof" class="pfl-td" onchange="app.updateLog('tkof', this.value)">
+                                <option value=""></option><option value="1">1</option><option value="N1">N1</option>
+                            </select>
+                        </div>
+                        <div class="pfl-col col-cnt"><span class="pfl-th">LDG</span>
+                            <select id="log_ldg" class="pfl-td" onchange="app.updateLog('ldg', this.value)">
+                                <option value=""></option><option value="1">1</option><option value="N1">N1</option>
+                            </select>
+                        </div>
+                        <div class="pfl-col col-flt"><span class="pfl-th">FLT NUMBER</span><input type="text" id="log_flt" class="pfl-td" onchange="app.updateLog('flt', this.value)"></div>
+                        <div class="pfl-col col-dur"><span class="pfl-th">PIC TIME</span><input type="text" id="log_picTime" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('picTime', this.value)"></div>
+                        <div class="pfl-col col-dur"><span class="pfl-th">SIC TIME</span><input type="text" id="log_sicTime" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('sicTime', this.value)"></div>
+                        <div class="pfl-col col-dur"><span class="pfl-th">NGT(PIC/SIC)</span><input type="text" id="log_picNgt" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('picNgt', this.value)"></div>
+                        <div class="pfl-col col-dur"><span class="pfl-th">COP TIME</span><input type="text" id="log_copTime" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('copTime', this.value)"></div>
+                        <div class="pfl-col col-dur"><span class="pfl-th">NGT(COP)</span><input type="text" id="log_copNgt" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('copNgt', this.value)"></div>
+                        <div class="pfl-col col-dur"><span class="pfl-th">IMC</span><input type="text" id="log_imc" class="pfl-td" placeholder="0+00" onchange="app.updateLogDuration('imc', this.value)"></div>
+                        
+                        <div class="pfl-col col-apch pfl-col-optional"><span class="pfl-th">APCH TYPE</span><input type="text" id="log_apch" class="pfl-td" placeholder="ILS/RNAV" onchange="app.updateLog('apch', this.value)"></div>
                     </div>
-                    <div class="pfl-item"><span class="pfl-label">LDG</span>
-                        <select id="log_ldg" class="pfl-input" onchange="app.updateLog('ldg', this.value)">
-                            <option value=""></option><option value="1">1</option><option value="N1">N1</option>
-                        </select>
-                    </div>
-                    <div class="pfl-item"><span class="pfl-label">APCH</span><input type="text" id="log_apch" class="pfl-input" placeholder="e.g. ILS07" onchange="app.updateLog('apch', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">PIC NGT</span><input type="text" id="log_picNgt" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('picNgt', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">COP NGT</span><input type="text" id="log_copNgt" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('copNgt', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">IMC</span><input type="text" id="log_imc" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('imc', this.value)"></div>
-                    <div class="pfl-item"><span class="pfl-label">APCH TIME</span><input type="text" id="log_apchTime" class="pfl-input" placeholder="H+MM" onchange="app.updateLogDuration('apchTime', this.value)"></div>
                 </div>
-                <div style="margin-top: 10px;">
-                    <textarea id="log_memo" class="memo-textarea" rows="3" placeholder="POST-FLIGHT MEMO (Free Text)..." onchange="app.updateLog('memo', this.value)"></textarea>
+
+                <div style="margin-top: 15px;">
+                    <textarea id="log_memo" class="memo-textarea" rows="3" placeholder="POST-FLIGHT MEMO / REMARKS..." onchange="app.updateLog('memo', this.value)"></textarea>
                 </div>
             </div>
             
@@ -128,7 +129,6 @@
 
     <div class="status-bar" id="statusBar" style="display:none;">
         <div style="display: flex; gap: 20px; width: 100%; flex-wrap: wrap;">
-            
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
                 <div class="status-section">
                     <span class="status-title">ACTUAL TIMES</span>
@@ -153,16 +153,14 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="status-section">
-                    <span class="status-title">EST. ARRIVAL (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
+                    <span class="status-title">EST. ARRIVAL (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px;"></span></span>
                     <div class="status-content status-value-group" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <span id="sb-eta" class="status-value">--</span>
                         <span id="sb-eta-diff" class="status-badge"></span>
                     </div>
                 </div>
             </div>
-
             <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div class="status-section">
@@ -180,9 +178,8 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="status-section">
-                        <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
+                        <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px;"></span></span>
                         <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <span id="sb-dest-fuel" class="status-value">--</span>
                             <span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span>
@@ -190,14 +187,12 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="status-section">
                     <span class="status-title">AVAILABLE FUEL MARGIN</span>
                     <div class="status-content" id="sb-avail-fuel-container" style="width: max-content; display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.15);">
                     </div>
                 </div>
             </div>
-            
         </div>
     </div>
 

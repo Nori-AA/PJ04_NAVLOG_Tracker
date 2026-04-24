@@ -38,10 +38,6 @@ body {
 
 h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-color); }
 
-/* --- 通常時のコンテナ制御（印刷用ラッパーは通常時は無視） --- */
-.print-header-container { display: block; width: 100%; }
-.print-left-col, .print-right-col { width: 100%; }
-
 .flight-header { background: var(--primary-color); color: white; border-radius: 10px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
 .fh-title { font-size: 11px; color: #95a5a6; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; font-weight: bold; letter-spacing: 0.5px; }
 .fh-details { display: flex; flex-wrap: wrap; gap: 12px 25px; }
@@ -73,7 +69,6 @@ html.theme-dark .pfl-toggle-group { background: rgba(255,255,255,0.1); }
 .pfl-input:focus { border-color: var(--accent-color); outline: none; }
 .pfl-input.wide { width: 75px; }
 .pfl-input.narrow { width: 45px; }
-
 #pfl_day { width: 75px; }
 #pfl_reg { width: 65px; }
 
@@ -215,54 +210,103 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
     .header-portrait { display: inline; }
 }
 
-/* ★ 印刷用デザイン：完全プレーンテキスト化・A4横・2段組み・強制改ページ */
+/* =========================================================
+   ★ 印刷用デザイン：完全プレーンテキスト化・A4横・Grid2段組み
+   ========================================================= */
 @media print {
+    /* 1. 基本ページ設定とPlaintext化 */
     @page { size: A4 landscape; margin: 10mm; }
+    
     * { 
         -webkit-print-color-adjust: exact !important; 
         print-color-adjust: exact !important; 
         color-adjust: exact !important; 
-    }
-
-    .no-print { display: none !important; }
-
-    body { 
-        padding: 0; background: white; min-width: 100%; color: black; 
-        font-family: 'SF Mono', Consolas, Menlo, monospace; font-size: 10px; 
-    }
-
-    /* ★ コンテナを使った確実な2段組み制御 */
-    .print-header-container {
-        width: 100% !important;
-        display: block !important;
-    }
-    .print-header-container::after {
-        content: ""; display: table; clear: both;
-    }
-    .print-left-col {
-        float: left !important;
-        width: 53% !important;
-        padding-right: 2% !important;
-    }
-    .print-right-col {
-        float: right !important;
-        width: 45% !important;
-    }
-
-    /* ボックスやUI装飾の完全排除 */
-    .flight-header, .card-crew, .card-drm {
         box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    body {
+        background: white !important;
+        color: black !important;
+        font-family: 'Courier New', Consolas, Menlo, monospace !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        min-width: 100% !important;
+        
+        /* 2. CSS Gridによる強制2段組み */
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 15mm !important;
+    }
+
+    /* 印刷不要な要素の非表示 */
+    .no-print, #defaultTitle, #statusBar, #inputArea, #bottomControls {
+        display: none !important;
+    }
+
+    /* コンテナの背景を無効化 */
+    .flight-header, .card-crew, .card-drm, .table-container, .settings-group {
+        background: transparent !important;
+        border: none !important;
+    }
+
+    /* 入力フォームのプレーンテキスト化 */
+    input, select, textarea {
         border: none !important;
         background: transparent !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
         color: black !important;
+        font-family: inherit !important;
         padding: 0 !important;
-        margin: 0 0 5mm 0 !important;
+        margin: 0 !important;
+        outline: none !important;
+    }
+    textarea { resize: none !important; overflow: hidden !important; }
+
+    /* Grid Layout: 各セクションの配置 */
+    #flightHeader {
+        grid-column: 1;
+        grid-row: 1;
+        break-inside: avoid;
         display: block !important;
-        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 
-    /* 各コンテンツの強制展開・折り返し */
-    #crewContentEl, .drm-content { display: block !important; }
+    #crewInfoCard {
+        grid-column: 1;
+        grid-row: 2;
+        break-inside: avoid;
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    #headerInfoCard {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* タイトルとテキストの調整 */
+    .fh-title, .crew-title, .drm-title {
+        color: black !important;
+        border-bottom: 1px solid black !important;
+        font-size: 12px !important;
+        margin-bottom: 4px !important;
+        display: block !important;
+    }
+    .crew-header, .drm-header {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+    .fh-val { color: black !important; font-size: 12px !important; }
+    .fh-label { color: #555 !important; font-size: 10px !important; }
+
     .drm-content {
         max-height: none !important;
         overflow: visible !important;
@@ -272,87 +316,55 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
         font-size: 10px !important;
     }
 
-    /* セクションタイトルのプレーンテキスト化 */
-    .fh-title, .crew-title, .drm-title {
-        color: black !important;
-        font-size: 11px !important;
-        border-bottom: 1px solid black !important;
-        margin-bottom: 4px !important;
-        padding-bottom: 2px !important;
-        display: block !important;
-    }
-    .crew-header, .drm-header { background: transparent !important; padding: 0 !important; border: none !important; }
-    
-    .fh-val { color: black !important; font-size: 12px !important; }
-    .fh-label { color: #555 !important; font-size: 9px !important; }
+    .crew-table { width: 100% !important; margin: 0 !important; }
+    .pfl-table { width: 100% !important; margin: 0 !important; table-layout: fixed !important; }
+    .pfl-scroll-wrapper { overflow: visible !important; }
 
-    /* ★ PFLテーブルのはみ出し（縮小）防止処理 */
-    .pfl-scroll-wrapper { overflow: visible !important; padding-bottom: 0 !important; }
-    .pfl-table { width: 100% !important; table-layout: fixed !important; }
-    .pfl-input { width: 100% !important; padding: 0 !important; font-size: 9px !important; text-align: center !important;}
-    .pfl-table th { font-size: 8px !important; padding: 1px !important; word-wrap: break-word !important; white-space: normal !important; }
-    .crew-table { width: 100% !important; table-layout: fixed !important; margin-left: 0 !important;}
-    .input-crew { width: 100% !important; padding: 0 !important; font-size: 10px !important;}
-
-    /* ステータスバー（中間エリア）のプレーン化 */
-    .status-bar { 
-        position: static !important; 
-        box-shadow: none !important; 
-        background: transparent !important; 
-        color: black !important; 
-        padding: 0 !important; 
-        margin-bottom: 5mm !important; 
-        clear: both !important; 
-    }
-    .status-title, .status-value, .status-badge, .input-label { color: black !important; background: transparent !important; }
-    .status-badge { border: 1px solid black !important; }
-
-    /* 入力フォームのプレーンテキスト化（枠線・背景・矢印消去） */
-    input, select, textarea {
-        border: none !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        -webkit-appearance: none !important;
-        appearance: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        color: black !important;
-        font-family: inherit !important;
-    }
-
-    /* NAVLOGテーブルの強制改ページ */
-    .table-container {
-        clear: both !important;
+    /* 3. NAVLOGテーブルの改ページと最適化 */
+    #tableContainer {
+        grid-column: 1 / 3;
+        grid-row: 3;
         break-before: page !important;
         page-break-before: always !important;
-        max-height: none !important;
-        overflow: visible !important;
-        position: static !important;
-        box-shadow: none !important;
+        display: block !important;
         margin: 0 !important;
-        background: white !important;
+        padding: 0 !important;
         width: 100% !important;
     }
 
-    table { font-size: 10px; width: 100%; border-collapse: collapse; table-layout: fixed; }
-    .table-container th, .table-container td { 
-        border: 1px solid black !important; 
-        padding: 4px 2px !important; 
-        color: black !important; 
+    table {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        border-collapse: collapse !important;
+        table-layout: fixed !important;
+    }
+
+    .table-container th, .table-container td {
+        border: 1px solid black !important;
+        padding: 2px !important;
+        color: black !important;
         background: transparent !important;
+        font-size: 10px !important;
     }
-    .sticky-col-wp, .table-container th { position: static !important; background: transparent !important; color: black !important; }
+    .sticky-col-wp, .table-container th { position: static !important; }
 
-    /* ★ メモ行を強制的に出力 */
-    .memo-row { display: table-row !important; }
-    .memo-row td { border-top: none !important; background-color: transparent !important; }
-    .memo-textarea { 
-        width: 100% !important; 
-        min-height: 24px !important; 
-        overflow: visible !important; 
-        resize: none !important; 
+    /* Web用flexの解除 */
+    .input-stacked, .input-group-inline, .status-content, .fuel-inputs {
+        display: block !important;
+    }
+    .input-ref, .input-actual, .input-actual-half, .pfl-input {
+        width: 100% !important;
+        text-align: center !important;
+        font-size: 10px !important;
     }
 
-    /* テーブル内インプット文字サイズの最適化 */
-    .input-actual, .input-actual-half, .input-ref { font-size: 10px !important; }
+    /* 4. ウェイポイントのメモ表示 */
+    tr[id^="memo-row-"] {
+        display: table-row !important;
+    }
+    tr[id^="memo-row-"] td {
+        border-top: none !important;
+        padding: 4px !important;
+    }
 }

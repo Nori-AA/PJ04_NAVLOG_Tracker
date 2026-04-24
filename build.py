@@ -2,44 +2,47 @@ import os
 import re
 
 def build():
-    print("--- Build Process Started ---")
+    # 実行場所（カレントディレクトリ）に左右されないよう、ファイルの場所を特定
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    src_dir = os.path.join(base_dir, 'src')
     
-    try:
-        # src内のファイルを読み込む
-        with open('src/index.html', 'r', encoding='utf-8') as f:
-            html = f.read()
-        with open('src/style.css', 'r', encoding='utf-8') as f:
-            css = f.read()
-        with open('src/script.js', 'r', encoding='utf-8') as f:
-            js = f.read()
-        
-        print(f"Read OK: HTML({len(html)} chars), CSS({len(css)}), JS({len(js)})")
+    print(f"--- Starting Build V25.2.5 ---")
 
-    except FileNotFoundError as e:
-        print(f"CRITICAL ERROR: {e}")
+    # 1. 各ファイルを読み込む
+    try:
+        with open(os.path.join(src_dir, 'index.html'), 'r', encoding='utf-8') as f:
+            html = f.read()
+        with open(os.path.join(src_dir, 'style.css'), 'r', encoding='utf-8') as f:
+            css = f.read()
+        with open(os.path.join(src_dir, 'script.js'), 'r', encoding='utf-8') as f:
+            js = f.read()
+        print(f"Read OK: HTML({len(html)} chars), CSS({len(css)}), JS({len(js)})")
+    except Exception as e:
+        print(f"CRITICAL ERROR (Read Failed): {e}")
         return
 
-    # CSS置換
-    css_pattern = r'<link.*href=["\']style\.css["\'].*>'
+    # 2. CSSの置換 (lambdaを使ってPythonの勘違いを防止)
+    css_pattern = r'<link[^>]*href=["\']style\.css["\'][^>]*>'
     css_replacement = f"<style>\n{css}\n</style>"
-    new_html = re.sub(css_pattern, css_replacement, html)
+    new_html = re.sub(css_pattern, lambda m: css_replacement, html)
 
-    # JS置換
-    js_pattern = r'<script.*src=["\']script\.js["\'].*></script>'
+    # 3. JSの置換 (lambdaを使ってPythonの勘違いを防止)
+    js_pattern = r'<script[^>]*src=["\']script\.js["\'][^>]*></script>'
     js_replacement = f"<script>\n{js}\n</script>"
-    new_html = re.sub(js_pattern, js_replacement, new_html)
+    new_html = re.sub(js_pattern, lambda m: js_replacement, new_html)
 
-    # 最終チェック: 置換が1回も行われなかったら警告
-    if new_html == html:
-        print("WARNING: No replacements were made. Check the tags in src/index.html")
-
-    # 書き出し
-    with open('index.html', 'w', encoding='utf-8') as f:
-        f.write(new_html)
-    
-    # 書き出し後のファイルサイズ確認
-    size = os.path.getsize('index.html')
-    print(f"SUCCESS: index.html generated. Size: {size} bytes")
+    # 4. 書き出し（ルート直下の index.html）
+    output_path = os.path.join(base_dir, 'index.html')
+    try:
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(new_html)
+        
+        size = os.path.getsize(output_path)
+        print(f"SUCCESS: index.html generated at {output_path}")
+        print(f"Final File Size: {size} bytes")
+            
+    except Exception as e:
+        print(f"CRITICAL ERROR (Write Failed): {e}")
 
 if __name__ == "__main__":
     build()

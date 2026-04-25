@@ -14,10 +14,9 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.8.7', // ★バージョン更新
+    version: 'v25.8.8', // ★ バージョン更新
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
-        // 1行目にNoriさんの情報をデフォルト設定
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' },
@@ -27,7 +26,6 @@ const app = {
     },
 
     init() {
-        // 最初のページのタイトルをJSのバージョンと同期
         const titleEl = document.getElementById('defaultTitle');
         if (titleEl) {
             titleEl.textContent = `✈️ NAVLOG Tracker ${this.version}`;
@@ -94,7 +92,6 @@ const app = {
         this.updateThemeButton();
         window.addEventListener('resize', this.updateStickyHeight);
 
-        // 画面右下の補助用バージョン表示
         if (!document.getElementById('app-version-display')) {
             const vDiv = document.createElement('div');
             vDiv.id = 'app-version-display';
@@ -356,7 +353,16 @@ const app = {
     },
 
     toggleMemo(i) { this.state.waypoints[i].memoOpen = !this.state.waypoints[i].memoOpen; this.saveConfig(); document.getElementById('tableBody').innerHTML = ''; this.render(); },
-    updateMemo(i, val) { this.state.waypoints[i].memo = val; this.saveConfig(); },
+    
+    updateMemo(i, val) { 
+        this.state.waypoints[i].memo = val; 
+        this.saveConfig(); 
+        const tr = document.getElementById(`memo-row-${i}`);
+        if(tr) {
+            if(val && val.trim() !== '') tr.classList.add('has-content');
+            else tr.classList.remove('has-content');
+        }
+    },
 
     render() {
         const tbody = document.getElementById('tableBody');
@@ -419,7 +425,7 @@ const app = {
                 const memoTr = document.createElement('tr');
                 memoTr.id = `memo-row-${i}`;
                 memoTr.style.display = wp.memoOpen ? 'table-row' : 'none';
-                memoTr.className = 'memo-row';
+                memoTr.className = hasMemo ? 'memo-row has-content' : 'memo-row';
                 memoTr.innerHTML = `
                     <td colspan="12" style="padding: 6px; background-color: var(--memo-bg);">
                         <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
@@ -572,6 +578,16 @@ const app = {
                 container.appendChild(div);
             }
         }
+
+        // ★ 追加：ETAの親要素（.status-section）を探して、直接 'no-print' クラス（印刷除外シール）を貼り付ける
+        const etaEl = document.getElementById('sb-eta');
+        if (etaEl) {
+            const etaSection = etaEl.closest('.status-section');
+            if (etaSection) {
+                etaSection.classList.add('no-print');
+            }
+        }
+
         setTimeout(() => this.updateStickyHeight(), 50);
     },
 

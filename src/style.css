@@ -434,102 +434,282 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 
 /* ★ 印刷用デザイン：完全プレーンテキスト化・A4横・2段組み・強制改ページ */
 
-@/* ★ 印刷用デザイン：A4縦・1段組み・罫線なしプレーンテキスト（ASCII）風 */
 @media print {
-    @page { size: A4 portrait; margin: 10mm; }
-    * { 
-        -webkit-print-color-adjust: exact !important; 
-        print-color-adjust: exact !important; 
-        color-adjust: exact !important; 
+
+    @page { size: A4 landscape; margin: 10mm; }
+
+    * {
+
+        -webkit-print-color-adjust: exact !important;
+
+        print-color-adjust: exact !important;
+
+        color-adjust: exact !important;
+
     }
+
+
 
     .no-print { display: none !important; }
 
-    body { 
-        padding: 0; background: white; min-width: 100%; color: black; 
-        font-family: 'SF Mono', Consolas, Menlo, monospace; font-size: 9px; line-height: 1.2;
+
+
+    body {
+
+        padding: 0; background: white; min-width: 100%; color: black;
+
+        font-family: 'SF Mono', Consolas, Menlo, monospace; font-size: 10px;
+
     }
 
-    /* 1段組み制御 */
-    .print-header-container { width: 100% !important; display: block !important; }
-    .print-left-col, .print-right-col { float: none !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+
+
+    /* ★ コンテナを使った確実な2段組み制御 */
+
+    .print-header-container {
+
+        width: 100% !important;
+
+        display: block !important;
+
+    }
+
+    .print-header-container::after {
+
+        content: ""; display: table; clear: both;
+
+    }
+
+    .print-left-col {
+
+        float: left !important;
+
+        width: 53% !important;
+
+        padding-right: 2% !important;
+
+    }
+
+    .print-right-col {
+
+        float: right !important;
+
+        width: 45% !important;
+
+    }
+
+
 
     /* ボックスやUI装飾の完全排除 */
+
     .flight-header, .card-crew, .card-drm {
-        box-shadow: none !important; border: none !important; background: transparent !important;
-        color: black !important; padding: 0 !important; margin: 0 0 5mm 0 !important;
-        display: block !important; width: 100% !important;
+
+        box-shadow: none !important;
+
+        border: none !important;
+
+        background: transparent !important;
+
+        color: black !important;
+
+        padding: 0 !important;
+
+        margin: 0 0 5mm 0 !important;
+
+        display: block !important;
+
+        width: 100% !important;
+
     }
+
+
 
     /* 各コンテンツの強制展開・折り返し */
+
     #crewContentEl, .drm-content { display: block !important; }
+
     .drm-content {
-        max-height: none !important; overflow: visible !important; white-space: pre-wrap !important;
-        color: black !important; padding: 0 !important; font-size: 9px !important;
+
+        max-height: none !important;
+
+        overflow: visible !important;
+
+        white-space: pre-wrap !important;
+
+        color: black !important;
+
+        padding: 0 !important;
+
+        font-size: 10px !important;
+
     }
 
-    /* セクションタイトルのプレーンテキスト化（下線のみ点線で残す） */
+
+
+    /* セクションタイトルのプレーンテキスト化 */
+
     .fh-title, .crew-title, .drm-title {
-        color: black !important; font-size: 10px !important; font-weight: bold !important;
-        border-bottom: 1px dashed black !important; margin-bottom: 4px !important; padding-bottom: 2px !important; display: block !important;
+
+        color: black !important;
+
+        font-size: 11px !important;
+
+        border-bottom: 1px solid black !important;
+
+        margin-bottom: 4px !important;
+
+        padding-bottom: 2px !important;
+
+        display: block !important;
+
     }
+
     .crew-header, .drm-header { background: transparent !important; padding: 0 !important; border: none !important; }
-    
-    .fh-val { color: black !important; font-size: 10px !important; }
-    .fh-label { color: black !important; font-size: 8px !important; }
 
-    /* PFL & クルーテーブル */
+   
+
+    .fh-val { color: black !important; font-size: 12px !important; }
+
+    .fh-label { color: #555 !important; font-size: 9px !important; }
+
+
+
+    /* ★ PFLテーブルのはみ出し（縮小）防止処理 */
+
     .pfl-scroll-wrapper { overflow: visible !important; padding-bottom: 0 !important; }
-    .pfl-table, .crew-table { width: 100% !important; table-layout: fixed !important; margin: 0 !important; border-collapse: collapse !important; }
-    .pfl-input, .input-crew { width: 100% !important; padding: 0 !important; font-size: 8px !important; text-align: center !important;}
-    .pfl-table th, .crew-table th { font-size: 8px !important; padding: 1px !important; word-wrap: break-word !important; white-space: normal !important; border-bottom: 1px dashed black !important; font-weight: bold !important; }
-    .pfl-table td, .crew-table td { border: none !important; padding: 2px 1px !important; }
 
-    /* ステータスバーのプレーン化 */
-    .status-bar { 
-        position: static !important; box-shadow: none !important; background: transparent !important; color: black !important; 
-        padding: 2px 0 !important; margin-bottom: 5mm !important; clear: both !important; 
-        border-top: 1px dashed black !important; border-bottom: 1px dashed black !important;
+    .pfl-table { width: 100% !important; table-layout: fixed !important; }
+
+    .pfl-input { width: 100% !important; padding: 0 !important; font-size: 9px !important; text-align: center !important;}
+
+    .pfl-table th { font-size: 8px !important; padding: 1px !important; word-wrap: break-word !important; white-space: normal !important; }
+
+    .crew-table { width: 100% !important; table-layout: fixed !important; margin-left: 0 !important;}
+
+    .input-crew { width: 100% !important; padding: 0 !important; font-size: 10px !important;}
+
+
+
+    /* ステータスバー（中間エリア）のプレーン化 */
+
+    .status-bar {
+
+        position: static !important;
+
+        box-shadow: none !important;
+
+        background: transparent !important;
+
+        color: black !important;
+
+        padding: 0 !important;
+
+        margin-bottom: 5mm !important;
+
+        clear: both !important;
+
     }
-    .status-title, .status-value, .status-badge, .input-label { color: black !important; background: transparent !important; font-size: 9px !important;}
-    .status-badge { border: none !important; }
 
-    /* 入力フォームのプレーンテキスト化 */
+    .status-title, .status-value, .status-badge, .input-label { color: black !important; background: transparent !important; }
+
+    .status-badge { border: 1px solid black !important; }
+
+
+
+    /* 入力フォームのプレーンテキスト化（枠線・背景・矢印消去） */
+
     input, select, textarea {
-        border: none !important; background: transparent !important; box-shadow: none !important;
-        -webkit-appearance: none !important; appearance: none !important; padding: 0 !important; margin: 0 !important;
-        color: black !important; font-family: inherit !important;
+
+        border: none !important;
+
+        background: transparent !important;
+
+        box-shadow: none !important;
+
+        -webkit-appearance: none !important;
+
+        appearance: none !important;
+
+        padding: 0 !important;
+
+        margin: 0 !important;
+
+        color: black !important;
+
+        font-family: inherit !important;
+
     }
 
-    /* NAVLOGテーブル */
+
+
+    /* NAVLOGテーブルの強制改ページ */
+
     .table-container {
-        clear: both !important; break-before: auto !important; page-break-before: auto !important;
-        max-height: none !important; overflow: visible !important; position: static !important;
-        box-shadow: none !important; margin: 0 !important; background: transparent !important; width: 100% !important;
+
+        clear: both !important;
+
+        break-before: page !important;
+
+        page-break-before: always !important;
+
+        max-height: none !important;
+
+        overflow: visible !important;
+
+        position: static !important;
+
+        box-shadow: none !important;
+
+        margin: 0 !important;
+
+        background: white !important;
+
+        width: 100% !important;
+
     }
 
-    table { font-size: 8px; width: 100%; border-collapse: collapse; table-layout: fixed; }
-    .table-container th { 
-        border: none !important; border-bottom: 1px dashed black !important; 
-        padding: 2px 1px !important; color: black !important; background: transparent !important; font-weight: bold !important;
+
+
+    table { font-size: 10px; width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+    .table-container th, .table-container td {
+
+        border: 1px solid black !important;
+
+        padding: 4px 2px !important;
+
+        color: black !important;
+
+        background: transparent !important;
+
     }
-    .table-container td { 
-        border: none !important; padding: 2px 1px !important; color: black !important; background: transparent !important;
-    }
+
     .sticky-col-wp, .table-container th { position: static !important; background: transparent !important; color: black !important; }
 
-    /* ★ メモ行の制御（空なら消す、あるならインデント） */
-    .memo-row:not(.has-content) { display: none !important; }
-    .memo-row.has-content { display: table-row !important; }
-    .memo-row td { border-top: none !important; background-color: transparent !important; padding-left: 20px !important; text-align: left !important; }
-    .memo-row td::before { content: "↳ "; font-weight: bold; }
-    .memo-textarea { 
-        width: calc(100% - 20px) !important; display: inline-block !important;
-        min-height: 12px !important; overflow: visible !important; resize: none !important; 
-        font-size: 8px !important; color: black !important; text-align: left !important;
+
+
+    /* ★ メモ行を強制的に出力 */
+
+    .memo-row { display: table-row !important; }
+
+    .memo-row td { border-top: none !important; background-color: transparent !important; }
+
+    .memo-textarea {
+
+        width: 100% !important;
+
+        min-height: 24px !important;
+
+        overflow: visible !important;
+
+        resize: none !important;
+
     }
 
+
+
     /* テーブル内インプット文字サイズの最適化 */
-    .input-actual, .input-actual-half, .input-ref { font-size: 8px !important; font-weight: normal !important; }
-    .fuel-primary, .fuel-secondary { font-size: 8px !important; font-weight: normal !important; }
+
+    .input-actual, .input-actual-half, .input-ref { font-size: 10px !important; }
+
 }

@@ -684,7 +684,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.8.1', // ★ここを更新するだけで全ての表示が変わります
+    version: 'v25.8.2', // ★ここを更新するだけで全ての表示が変わります
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -926,9 +926,9 @@ const app = {
     },
 
     renderFlightMeta() {
+        document.getElementById('defaultTitle').style.display = 'none';
         const header = document.getElementById('flightHeader');
         header.style.display = 'block';
-        document.getElementById('defaultTitle').style.display = 'none';
         
         document.getElementById('fh-flt').textContent = this.state.flightMeta.flt;
         document.getElementById('fh-date').textContent = this.state.flightMeta.date;
@@ -940,15 +940,19 @@ const app = {
         document.getElementById('fh-ft').textContent = this.state.flightMeta.ft || "---";
         document.getElementById('fh-dist').textContent = (this.state.flightMeta.dist !== "---" ? this.state.flightMeta.dist + " NM" : "---");
 
-        // ★ ダッシュボード（FLIGHT STATUS DASHBOARD）の右上にアプリ名とバージョンを表示
-        if (!document.getElementById('header-version-tag')) {
-            const tag = document.createElement('div');
-            tag.id = 'header-version-tag';
-            tag.className = 'no-print';
-            tag.style.cssText = 'position: absolute; top: 12px; right: 15px; font-size: 9px; color: rgba(255,255,255,0.4); font-family: "SF Mono", monospace; font-weight: bold; pointer-events: none;';
-            tag.textContent = `NAVLOG Tracker ${this.version}`;
-            header.style.position = 'relative'; // 座標の基準にするため追加
-            header.appendChild(tag);
+        // ★確実な配置方法：タイトル行（fh-title）をFlexboxで左右に分け、右端にバージョンを配置する
+        const titleBar = header.querySelector('.fh-title');
+        if (titleBar && !titleBar.dataset.versionSet) {
+            titleBar.style.display = 'flex';
+            titleBar.style.justifyContent = 'space-between';
+            titleBar.style.alignItems = 'flex-end';
+            titleBar.innerHTML = `
+                <span>✈️ FLIGHT STATUS DASHBOARD</span>
+                <span style="font-size: 9px; font-weight: normal; opacity: 0.6; font-family: 'SF Mono', monospace;">
+                    NAVLOG Tracker ${this.version}
+                </span>
+            `;
+            titleBar.dataset.versionSet = 'true'; // 二重に追加されるのを防ぐ
         }
     },
 

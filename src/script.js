@@ -17,11 +17,8 @@ const app = {
     version: 'v25.8.3', // ★バージョン更新
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
-        // ★1行目にNoriさんの情報をデフォルト設定
-        crew: [
-            { id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, 
-            { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }
-        ],
+        // 1行目にNoriさんの情報をデフォルト設定
+        crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' },
         actFob: '', actFod: '',
@@ -48,11 +45,8 @@ const app = {
             if (this.state.actFob === undefined) this.state.actFob = '';
             if (this.state.actFod === undefined) this.state.actFod = '';
             if (!this.state.crew || this.state.crew.length === 0) {
-                // 保存データが壊れている場合のフォールバックにもデフォルト値を適用
-                this.state.crew = [
-                    { id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, 
-                    { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }
-                ];
+                // フォールバック時もNoriさんの情報をセット
+                this.state.crew = [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
             }
 
             this.state.waypoints.forEach(wp => {
@@ -102,15 +96,14 @@ const app = {
         window.addEventListener('resize', this.updateStickyHeight);
 
         // ★ 画面右下の補助用バージョン表示（データ入力中も常に確認用）
-        let versionDisplay = document.getElementById('app-version-display');
-        if (!versionDisplay) {
-            versionDisplay = document.createElement('div');
-            versionDisplay.id = 'app-version-display';
-            versionDisplay.className = 'no-print';
-            versionDisplay.style.cssText = 'position: fixed; bottom: 5px; right: 10px; font-size: 10px; color: var(--text-faint); z-index: 9999; pointer-events: none; opacity: 0.5; font-family: "SF Mono", monospace;';
-            document.body.appendChild(versionDisplay);
+        if (!document.getElementById('app-version-display')) {
+            const vDiv = document.createElement('div');
+            vDiv.id = 'app-version-display';
+            vDiv.className = 'no-print';
+            vDiv.style.cssText = 'position: fixed; bottom: 5px; right: 10px; font-size: 10px; color: var(--text-faint); z-index: 9999; pointer-events: none; opacity: 0.5; font-family: "SF Mono", monospace;';
+            vDiv.textContent = this.version;
+            document.body.appendChild(vDiv);
         }
-        versionDisplay.textContent = this.version;
     },
 
     setupFocusScrollBehavior() {
@@ -587,13 +580,10 @@ const app = {
     resetData() {
         if(confirm("フライトデータを完全に削除し、初期状態に戻しますか？")) {
             localStorage.removeItem('navlog_v25_data');
-            // ★ リセット時もNoriさんの情報を再セット
             this.state = { 
                 waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
-                crew: [
-                    { id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, 
-                    { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }
-                ],
+                // リセット時にもデフォルト値を適用
+                crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
                 takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
                 times: { bo: '', bi: '', tkof: '', ldg: '' },
                 actFob: '', actFod: '',
@@ -607,13 +597,8 @@ const app = {
             this.renderSettings();
             this.renderTimes();
             this.renderActualFuel();
-            // PFL側の初期化
             this.state.postFlightLog = { domInt: 'DOM', activeDuty: 'PIC', day: '', type: 'B767', reg: '', dep: '', arr: '', fltNumber: '', depTime: '', arrTime: '', tkof: '', ldg: '', fltTime: '', picTime: '', sicTime: '', ngtPicSic: '', copTime: '', ngtCop: '', imc: '', apchType: '' };
             if(this.renderPostFlightLog) this.renderPostFlightLog();
-            
-            // バージョン表示の再描画
-            const titleEl = document.getElementById('defaultTitle');
-            if (titleEl) titleEl.textContent = `✈️ NAVLOG Tracker ${this.version}`;
         }
     }
 };

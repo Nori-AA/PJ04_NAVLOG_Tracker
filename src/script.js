@@ -14,7 +14,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.8.0', // ★ここでバージョンを一括管理！
+    version: 'v25.8.1', // ★ここを更新するだけで全ての表示が変わります
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -26,6 +26,12 @@ const app = {
     },
 
     init() {
+        // ★ 最初のページのタイトルをJSのバージョンと同期
+        const titleEl = document.getElementById('defaultTitle');
+        if (titleEl) {
+            titleEl.textContent = `✈️ NAVLOG Tracker ${this.version}`;
+        }
+
         const saved = localStorage.getItem('navlog_v25_data');
         if (saved) {
             const parsed = JSON.parse(saved);
@@ -64,10 +70,7 @@ const app = {
             document.getElementById('headerInfoCard').style.display = 'block';
             document.getElementById('headerInfoContent').textContent = this.state.headerInfo;
         }
-        if (this.state.flightMeta) {
-            if(this.renderFlightMeta) this.renderFlightMeta(); // 動的呼び出し
-        }
-        
+        if (this.state.flightMeta) this.renderFlightMeta();
         if (this.state.waypoints.length > 0) {
             document.getElementById('statusBar').style.display = 'flex';
             document.getElementById('bottomControls').style.display = 'block';
@@ -90,12 +93,12 @@ const app = {
         this.updateThemeButton();
         window.addEventListener('resize', this.updateStickyHeight);
 
-        // ★ ここで画面の右下にバージョン情報を小さく追加！
+        // ★ 画面右下の補助用バージョン表示（データ入力中も常に確認用）
         if (!document.getElementById('app-version-display')) {
             const vDiv = document.createElement('div');
             vDiv.id = 'app-version-display';
             vDiv.className = 'no-print';
-            vDiv.style.cssText = 'position: fixed; bottom: 5px; right: 10px; font-size: 10px; color: var(--text-faint); z-index: 9999; pointer-events: none; opacity: 0.7; font-family: "SF Mono", monospace;';
+            vDiv.style.cssText = 'position: fixed; bottom: 5px; right: 10px; font-size: 10px; color: var(--text-faint); z-index: 9999; pointer-events: none; opacity: 0.5; font-family: "SF Mono", monospace;';
             vDiv.textContent = this.version;
             document.body.appendChild(vDiv);
         }
@@ -253,12 +256,30 @@ const app = {
     },
 
     renderFlightMeta() {
-        document.getElementById('defaultTitle').style.display = 'none'; document.getElementById('flightHeader').style.display = 'block';
-        document.getElementById('fh-flt').textContent = this.state.flightMeta.flt; document.getElementById('fh-date').textContent = this.state.flightMeta.date;
-        document.getElementById('fh-reg').textContent = this.state.flightMeta.reg; document.getElementById('fh-route').textContent = `${this.state.flightMeta.dep} ➔ ${this.state.flightMeta.dest}`;
-        document.getElementById('fh-altn').textContent = this.state.flightMeta.altn; document.getElementById('fh-time').textContent = this.state.flightMeta.time;
-        document.getElementById('fh-bt').textContent = this.state.flightMeta.bt || "---"; document.getElementById('fh-ft').textContent = this.state.flightMeta.ft || "---";
+        const header = document.getElementById('flightHeader');
+        header.style.display = 'block';
+        document.getElementById('defaultTitle').style.display = 'none';
+        
+        document.getElementById('fh-flt').textContent = this.state.flightMeta.flt;
+        document.getElementById('fh-date').textContent = this.state.flightMeta.date;
+        document.getElementById('fh-reg').textContent = this.state.flightMeta.reg;
+        document.getElementById('fh-route').textContent = `${this.state.flightMeta.dep} ➔ ${this.state.flightMeta.dest}`;
+        document.getElementById('fh-altn').textContent = this.state.flightMeta.altn;
+        document.getElementById('fh-time').textContent = this.state.flightMeta.time;
+        document.getElementById('fh-bt').textContent = this.state.flightMeta.bt || "---";
+        document.getElementById('fh-ft').textContent = this.state.flightMeta.ft || "---";
         document.getElementById('fh-dist').textContent = (this.state.flightMeta.dist !== "---" ? this.state.flightMeta.dist + " NM" : "---");
+
+        // ★ ダッシュボード（FLIGHT STATUS DASHBOARD）の右上にアプリ名とバージョンを表示
+        if (!document.getElementById('header-version-tag')) {
+            const tag = document.createElement('div');
+            tag.id = 'header-version-tag';
+            tag.className = 'no-print';
+            tag.style.cssText = 'position: absolute; top: 12px; right: 15px; font-size: 9px; color: rgba(255,255,255,0.4); font-family: "SF Mono", monospace; font-weight: bold; pointer-events: none;';
+            tag.textContent = `NAVLOG Tracker ${this.version}`;
+            header.style.position = 'relative'; // 座標の基準にするため追加
+            header.appendChild(tag);
+        }
     },
 
     toggleHeader() {

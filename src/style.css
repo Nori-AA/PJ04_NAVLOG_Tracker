@@ -1,7 +1,3 @@
-/* ================================================= */
-/* 1. 通常画面用スタイル (Noriさんのオリジナルを完全復元)  */
-/* ================================================= */
-
 :root {
     --bg-color: #f0f2f5; --card-bg: #ffffff; --text-color: #2c3e50;
     --text-muted: #555555; --text-faint: #888888; --primary-color: #1a252f;
@@ -42,6 +38,7 @@ body {
 
 h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-color); }
 
+/* --- 通常時のコンテナ制御 --- */
 .print-header-container { display: block; width: 100%; }
 .print-left-col, .print-right-col { width: 100%; }
 
@@ -61,6 +58,7 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .crew-table th { font-size: 10px; color: var(--text-faint); text-align: center; padding: 4px 6px; }
 .crew-table td { padding: 4px 6px; text-align: center; vertical-align: middle; border: none; }
 
+/* POST FLIGHT LOG STYLES */
 .pfl-section { margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 15px; padding-left: 15px; }
 .pfl-header-controls { display: flex; margin-bottom: 8px; align-items: center; }
 .pfl-toggle-group { display: flex; background: rgba(0,0,0,0.1); border-radius: 6px; padding: 3px; }
@@ -84,6 +82,7 @@ html.theme-dark .pfl-toggle-group { background: rgba(255,255,255,0.1); }
 .drm-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
 .drm-content { display: block; font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: var(--drm-text); padding: 15px; max-height: 350px; overflow: auto; -webkit-overflow-scrolling: touch; }
 
+/* StatusBar 基本スタイル */
 .status-bar {
     padding: 15px; border-radius: 10px; margin-bottom: 12px; background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
@@ -138,6 +137,7 @@ table { width: 100%; min-width: 970px; margin: 0 auto; table-layout: fixed; bord
 
 .input-crew { width: 100%; padding: 6px; border: 1px solid var(--input-border); border-radius: 4px; font-size: 13px; text-align: center; background: var(--input-bg); color: var(--text-color); }
 .input-crew:focus { background: var(--card-bg); border-color: var(--accent-color); outline: none; }
+
 .input-crew-name { text-align: left !important; padding-left: 10px; }
 
 .input-ref { width: 100%; text-align: center; border: 1px dashed transparent; background: transparent; color: var(--text-color); font-size: 12px; padding: 2px; border-radius: 4px; box-sizing: border-box; }
@@ -200,38 +200,39 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
     .col-ztme { width: 55px; min-width: 55px; max-width: 55px; }
     .col-main { width: 74px; min-width: 74px; max-width: 74px; }
     .col-diff { width: 45px; min-width: 45px; max-width: 45px; }
+
     .input-ref.input-wind { width: 55px !important; }
     .input-ref.input-tmp { width: 32px !important; min-width: 32px !important; max-width: 32px !important; flex: 0 0 32px !important; font-size: 11px !important; padding: 2px 1px !important; }
     .isa-dev-text { font-size: 9px; }
+
     .input-actual { width: 65px; height: 35px; font-size: 14px; margin: 0 auto; display: block; }
     .input-actual-half { width: 65px; font-size: 12px; margin: 0 auto; display: block; }
+
     .fuel-primary { font-size: 13px; }
     .fuel-secondary { font-size: 10px; }
+
     .header-landscape { display: none; }
     .header-portrait { display: inline; }
 }
 
 
 /* ================================================= */
-/* 2. 印刷用スタイル (縦向き・1段組・ASCII風・ETA非表示)  */
+/* 2. 印刷用スタイル (縦向き・1段組・ASCII風・ステータス非表示) */
 /* ================================================= */
 
 @media print {
-    /* A4縦向き、余白10mm */
     @page { size: A4 portrait; margin: 10mm; }
-    
-    * { 
-        -webkit-print-color-adjust: exact !important; 
-        print-color-adjust: exact !important; 
-        color-adjust: exact !important; 
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
     }
 
     .no-print { display: none !important; }
 
     body {
         padding: 0; background: white; min-width: 100%; color: black;
-        /* 等幅フォント（ASCII風）を強制適用 */
-        font-family: 'SF Mono', Consolas, Menlo, monospace !important; 
+        font-family: 'SF Mono', Consolas, Menlo, monospace !important;
         font-size: 8px; line-height: 1.1;
     }
 
@@ -274,19 +275,10 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
     }
     .pfl-table td, .crew-table td { border: none !important; padding: 1px !important; }
 
-    /* ステータスバーのプレーン化 */
-    .status-bar {
-        position: static !important; box-shadow: none !important; background: transparent !important; color: black !important;
-        padding: 1mm 0 !important; margin-bottom: 3mm !important; clear: both !important;
-        border-top: 1px dashed black !important; border-bottom: 1px dashed black !important;
-        display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 5mm !important;
+    /* ★ 画像での指定通り、ステータスバー領域（ETA/FUEL/TIMES）を完全に非表示 */
+    .status-bar, #statusBar { 
+        display: none !important; 
     }
-    .status-section { display: flex !important; flex-direction: column !important; }
-    .status-title, .status-value, .status-badge, .input-label { color: black !important; background: transparent !important; font-size: 8px !important;}
-    .status-badge { border: none !important; padding: 0 !important; }
-
-    /* ★ 追加要件：ETA（EST Arrival）ボックスを印刷時のみ非表示 */
-    .status-section:has(#sb-eta) { display: none !important; }
 
     /* 入力フォームのプレーンテキスト化 */
     input, select, textarea {
@@ -312,15 +304,12 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
     }
     .sticky-col-wp, .table-container th { position: static !important; background: transparent !important; color: black !important; }
 
-    /* メモ行の制御（空なら非表示、あればインデント） */
-    .memo-row:not(.has-content) { display: none !important; }
-    .memo-row.has-content { display: table-row !important; }
-    .memo-row td { border: none !important; padding-left: 15px !important; text-align: left !important; }
-    .memo-row td::before { content: "↳ "; font-weight: bold; }
+    /* メモ行を強制的に出力 */
+    .memo-row { display: table-row !important; }
+    .memo-row td { border-top: none !important; background-color: transparent !important; }
     .memo-textarea {
-        width: calc(100% - 15px) !important; display: inline-block !important;
-        min-height: 10px !important; overflow: visible !important; resize: none !important;
-        font-size: 7px !important; color: black !important;
+        width: 100% !important; min-height: 24px !important; overflow: visible !important; 
+        resize: none !important; font-size: 7px !important; color: black !important;
     }
 
     /* テーブル内の各項目のサイズ調整 */

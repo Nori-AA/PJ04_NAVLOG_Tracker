@@ -1,223 +1,6 @@
-:root {
-    --bg-color: #f0f2f5; --card-bg: #ffffff; --text-color: #2c3e50;
-    --text-muted: #555555; --text-faint: #888888; --primary-color: #1a252f;
-    --accent-color: #3498db; --danger-color: #e74c3c; --alert-text: #ff6b6b;
-    --success-color: #2ecc71; --border-color: #bdc3c7; --table-header-bg: #e8ecef;
-    --ahead-bg: #d4efdf; --ahead-color: #1e8449; --behind-bg: #fadbd8;
-    --behind-color: #c0392b; --modified-bg: #e1f5fe; --modified-text: #1a252f;
-    --drm-bg: #0c0c0c; --drm-text: #00ff41; --input-bg: #ffffff;
-    --input-border: #ccc; --actual-col-bg: #fff9e6; --memo-bg: #eef2f5;
-    --sb-height: 85px; 
-    --warning-bg: #5c2a2a; /* 暗めの赤茶色 */
-}
-
-html.theme-dark {
-    --bg-color: #121212; --card-bg: #1c1c1e; --text-color: #d1d1d6;
-    --text-muted: #8e8e93; --text-faint: #636366; --primary-color: #2c2c2e; 
-    --accent-color: #2980b9; --danger-color: #d32f2f; --alert-text: #ff5252;
-    --success-color: #27ae60; --border-color: #3a3a3c; --table-header-bg: #2c2c2e;
-    --ahead-bg: #1b4332; --ahead-color: #81c784; --behind-bg: #4a1c1c;
-    --behind-color: #e57373; --modified-bg: #1e3a5f; --modified-text: #64b5f6;
-    --drm-bg: #000000; --drm-text: #00e676; --input-bg: #2c2c2e;
-    --input-border: #48484a; --actual-col-bg: #24221d; --memo-bg: #2c2c2e;
-    --warning-bg: #5c2a2a; /* 暗めの赤茶色 */
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-body::before {
-    content: ""; position: fixed; top: 0; left: 0; right: 0;
-    height: env(safe-area-inset-top, 0px); background-color: var(--bg-color); z-index: 1001;
-}
-
-body { 
-    font-family: -apple-system, sans-serif; background-color: var(--bg-color); color: var(--text-color); 
-    padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom) 15px; line-height: 1.4; min-width: 1000px; 
-    transition: background-color 0.3s, color 0.3s; 
-}
-
-h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-color); }
-
-/* --- 通常時のコンテナ制御（印刷用ラッパーは通常時は無視） --- */
-.print-header-container { display: block; width: 100%; }
-.print-left-col, .print-right-col { width: 100%; }
-
-.flight-header { background: var(--primary-color); color: white; border-radius: 10px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-.fh-title { font-size: 11px; color: #95a5a6; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; font-weight: bold; letter-spacing: 0.5px; }
-.fh-details { display: flex; flex-wrap: wrap; gap: 12px 25px; }
-.fh-item { display: flex; flex-direction: column; }
-.fh-label { font-size: 10px; color: var(--text-faint); font-weight: bold; text-transform: uppercase; }
-.fh-val { font-size: 16px; font-weight: bold; font-family: 'SF Mono', Menlo, monospace; color: #fff; }
-
-.card-crew { background: var(--card-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
-.crew-header { background: var(--primary-color); padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-.crew-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
-.crew-content { padding: 10px; }
-
-.crew-table { width: auto; border-collapse: collapse; margin-left: 15px; } 
-.crew-table th { font-size: 10px; color: var(--text-faint); text-align: center; padding: 4px 6px; } 
-.crew-table td { padding: 4px 6px; text-align: center; vertical-align: middle; border: none; }
-
-/* POST FLIGHT LOG STYLES */
-.pfl-section { margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 15px; padding-left: 15px; }
-.pfl-header-controls { display: flex; margin-bottom: 8px; align-items: center; }
-.pfl-toggle-group { display: flex; background: rgba(0,0,0,0.1); border-radius: 6px; padding: 3px; }
-html.theme-dark .pfl-toggle-group { background: rgba(255,255,255,0.1); }
-.pfl-btn { background: transparent; color: var(--text-color); border: none; padding: 4px 12px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s; }
-.pfl-btn.active { background: var(--accent-color); color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-.pfl-scroll-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
-.pfl-table { width: max-content; border-collapse: collapse; text-align: center; }
-.pfl-table th { font-size: 9px; color: var(--text-faint); padding: 0 4px 4px 4px; font-weight: normal; }
-.pfl-table td { padding: 0 2px; border: none; }
-.pfl-input { width: 55px; text-align: center; font-size: 12px; padding: 5px 2px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); border-radius: 4px; font-family: 'SF Mono', monospace; }
-.pfl-input:focus { border-color: var(--accent-color); outline: none; }
-.pfl-input.wide { width: 75px; }
-.pfl-input.narrow { width: 45px; }
-
-#pfl_day { width: 75px; }
-#pfl_reg { width: 65px; }
-
-.card-drm { background: var(--drm-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
-.drm-header { background: #222; padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-.drm-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
-.drm-content { display: block; font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: var(--drm-text); padding: 15px; max-height: 350px; overflow: auto; -webkit-overflow-scrolling: touch; }
-
-/* ★ StatusBar 基本スタイル */
-.status-bar { 
-    padding: 15px; border-radius: 10px; margin-bottom: 12px; background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
-    position: -webkit-sticky; position: sticky; top: env(safe-area-inset-top, 10px); z-index: 1000; transform: translateZ(0);
-    transition: background-color 0.3s ease;
-}
-.status-bar.status-warning { background-color: var(--warning-bg) !important; }
-.dest-warning-badge { font-size: 10px; font-weight: bold; color: white; background-color: var(--danger-color); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
-
-.status-section { display: flex; flex-direction: column; }
-.status-title { display: block; font-size: 11px; opacity: 0.7; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; text-align: left; }
-.status-content { margin-left: 15px; }
-.status-value { font-size: 22px; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; line-height: 1; }
-.status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
-
-.input-group-inline { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
-.input-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
-.status-input { background: transparent; border: none; color: #fff; font-size: 16px; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0; outline: none; }
-.status-input::placeholder { color: rgba(255,255,255,0.3); }
-.status-input:focus { border-bottom: 1px solid #fff; }
-.input-time { width: 60px; }
-.fuel-input { width: 75px; }
-
-.table-container { 
-    background: var(--card-bg); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; 
-    position: relative; z-index: 10;
-}
-
-table { width: 100%; min-width: 970px; margin: 0 auto; table-layout: fixed; border-collapse: separate; border-spacing: 0; }
-
-.table-container th { 
-    background: var(--table-header-bg); position: sticky; top: calc(env(safe-area-inset-top, 10px) + var(--sb-height)); z-index: 900; 
-    font-size: 11px; color: var(--text-muted); font-weight: bold; box-shadow: 0 2px 2px rgba(0,0,0,0.05); 
-}
-
-.header-landscape { display: inline; }
-.header-portrait { display: none; }
-
-.sticky-col-wp { position: sticky; left: 0; background-color: var(--card-bg); z-index: 800; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
-.table-container th.sticky-col-wp { background-color: var(--table-header-bg); z-index: 950; }
-.table-container th, .table-container td { padding: 8px 2px; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); text-align: center; font-size: 13px; vertical-align: middle; overflow: hidden; }
-
-.col-wp   { width: 90px; min-width: 90px; }
-.col-alt  { width: 80px; min-width: 80px; }
-.col-wind { width: 95px; min-width: 95px; }
-.col-mwtp { width: 70px; min-width: 70px; }
-.col-ctme { width: 95px; min-width: 95px; }
-.col-ztme { width: 70px; min-width: 70px; }
-.col-main { width: 90px; min-width: 90px; } 
-.col-diff { width: 55px; min-width: 55px; }
-
-.col-actual { background-color: var(--actual-col-bg); }
-
-.input-crew { width: 100%; padding: 6px; border: 1px solid var(--input-border); border-radius: 4px; font-size: 13px; text-align: center; background: var(--input-bg); color: var(--text-color); }
-.input-crew:focus { background: var(--card-bg); border-color: var(--accent-color); outline: none; }
-
-.input-crew-name { text-align: left !important; padding-left: 10px; }
-
-.input-ref { width: 100%; text-align: center; border: 1px dashed transparent; background: transparent; color: var(--text-color); font-size: 12px; padding: 2px; border-radius: 4px; box-sizing: border-box; }
-.input-ref:focus { border: 1px solid var(--accent-color); background: var(--input-bg); outline: none; }
-.input-modified { font-weight: bold; color: var(--modified-text) !important; background-color: var(--modified-bg); border: 1px solid var(--accent-color); }
-
-.input-ref.input-wind { width: 75px !important; margin: 0 auto; }
-.input-ref.input-tmp { width: 36px !important; min-width: 36px !important; max-width: 36px !important; flex: 0 0 36px !important; padding: 2px 2px 2px 0 !important; text-align: right !important; }
-
-.isa-dev-text { font-size: 10px; color: var(--text-muted); text-align: left; white-space: nowrap; margin-left: 2px; flex: 0 0 auto; }
-
-.input-actual { width: 75px; height: 38px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 6px; font-size: 16px; font-weight: bold; background: var(--input-bg); color: var(--text-color); display: block; }
-.input-actual-half { width: 75px; height: 18px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 4px; font-size: 13px; font-weight: bold; background: var(--input-bg); color: var(--text-color); padding: 0; display: block; }
-.input-actual-half::placeholder { font-weight: normal; font-size: 10px; color: var(--text-faint); }
-
-input[readonly] { background-color: rgba(0, 0, 0, 0.05); color: var(--text-muted); cursor: not-allowed; border-color: transparent; }
-html.theme-dark input[readonly] { background-color: rgba(255, 255, 255, 0.05); }
-
-input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-input[type="number"] { -moz-appearance: textfield; }
-input, textarea, select { padding: 6px; border: 1px solid var(--input-border); border-radius: 4px; font-size: 14px; background-color: var(--input-bg); color: var(--text-color); }
-
-.input-stacked { display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; }
-.fuel-primary { font-size: 14px; font-weight: bold; }
-.fuel-secondary { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
-
-.wp-cell { cursor: pointer; padding: 6px 2px; border-radius: 6px; user-select: none; display: block; }
-.wp-cell:active { background-color: var(--border-color); }
-.memo-textarea { width: 100%; border: 1px solid var(--input-border); border-radius: 4px; padding: 8px; font-size: 14px; font-family: inherit; resize: vertical; outline: none; background-color: var(--input-bg); color: var(--text-color); }
-.memo-textarea:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
-
-.card-footer { background: var(--card-bg); border-radius: 10px; padding: 12px; margin-bottom: 40px; }
-.config-panel { display: flex; gap: 15px; align-items: center; justify-content: space-between; }
-button { padding: 12px 18px; border: none; border-radius: 8px; background: var(--accent-color); color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
-.btn-danger { background: var(--danger-color); }
-.btn-secondary { background: #607d8b; }
-.btn-small { padding: 6px 10px; font-size: 12px; }
-.input-group { display: flex; flex-direction: column; gap: 5px; }
-.input-group label { font-size: 11px; font-weight: bold; color: var(--text-muted); }
-
-.settings-wrapper { display: flex; flex-wrap: wrap; gap: 15px; }
-.settings-group { flex: 1 1 250px; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.05); }
-html.theme-dark .settings-group { background: rgba(255,255,255,0.05); }
-h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accent-color); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; text-transform: uppercase; margin-top: 0; }
-
-.clipboard-btn { display: block; width: 100%; background: #2980b9; color: white; padding: 25px; border-radius: 10px; text-align: center; font-weight: bold; font-size: 20px; cursor: pointer; box-shadow: 0 6px 12px rgba(41, 128, 185, 0.3); margin-bottom: 15px; border: none; }
-.clipboard-btn:active { background: #1c5980; transform: translateY(2px); box-shadow: 0 2px 6px rgba(41, 128, 185, 0.3); }
-.file-upload-btn { display: block; width: 100%; background: #7f8c8d; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 14px; cursor: pointer; border: none; }
-
-.altn-warning-badge { margin-left: 8px; font-size: 10px; font-weight: bold; color: var(--alert-text); background: rgba(255, 107, 107, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255, 107, 107, 0.4); white-space: nowrap; }
-
-@media screen and (max-width: 1000px), screen and (orientation: portrait) {
-    body { min-width: 810px; } 
-    table { width: 780px; min-width: 780px; max-width: 780px; }
-    .col-wp   { width: 74px; min-width: 74px; max-width: 74px; }
-    .col-alt  { width: 60px; min-width: 60px; max-width: 60px; }
-    .col-wind { width: 70px; min-width: 70px; max-width: 70px; }
-    .col-mwtp { width: 55px; min-width: 55px; max-width: 55px; }
-    .col-ctme { width: 80px; min-width: 80px; max-width: 80px; }
-    .col-ztme { width: 55px; min-width: 55px; max-width: 55px; }
-    .col-main { width: 74px; min-width: 74px; max-width: 74px; }
-    .col-diff { width: 45px; min-width: 45px; max-width: 45px; }
-    
-    .input-ref.input-wind { width: 55px !important; }
-    .input-ref.input-tmp { width: 32px !important; min-width: 32px !important; max-width: 32px !important; flex: 0 0 32px !important; font-size: 11px !important; padding: 2px 1px !important; }
-    .isa-dev-text { font-size: 9px; }
-    
-    .input-actual { width: 65px; height: 35px; font-size: 14px; margin: 0 auto; display: block; } 
-    .input-actual-half { width: 65px; font-size: 12px; margin: 0 auto; display: block; }
-    
-    .fuel-primary { font-size: 13px; }
-    .fuel-secondary { font-size: 10px; }
-
-    .header-landscape { display: none; }
-    .header-portrait { display: inline; }
-}
-
-/* ★ 印刷用デザイン：完全プレーンテキスト化・A4横・2段組み・強制改ページ */
+/* ★ 印刷用デザイン：A4縦・1段組み・罫線なしプレーンテキスト（ASCII）風 */
 @media print {
-    @page { size: A4 landscape; margin: 10mm; }
+    @page { size: A4 portrait; margin: 10mm; }
     * { 
         -webkit-print-color-adjust: exact !important; 
         print-color-adjust: exact !important; 
@@ -228,131 +11,89 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 
     body { 
         padding: 0; background: white; min-width: 100%; color: black; 
-        font-family: 'SF Mono', Consolas, Menlo, monospace; font-size: 10px; 
+        font-family: 'SF Mono', Consolas, Menlo, monospace; font-size: 9px; line-height: 1.2;
     }
 
-    /* ★ コンテナを使った確実な2段組み制御 */
-    .print-header-container {
-        width: 100% !important;
-        display: block !important;
-    }
-    .print-header-container::after {
-        content: ""; display: table; clear: both;
-    }
-    .print-left-col {
-        float: left !important;
-        width: 53% !important;
-        padding-right: 2% !important;
-    }
-    .print-right-col {
-        float: right !important;
-        width: 45% !important;
-    }
+    /* 1段組み制御 */
+    .print-header-container { width: 100% !important; display: block !important; }
+    .print-left-col, .print-right-col { float: none !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
 
     /* ボックスやUI装飾の完全排除 */
     .flight-header, .card-crew, .card-drm {
-        box-shadow: none !important;
-        border: none !important;
-        background: transparent !important;
-        color: black !important;
-        padding: 0 !important;
-        margin: 0 0 5mm 0 !important;
-        display: block !important;
-        width: 100% !important;
+        box-shadow: none !important; border: none !important; background: transparent !important;
+        color: black !important; padding: 0 !important; margin: 0 0 5mm 0 !important;
+        display: block !important; width: 100% !important;
     }
 
     /* 各コンテンツの強制展開・折り返し */
     #crewContentEl, .drm-content { display: block !important; }
     .drm-content {
-        max-height: none !important;
-        overflow: visible !important;
-        white-space: pre-wrap !important;
-        color: black !important;
-        padding: 0 !important;
-        font-size: 10px !important;
+        max-height: none !important; overflow: visible !important; white-space: pre-wrap !important;
+        color: black !important; padding: 0 !important; font-size: 9px !important;
     }
 
-    /* セクションタイトルのプレーンテキスト化 */
+    /* セクションタイトルのプレーンテキスト化（下線のみ点線で残す） */
     .fh-title, .crew-title, .drm-title {
-        color: black !important;
-        font-size: 11px !important;
-        border-bottom: 1px solid black !important;
-        margin-bottom: 4px !important;
-        padding-bottom: 2px !important;
-        display: block !important;
+        color: black !important; font-size: 10px !important; font-weight: bold !important;
+        border-bottom: 1px dashed black !important; margin-bottom: 4px !important; padding-bottom: 2px !important; display: block !important;
     }
     .crew-header, .drm-header { background: transparent !important; padding: 0 !important; border: none !important; }
     
-    .fh-val { color: black !important; font-size: 12px !important; }
-    .fh-label { color: #555 !important; font-size: 9px !important; }
+    .fh-val { color: black !important; font-size: 10px !important; }
+    .fh-label { color: black !important; font-size: 8px !important; }
 
-    /* ★ PFLテーブルのはみ出し（縮小）防止処理 */
+    /* PFL & クルーテーブル */
     .pfl-scroll-wrapper { overflow: visible !important; padding-bottom: 0 !important; }
-    .pfl-table { width: 100% !important; table-layout: fixed !important; }
-    .pfl-input { width: 100% !important; padding: 0 !important; font-size: 9px !important; text-align: center !important;}
-    .pfl-table th { font-size: 8px !important; padding: 1px !important; word-wrap: break-word !important; white-space: normal !important; }
-    .crew-table { width: 100% !important; table-layout: fixed !important; margin-left: 0 !important;}
-    .input-crew { width: 100% !important; padding: 0 !important; font-size: 10px !important;}
+    .pfl-table, .crew-table { width: 100% !important; table-layout: fixed !important; margin: 0 !important; border-collapse: collapse !important; }
+    .pfl-input, .input-crew { width: 100% !important; padding: 0 !important; font-size: 8px !important; text-align: center !important;}
+    .pfl-table th, .crew-table th { font-size: 8px !important; padding: 1px !important; word-wrap: break-word !important; white-space: normal !important; border-bottom: 1px dashed black !important; font-weight: bold !important; }
+    .pfl-table td, .crew-table td { border: none !important; padding: 2px 1px !important; }
 
-    /* ステータスバー（中間エリア）のプレーン化 */
+    /* ステータスバーのプレーン化 */
     .status-bar { 
-        position: static !important; 
-        box-shadow: none !important; 
-        background: transparent !important; 
-        color: black !important; 
-        padding: 0 !important; 
-        margin-bottom: 5mm !important; 
-        clear: both !important; 
+        position: static !important; box-shadow: none !important; background: transparent !important; color: black !important; 
+        padding: 2px 0 !important; margin-bottom: 5mm !important; clear: both !important; 
+        border-top: 1px dashed black !important; border-bottom: 1px dashed black !important;
     }
-    .status-title, .status-value, .status-badge, .input-label { color: black !important; background: transparent !important; }
-    .status-badge { border: 1px solid black !important; }
+    .status-title, .status-value, .status-badge, .input-label { color: black !important; background: transparent !important; font-size: 9px !important;}
+    .status-badge { border: none !important; }
 
-    /* 入力フォームのプレーンテキスト化（枠線・背景・矢印消去） */
+    /* 入力フォームのプレーンテキスト化 */
     input, select, textarea {
-        border: none !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        -webkit-appearance: none !important;
-        appearance: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        color: black !important;
-        font-family: inherit !important;
+        border: none !important; background: transparent !important; box-shadow: none !important;
+        -webkit-appearance: none !important; appearance: none !important; padding: 0 !important; margin: 0 !important;
+        color: black !important; font-family: inherit !important;
     }
 
-    /* NAVLOGテーブルの強制改ページ */
+    /* NAVLOGテーブル */
     .table-container {
-        clear: both !important;
-        break-before: page !important;
-        page-break-before: always !important;
-        max-height: none !important;
-        overflow: visible !important;
-        position: static !important;
-        box-shadow: none !important;
-        margin: 0 !important;
-        background: white !important;
-        width: 100% !important;
+        clear: both !important; break-before: auto !important; page-break-before: auto !important;
+        max-height: none !important; overflow: visible !important; position: static !important;
+        box-shadow: none !important; margin: 0 !important; background: transparent !important; width: 100% !important;
     }
 
-    table { font-size: 10px; width: 100%; border-collapse: collapse; table-layout: fixed; }
-    .table-container th, .table-container td { 
-        border: 1px solid black !important; 
-        padding: 4px 2px !important; 
-        color: black !important; 
-        background: transparent !important;
+    table { font-size: 8px; width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .table-container th { 
+        border: none !important; border-bottom: 1px dashed black !important; 
+        padding: 2px 1px !important; color: black !important; background: transparent !important; font-weight: bold !important;
+    }
+    .table-container td { 
+        border: none !important; padding: 2px 1px !important; color: black !important; background: transparent !important;
     }
     .sticky-col-wp, .table-container th { position: static !important; background: transparent !important; color: black !important; }
 
-    /* ★ メモ行を強制的に出力 */
-    .memo-row { display: table-row !important; }
-    .memo-row td { border-top: none !important; background-color: transparent !important; }
+    /* ★ メモ行の制御（空なら消す、あるならインデント） */
+    .memo-row:not(.has-content) { display: none !important; }
+    .memo-row.has-content { display: table-row !important; }
+    .memo-row td { border-top: none !important; background-color: transparent !important; padding-left: 20px !important; text-align: left !important; }
+    .memo-row td::before { content: "↳ "; font-weight: bold; }
     .memo-textarea { 
-        width: 100% !important; 
-        min-height: 24px !important; 
-        overflow: visible !important; 
-        resize: none !important; 
+        width: calc(100% - 20px) !important; display: inline-block !important;
+        min-height: 12px !important; overflow: visible !important; resize: none !important; 
+        font-size: 8px !important; color: black !important; text-align: left !important;
     }
 
     /* テーブル内インプット文字サイズの最適化 */
-    .input-actual, .input-actual-half, .input-ref { font-size: 10px !important; }
+    .input-actual, .input-actual-half, .input-ref { font-size: 8px !important; font-weight: normal !important; }
+    .fuel-primary, .fuel-secondary { font-size: 8px !important; font-weight: normal !important; }
 }

@@ -14,10 +14,9 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.8.3', // ★バージョン更新
+    version: 'v25.8.4', // ★ バージョン更新 (PDF出力最適化版)
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
-        // 1行目にNoriさんの情報をデフォルト設定
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' },
@@ -27,7 +26,6 @@ const app = {
     },
 
     init() {
-        // ★ 最初のページのタイトルをJSのバージョンと同期
         const titleEl = document.getElementById('defaultTitle');
         if (titleEl) {
             titleEl.textContent = `✈️ NAVLOG Tracker ${this.version}`;
@@ -45,7 +43,6 @@ const app = {
             if (this.state.actFob === undefined) this.state.actFob = '';
             if (this.state.actFod === undefined) this.state.actFod = '';
             if (!this.state.crew || this.state.crew.length === 0) {
-                // フォールバック時もNoriさんの情報をセット
                 this.state.crew = [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
             }
 
@@ -95,7 +92,6 @@ const app = {
         this.updateThemeButton();
         window.addEventListener('resize', this.updateStickyHeight);
 
-        // ★ 画面右下の補助用バージョン表示（データ入力中も常に確認用）
         if (!document.getElementById('app-version-display')) {
             const vDiv = document.createElement('div');
             vDiv.id = 'app-version-display';
@@ -272,7 +268,6 @@ const app = {
         document.getElementById('fh-ft').textContent = this.state.flightMeta.ft || "---";
         document.getElementById('fh-dist').textContent = (this.state.flightMeta.dist !== "---" ? this.state.flightMeta.dist + " NM" : "---");
 
-        // ★確実な配置方法：タイトル行（fh-title）をFlexboxで左右に分け、右端にバージョンを配置する
         const titleBar = header.querySelector('.fh-title');
         if (titleBar && !titleBar.dataset.versionSet) {
             titleBar.style.display = 'flex';
@@ -284,7 +279,7 @@ const app = {
                     NAVLOG Tracker ${this.version}
                 </span>
             `;
-            titleBar.dataset.versionSet = 'true'; // 二重に追加されるのを防ぐ
+            titleBar.dataset.versionSet = 'true';
         }
     },
 
@@ -358,7 +353,17 @@ const app = {
     },
 
     toggleMemo(i) { this.state.waypoints[i].memoOpen = !this.state.waypoints[i].memoOpen; this.saveConfig(); document.getElementById('tableBody').innerHTML = ''; this.render(); },
-    updateMemo(i, val) { this.state.waypoints[i].memo = val; this.saveConfig(); },
+    
+    // ★ 印刷時の表示制御（空かどうかの判定クラス付与）のためにアップデート
+    updateMemo(i, val) { 
+        this.state.waypoints[i].memo = val; 
+        this.saveConfig(); 
+        const tr = document.getElementById(`memo-row-${i}`);
+        if(tr) {
+            if(val && val.trim() !== '') tr.classList.add('has-content');
+            else tr.classList.remove('has-content');
+        }
+    },
 
     render() {
         const tbody = document.getElementById('tableBody');
@@ -421,7 +426,8 @@ const app = {
                 const memoTr = document.createElement('tr');
                 memoTr.id = `memo-row-${i}`;
                 memoTr.style.display = wp.memoOpen ? 'table-row' : 'none';
-                memoTr.className = 'memo-row';
+                // ★ 印刷時の表示制御のためにクラスを設定
+                memoTr.className = hasMemo ? 'memo-row has-content' : 'memo-row';
                 memoTr.innerHTML = `
                     <td colspan="12" style="padding: 6px; background-color: var(--memo-bg);">
                         <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
@@ -582,7 +588,6 @@ const app = {
             localStorage.removeItem('navlog_v25_data');
             this.state = { 
                 waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
-                // リセット時にもデフォルト値を適用
                 crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
                 takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
                 times: { bo: '', bi: '', tkof: '', ldg: '' },

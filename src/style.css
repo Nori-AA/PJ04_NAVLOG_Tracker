@@ -45,9 +45,20 @@ h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-co
 .flight-header { background: var(--primary-color); color: white; border-radius: 10px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
 .fh-title { font-size: 11px; color: #95a5a6; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; font-weight: bold; letter-spacing: 0.5px; }
 .fh-details { display: flex; flex-wrap: wrap; gap: 12px 25px; }
-.fh-item { display: flex; flex-direction: column; }
-.fh-label { font-size: 10px; color: var(--text-faint); font-weight: bold; text-transform: uppercase; }
-.fh-val { font-size: 16px; font-weight: bold; font-family: 'SF Mono', Menlo, monospace; color: #fff; }
+/* ヘッダーの基本設定（横置き時は1行に強制） */
+.fh-details { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start; 
+    flex-wrap: nowrap; 
+    gap: 10px; 
+    width: 100%; 
+}
+.fh-item { 
+    display: flex; 
+    flex-direction: column; 
+    white-space: nowrap; /* テキストの予期せぬ改行を防止 */
+}.fh-val { font-size: 16px; font-weight: bold; font-family: 'SF Mono', Menlo, monospace; color: #fff; }
 
 .card-crew { background: var(--card-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
 .crew-header { background: var(--primary-color); padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
@@ -213,6 +224,12 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 
     .header-landscape { display: none; }
     .header-portrait { display: inline; }
+    .fh-details {
+        display: grid !important;
+        grid-template-columns: repeat(5, auto) !important;
+        justify-content: space-between !important;
+        gap: 12px 10px !important;
+    }
 }
 
 

@@ -15,7 +15,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.9', // ★ バージョン更新（Turbulence機能追加）
+    version: 'v25.9.10', // ★ バージョン更新
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -55,7 +55,7 @@ const app = {
                 if (wp.isaTmp === undefined) wp.isaTmp = null;
                 if (wp.mwtp === undefined) wp.mwtp = '---';
                 if (wp.wscp === undefined) wp.wscp = '---';
-                if (wp.turbulence === undefined) wp.turbulence = ''; // ★ Turb初期化
+                if (wp.turbulence === undefined) wp.turbulence = '';
             });
         }
         
@@ -339,7 +339,7 @@ const app = {
             plannedZwind: zwind, actualZwind: '', estZwindDisplay: zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel: fuel,
             isaDevNum, isaTmp, mwtp, wscp,
             actualTime: '', actualFuelTTL: '', actualFuelCALC: '', calcEstTimeMin: null, calcEstFuel: null, estTimeDisplay: '', estFuelDisplay: 0, timeDiff: null, fuelDiff: null,
-            cumDist: 0, rdis: 0, memo: '', memoOpen: false, turbulence: '' // ★ Turbプロパティ追加
+            cumDist: 0, rdis: 0, memo: '', memoOpen: false, turbulence: ''
         };
     },
 
@@ -404,7 +404,6 @@ const app = {
         }
     },
 
-    // ★ Turb設定関数：入力途中のメモが消えないように一時退避する安全設計
     setTurb(i, val) {
         const memoEl = document.getElementById(`wp_${i}_memo`);
         if (memoEl) {
@@ -412,7 +411,7 @@ const app = {
         }
         
         if (this.state.waypoints[i].turbulence === val) {
-            this.state.waypoints[i].turbulence = ''; // 再度タップでクリア
+            this.state.waypoints[i].turbulence = '';
         } else {
             this.state.waypoints[i].turbulence = val;
         }
@@ -435,7 +434,6 @@ const app = {
                 const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt, isWind = wp.actualZwind !== '', isTmp = wp.actualTmp !== '';
                 const hasMemo = wp.memo && wp.memo.trim() !== '';
                 
-                // ★ Turbインジケーターの作成（画面用とPDF印字用）
                 const hasTurb = wp.turbulence && wp.turbulence !== '';
                 let turbBadge = hasTurb ? `<br><span class="turb-indicator turb-${wp.turbulence} no-print">〰️ ${wp.turbulence}</span><span class="turb-indicator-print" style="display:none;">[〰️${wp.turbulence}]</span>` : '';
 
@@ -488,7 +486,6 @@ const app = {
                 memoTr.style.display = wp.memoOpen ? 'table-row' : 'none';
                 memoTr.className = hasMemo ? 'memo-row has-content' : 'memo-row';
                 
-                // ★ Turb入力用ボタンエリアの追加（クラス名を強度ごとに割り当て）
                 const turbOptions = ['S', 'LM', 'L', 'LP', 'M'];
                 const turbButtonsHtml = turbOptions.map(t => 
                     `<button class="turb-btn turb-btn-${t} ${wp.turbulence === t ? 'active' : ''}" onclick="app.setTurb(${i}, '${t}')">${t}</button>`
@@ -573,6 +570,7 @@ const app = {
         document.getElementById('tableContainer').style.display = 'block';
     },
 
+    // ★ 修正箇所：renderStatusBar() 内に、STAとPlanned FODの描画処理を追加
     renderStatusBar() {
         const wps = this.state.waypoints; if (!wps || wps.length === 0) return;
         const last = wps[wps.length - 1];
@@ -612,6 +610,18 @@ const app = {
         document.getElementById('sb-eta').textContent = etaDisp;
         const elEtaDiff = document.getElementById('sb-eta-diff'); elEtaDiff.textContent = etaDiffDisp; elEtaDiff.className = etaClass ? `status-badge ${etaClass}` : 'status-badge';
         
+        // ★ 追加：STA（またはETA）の表示
+        const staEl = document.getElementById('sb-sta-display');
+        if (staEl && this.state.flightMeta) {
+            if (this.state.flightMeta.sta) {
+                // 元のヘッダー情報にSTAが含まれているかチェック
+                const timeType = (this.state.flightMeta.time && this.state.flightMeta.time.includes('STA')) ? 'STA' : 'ETA';
+                staEl.textContent = `${timeType}: ${this.state.flightMeta.sta}Z`;
+            } else {
+                staEl.textContent = '';
+            }
+        }
+
         let destFuelDisp = finalFuel !== null ? finalFuel.toFixed(1) : '--'; let destFuelDiffDisp = '', destFuelClass = '';
         if (finalFuel !== null) {
             let diff = finalFuel - last.plannedFuel;
@@ -619,6 +629,12 @@ const app = {
         }
         document.getElementById('sb-dest-fuel').textContent = destFuelDisp;
         const elFuelDiff = document.getElementById('sb-dest-fuel-diff'); elFuelDiff.textContent = destFuelDiffDisp; elFuelDiff.className = destFuelClass ? `status-badge ${destFuelClass}` : 'status-badge';
+
+        // ★ 追加：Planned FODの表示
+        const planFodEl = document.getElementById('sb-plan-fod-display');
+        if (planFodEl && last) {
+            planFodEl.textContent = `Plan FOD: ${last.plannedFuel.toFixed(1)}`;
+        }
 
         const sb = document.getElementById('statusBar');
         const warningEl = document.getElementById('sb-dest-fuel-warning');

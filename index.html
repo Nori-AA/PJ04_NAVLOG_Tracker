@@ -395,6 +395,65 @@ html.theme-dark .turb-indicator {
         margin-top: 1px !important;
     }
 }
+/* ================================================= */
+/* 3. Turbulence (乱気流) 入力ボタン用スタイル */
+/* ================================================= */
+
+.turb-btn {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+/* 強度別のアクティブカラー（青→緑→黄→橙→赤） */
+.turb-btn-S.active { background: #3498db; color: white; border-color: #3498db; }
+.turb-btn-LM.active { background: #2ecc71; color: white; border-color: #2ecc71; }
+.turb-btn-L.active { background: #f1c40f; color: #1a252f; border-color: #f1c40f; } /* 黄色は文字を黒っぽく */
+.turb-btn-LP.active { background: #e67e22; color: white; border-color: #e67e22; }
+.turb-btn-M.active { background: #e74c3c; color: white; border-color: #e74c3c; }
+
+/* 画面表示用インジケーター（WPTの下） */
+.turb-indicator {
+    font-size: 10px;
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-top: 2px;
+}
+
+/* インジケーターの色分け */
+.turb-indicator.turb-S { color: #2980b9; background: rgba(52, 152, 219, 0.15); }
+.turb-indicator.turb-LM { color: #27ae60; background: rgba(46, 204, 113, 0.15); }
+.turb-indicator.turb-L { color: #d4ac0d; background: rgba(241, 196, 15, 0.15); }
+.turb-indicator.turb-LP { color: #d35400; background: rgba(230, 126, 34, 0.15); }
+.turb-indicator.turb-M { color: #c0392b; background: rgba(231, 76, 60, 0.15); }
+
+/* ダークモード用調整 */
+html.theme-dark .turb-btn { background: var(--input-bg); }
+html.theme-dark .turb-indicator.turb-S { color: #64b5f6; }
+html.theme-dark .turb-indicator.turb-LM { color: #81c784; }
+html.theme-dark .turb-indicator.turb-L { color: #fff176; }
+html.theme-dark .turb-indicator.turb-LP { color: #ffb74d; }
+html.theme-dark .turb-indicator.turb-M { color: #e57373; }
+
+/* PDF印刷時の印字用レイアウト */
+@media print {
+    .turb-indicator-print {
+        display: block !important;
+        font-size: 7px !important;
+        color: black !important;
+        font-weight: normal !important;
+        margin-top: 1px !important;
+        white-space: nowrap !important;
+    }
+}
 </style>
 </head>
 <body>

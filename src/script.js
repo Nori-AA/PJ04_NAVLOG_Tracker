@@ -5,19 +5,21 @@ if ('serviceWorker' in navigator) {
 }
 
 // Enter（完了）キー押下時にキーボードを即座に引っ込める機能
+// ※テキストエリア（メモ欄）は改行できるように除外しました。
 window.addEventListener('keydown', function(event) {
     if (event.key === 'Enter' || event.keyCode === 13) {
-        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT')) {
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
             document.activeElement.blur();
         }
     }
 });
 
 const app = {
-    version: 'v25.9.1', // ★ バージョン更新
+    version: 'v25.9.2', // ★ バージョン更新
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
+        crewMemo: '', // ★ CREW/フライト全体メモ用の状態を追加
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' },
         actFob: '', actFod: '',
@@ -42,6 +44,7 @@ const app = {
             if (!this.state.times) this.state.times = { bo: '', bi: '', tkof: '', ldg: '' };
             if (this.state.actFob === undefined) this.state.actFob = '';
             if (this.state.actFod === undefined) this.state.actFod = '';
+            if (this.state.crewMemo === undefined) this.state.crewMemo = ''; // ★ メモの復元
             if (!this.state.crew || this.state.crew.length === 0) {
                 this.state.crew = [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
             }
@@ -83,6 +86,8 @@ const app = {
             this.renderActualFuel();
             
             if(this.renderPostFlightLog) this.renderPostFlightLog();
+            
+            this.renderCrewMemo(); // ★ CREWメモの描画を追加
             
             document.getElementById('tableBody').innerHTML = ''; 
             this.render();
@@ -286,6 +291,51 @@ const app = {
     toggleHeader() {
         const c = document.getElementById('headerInfoContent'), icon = document.getElementById('drm-toggle-icon');
         if (c.style.display === 'none') { c.style.display = 'block'; icon.textContent = '▼'; } else { c.style.display = 'none'; icon.textContent = '▶'; }
+    },
+
+    // ★ CREW INFO エリアに全体メモを動的生成・描画する処理
+    renderCrewMemo() {
+        const crewContent = document.querySelector('.card-crew .crew-content');
+        if (!crewContent) return;
+        
+        let container = document.getElementById('crew_memo_container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'crew_memo_container';
+            container.style.cssText = 'margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px; padding-left: 15px; padding-right: 15px;';
+            container.innerHTML = `
+                <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 5px;">📝 FLIGHT MEMO</div>
+                <textarea id="crew_memo" class="memo-textarea" rows="3" placeholder="フライト全体に関するメモを入力..." onchange="app.updateCrewMemo(this.value)"></textarea>
+            `;
+            crewContent.appendChild(container);
+        }
+        
+        const textarea = document.getElementById('crew_memo');
+        if (textarea && document.activeElement !== textarea) {
+            textarea.value = this.state.crewMemo || '';
+        }
+        
+        // 空欄の場合はPDF印刷時に自動非表示にするための処理
+        if (!this.state.crewMemo || this.state.crewMemo.trim() === '') {
+            container.classList.add('no-print');
+        } else {
+            container.classList.remove('no-print');
+        }
+    },
+
+    // ★ CREWメモの保存処理
+    updateCrewMemo(val) {
+        this.state.crewMemo = val;
+        this.saveConfig();
+        
+        const container = document.getElementById('crew_memo_container');
+        if (container) {
+            if (val && val.trim() !== '') {
+                container.classList.remove('no-print');
+            } else {
+                container.classList.add('no-print');
+            }
+        }
     },
 
     createWP(name, alt, tmp, zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, fuel, isaDevVal = '', mwtp = '---', wscp = '---') {
@@ -579,7 +629,6 @@ const app = {
             }
         }
 
-        // ★ 追加：ETAの親要素（.status-section）を探して、直接 'no-print' クラス（印刷除外シール）を貼り付ける
         const etaEl = document.getElementById('sb-eta');
         if (etaEl) {
             const etaSection = etaEl.closest('.status-section');
@@ -597,6 +646,7 @@ const app = {
             this.state = { 
                 waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
                 crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
+                crewMemo: '', // ★ メモの初期化
                 takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
                 times: { bo: '', bi: '', tkof: '', ldg: '' },
                 actFob: '', actFod: '',

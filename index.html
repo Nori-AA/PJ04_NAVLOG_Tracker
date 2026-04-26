@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.9.6 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.7.1 (Offline EFB)</title>
 
     <script>
         try {
@@ -260,7 +260,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
     .print-header-container { width: 100% !important; display: block !important; }
     .print-left-col, .print-right-col { float: none !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
 
-    /* ボックス装飾の排除 (全ヘッダーカードを統一) */
+    /* ボックス装飾の排除 */
     .flight-header, .card-crew, .card-drm {
         box-shadow: none !important; border: none !important; background: transparent !important;
         color: black !important; padding: 0 !important; margin: 0 0 3mm 0 !important;
@@ -274,7 +274,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
         color: black !important; padding: 0 !important; font-size: 8px !important;
     }
 
-    /* セクションタイトルをテキスト（点線）で区切る (全タイトルデザインを統一) */
+    /* セクションタイトルをテキスト（点線）で区切る */
     .fh-title, .crew-title, .drm-title {
         color: black !important; font-size: 9px !important; font-weight: bold !important;
         border-bottom: 1px dashed black !important; margin-bottom: 2mm !important; 
@@ -295,7 +295,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
     }
     .pfl-table td, .crew-table td { border: none !important; padding: 1px !important; }
 
-    /* ステータスバー領域（ETA/FUEL/TIMES）を完全に非表示 */
+    /* ★ 画像での指定通り、ステータスバー領域（ETA/FUEL/TIMES）を完全に非表示 */
     .status-bar, #statusBar { 
         display: none !important; 
     }
@@ -340,7 +340,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.9.6</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.7.1</h1>
 
     <div class="print-header-container">
         
@@ -451,7 +451,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
         <div class="print-right-col">
             <div class="card-drm" id="headerInfoCard" style="display:none;">
                 <div class="drm-header" onclick="app.toggleHeader()">
-                    <span class="drm-title">📡 DISPATCH RELEASE MESSAGE</span>
+                    <span class="drm-title">[ DISPATCH RELEASE MESSAGE ]</span>
                     <span id="drm-toggle-icon" style="color: var(--text-faint);" class="no-print">▼</span>
                 </div>
                 <div class="drm-content" id="headerInfoContent"></div>
@@ -645,7 +645,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.6', // ★ バージョン更新
+    version: 'v25.9.5', // ★ バージョン更新
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -736,7 +736,7 @@ const app = {
             document.body.appendChild(vDiv);
         }
     },
-    // ...以降のコードは変更なし (省略) ...
+
     setupFocusScrollBehavior() {
         document.addEventListener('focusin', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
@@ -1105,7 +1105,7 @@ const app = {
                 memoTr.className = hasMemo ? 'memo-row has-content' : 'memo-row';
                 memoTr.innerHTML = `
                     <td colspan="12" style="padding: 6px; background-color: var(--memo-bg);">
-                        <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
+                        <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
                     </td>
                 `;
                 tbody.appendChild(memoTr);
@@ -1294,55 +1294,9 @@ const app = {
 };
 
 window.onload = () => app.init();
-```#### 4. `crew.js` (T/O Pilot, LDG Pilot, APCH Type項目のPDF出力追加)
-```javascript
-// ====== crew.js (V25.9.6) ======
-// appオブジェクトにCREW・PFL関連の機能を追加（拡張）します
-Object.assign(app, {
-    
-    toggleCrew() {
-        this.state.crewPanelOpen = !this.state.crewPanelOpen;
-        this.saveConfig();
-        this.updateCrewPanelUI();
-    },
-    
-    updateCrewPanelUI() {
-        const c = document.getElementById('crewContentEl');
-        const icon = document.getElementById('crew-toggle-icon');
-        if (this.state.crewPanelOpen) { c.style.display = 'block'; icon.textContent = '▼'; } 
-        else { c.style.display = 'none'; icon.textContent = '▶'; }
-    },
-
-    handleSelectChange(index, field, val) {
-        if (val === 'other') {
-            const input = prompt(`${field.toUpperCase()} を入力:`);
-            if (input !== null && input.trim() !== '') { this.state.crew[index][field] = input.trim().toUpperCase(); }
-        } else { this.state.crew[index][field] = val; }
-        this.saveConfig();
-        this.renderCrew();
-    },
-
-    renderCrew() {
-        const tbody = document.getElementById('crewTableBody'); tbody.innerHTML = '';
-        this.state.crew.forEach((c, i) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><input type="radio" name="takeoff_pilot" ${this.state.takeoffPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('takeoff', ${c.id})"></td>
-                <td><input type="radio" name="landing_pilot" ${this.state.landingPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('landing', ${c.id})"></td>
-                <td><select class="input-crew" onchange="app.handleSelectChange(${i}, 'duty', this.value)">
-                    <option value="${c.duty}" selected hidden>${c.duty}</option>
-                    <option value="PIC">PIC</option><option value="COP">COP</option><option value="SIC">SIC</option><option value="other">other</option>
-                </select></td>
-                <td><input type="text" class="input-crew" value="${c.empNo}" placeholder="Emp No" onchange="app.updateCrew(${i}, 'empNo', this.value)"></td>
-                <td><input type="text" class="input-crew input-crew-name" value="${c.name}" placeholder="Name" onchange="app.updateCrew(${i}, 'name', this.value)"></td>
-                <td><select class="input-crew" onchange="app.handleSelectChange(${i}, 'rank', this.value)">
-                    <option value="${c.rank}" selected hidden>${c.rank}</option>
-                    <option value="CAP">CAP</option><option value="COP">COP</option><option value="other">other</option>
-                </select></td>
-                <td>${this.state.crew.length > 2 ? `<button class="btn-danger btn-small" style="padding:2
 </script>
     <script>
-// ====== crew.js (V25.9.6) ======
+// ====== crew.js ======
 // appオブジェクトにCREW・PFL関連の機能を追加（拡張）します
 Object.assign(app, {
     
@@ -1491,7 +1445,7 @@ Object.assign(app, {
     renderPostFlightLog() {
         if(!this.state.postFlightLog) return;
 
-        // ★★★ PDF印刷時専用の2段分割テーブルを生成 (修正V25.9.6) ★★★
+        // ★★★ 修正: PDF印刷時専用の2段分割テーブルを生成 ★★★
         let printPfl = document.getElementById('print-pfl-container');
         if (!printPfl) {
             printPfl = document.createElement('div');
@@ -1499,9 +1453,11 @@ Object.assign(app, {
             const pflSection = document.querySelector('.pfl-section');
             if(pflSection) pflSection.appendChild(printPfl);
 
+            // 古いバグのスタイルがあれば削除
             const oldStyle = document.getElementById('pfl_print_style');
             if(oldStyle) oldStyle.remove();
 
+            // 印刷時のみ出現する専用CSSを追加
             const style = document.createElement('style');
             style.id = 'pfl_print_style_v2';
             style.innerHTML = `
@@ -1510,52 +1466,35 @@ Object.assign(app, {
                 }
                 @media print {
                     #print-pfl-container { display: block !important; width: 100%; margin-bottom: 2mm; margin-top: 2mm; }
-                    .pfl-scroll-wrapper { display: none !important; } 
+                    .pfl-scroll-wrapper { display: none !important; } /* 元の1行テーブルを印刷時のみ隠す */
                     .print-pfl-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 2mm; }
                     .print-pfl-table th { font-size: 7px; padding: 2px 1px; font-weight: bold; border-bottom: 1px dashed black; text-align: center; }
-                    .print-pfl-table td { font-size: 7px; padding: 2px 1px; text-align: center; border: none !important; }
+                    .print-pfl-table td { font-size: 7px; padding: 2px 1px; text-align: center; }
                 }
             `;
             document.head.appendChild(style);
         }
 
         const pfl = this.state.postFlightLog;
-
-        // 1段目: T/O Pilot, LDG Pilotを追加
-        const labels1 = ['DAY', 'TYPE', 'REG', 'DEP', 'ARR', 'DEP TIME', 'ARR TIME', 'T/O Pilot', 'LDG Pilot'];
         
-        const buildTable1Rows = () => {
-            const takeoffPilotName = this.state.takeoffPilotId ? (this.state.crew.find(c => c.id === this.state.takeoffPilotId)?.name || '') : '';
-            const landingPilotName = this.state.landingPilotId ? (this.state.crew.find(c => c.id === this.state.landingPilotId)?.name || '') : '';
-            return `
-                <tr>
-                    <td>${pfl.day || ''}</td><td>${pfl.type || ''}</td><td>${pfl.reg || ''}</td><td>${pfl.dep || ''}</td><td>${pfl.arr || ''}</td>
-                    <td>${pfl.depTime || ''}</td><td>${pfl.arrTime || ''}</td>
-                    <td style="font-family: Arial, sans-serif; font-size: 8px;">${takeoffPilotName ? '✔ '+takeoffPilotName : ''}</td>
-                    <td style="font-family: Arial, sans-serif; font-size: 8px;">${landingPilotName ? '✔ '+landingPilotName : ''}</td>
-                </tr>
-            `;
-        };
-
-        // 2段目: APCH TYPEを追加
+        // 1段目と2段目に分ける項目を定義
+        const labels1 = ['DAY', 'TYPE', 'REG', 'DEP', 'ARR', 'DEP TIME', 'ARR TIME', 'TKOF', 'LDG'];
+        const keys1 = ['day', 'type', 'reg', 'dep', 'arr', 'depTime', 'arrTime', 'tkof', 'ldg'];
+        
         const labels2 = ['FLT NUMBER', 'FLT TIME', 'PIC TIME', 'SIC TIME', 'NGT(PIC/SIC)', 'COP TIME', 'NGT(COP)', 'IMC', 'APCH TYPE'];
         const keys2 = ['fltNumber', 'fltTime', 'picTime', 'sicTime', 'ngtPicSic', 'copTime', 'ngtCop', 'imc', 'apchType'];
 
-        const buildTable = (labels, contentHtml) => {
+        const buildTable = (labels, keys) => {
             return `
                 <table class="print-pfl-table">
                     <thead><tr>${labels.map(l => `<th>${l}</th>`).join('')}</tr></thead>
-                    <tbody>${contentHtml}</tbody>
+                    <tbody><tr>${keys.map(k => `<td>${pfl[k] || ''}</td>`).join('')}</tr></tbody>
                 </table>
             `;
         };
 
-        const buildTable2Rows = () => {
-            return `<tr>${keys2.map(k => `<td>${pfl[k] || ''}</td>`).join('')}</tr>`;
-        };
-
         if(printPfl) {
-            printPfl.innerHTML = buildTable(labels1, buildTable1Rows()) + buildTable(labels2, buildTable2Rows());
+            printPfl.innerHTML = buildTable(labels1, keys1) + buildTable(labels2, keys2);
         }
         // ★★★ ここまで ★★★
 

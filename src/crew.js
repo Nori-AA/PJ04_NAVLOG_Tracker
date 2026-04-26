@@ -147,51 +147,59 @@ Object.assign(app, {
     renderPostFlightLog() {
         if(!this.state.postFlightLog) return;
 
-        // ★★★ 追加: PDF印刷時にFLT NUMBERの前で改行する処理 ★★★
-        if (!document.getElementById('pfl_print_style')) {
+        // ★★★ 修正: PDF印刷時専用の2段分割テーブルを生成 ★★★
+        let printPfl = document.getElementById('print-pfl-container');
+        if (!printPfl) {
+            printPfl = document.createElement('div');
+            printPfl.id = 'print-pfl-container';
+            const pflSection = document.querySelector('.pfl-section');
+            if(pflSection) pflSection.appendChild(printPfl);
+
+            // 古いバグのスタイルがあれば削除
+            const oldStyle = document.getElementById('pfl_print_style');
+            if(oldStyle) oldStyle.remove();
+
+            // 印刷時のみ出現する専用CSSを追加
             const style = document.createElement('style');
-            style.id = 'pfl_print_style';
+            style.id = 'pfl_print_style_v2';
             style.innerHTML = `
-                @media print {
-                    .pfl-print-break {
-                        display: block !important;
-                        flex-basis: 100%;
-                        width: 100%;
-                        height: 0;
-                        margin: 0;
-                        padding: 0;
-                    }
-                    .pfl-container-print-wrap {
-                        flex-wrap: wrap !important;
-                    }
-                }
                 @media screen {
-                    .pfl-print-break {
-                        display: none !important;
-                    }
+                    #print-pfl-container { display: none !important; }
+                }
+                @media print {
+                    #print-pfl-container { display: block !important; width: 100%; margin-bottom: 2mm; margin-top: 2mm; }
+                    .pfl-scroll-wrapper { display: none !important; } /* 元の1行テーブルを印刷時のみ隠す */
+                    .print-pfl-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 2mm; }
+                    .print-pfl-table th { font-size: 7px; padding: 2px 1px; font-weight: bold; border-bottom: 1px dashed black; text-align: center; }
+                    .print-pfl-table td { font-size: 7px; padding: 2px 1px; text-align: center; }
                 }
             `;
             document.head.appendChild(style);
-
-            const fltNumEl = document.getElementById('pfl_fltNumber');
-            if (fltNumEl) {
-                // FLT NUMBERの入力欄とラベルを囲んでいる親コンテナを取得
-                const parentGroup = fltNumEl.parentElement;
-                if (parentGroup && parentGroup.parentNode) {
-                    const brk = document.createElement('div');
-                    brk.className = 'pfl-print-break';
-                    // FLT NUMBERコンテナの直前に「印刷時のみ発動する改行ブロック」を挿入
-                    parentGroup.parentNode.insertBefore(brk, parentGroup);
-                    
-                    // フレックスボックスで折り返しを許可する
-                    parentGroup.parentNode.classList.add('pfl-container-print-wrap');
-                }
-            }
         }
-        // ★★★ ここまで ★★★
 
         const pfl = this.state.postFlightLog;
         
+        // 1段目と2段目に分ける項目を定義
+        const labels1 = ['DAY', 'TYPE', 'REG', 'DEP', 'ARR', 'DEP TIME', 'ARR TIME', 'TKOF', 'LDG'];
+        const keys1 = ['day', 'type', 'reg', 'dep', 'arr', 'depTime', 'arrTime', 'tkof', 'ldg'];
+        
+        const labels2 = ['FLT NUMBER', 'FLT TIME', 'PIC TIME', 'SIC TIME', 'NGT(PIC/SIC)', 'COP TIME', 'NGT(COP)', 'IMC', 'APCH TYPE'];
+        const keys2 = ['fltNumber', 'fltTime', 'picTime', 'sicTime', 'ngtPicSic', 'copTime', 'ngtCop', 'imc', 'apchType'];
+
+        const buildTable = (labels, keys) => {
+            return `
+                <table class="print-pfl-table">
+                    <thead><tr>${labels.map(l => `<th>${l}</th>`).join('')}</tr></thead>
+                    <tbody><tr>${keys.map(k => `<td>${pfl[k] || ''}</td>`).join('')}</tr></tbody>
+                </table>
+            `;
+        };
+
+        if(printPfl) {
+            printPfl.innerHTML = buildTable(labels1, keys1) + buildTable(labels2, keys2);
+        }
+        // ★★★ ここまで ★★★
+
         const btnDom = document.getElementById('btnPflDom'); if(btnDom) btnDom.className = pfl.domInt === 'DOM' ? 'pfl-btn active' : 'pfl-btn';
         const btnInt = document.getElementById('btnPflInt'); if(btnInt) btnInt.className = pfl.domInt === 'INT' ? 'pfl-btn active' : 'pfl-btn';
         

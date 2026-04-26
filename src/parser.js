@@ -84,6 +84,7 @@ Object.assign(app, {
         this.renderTimes();
         this.renderActualFuel();
         if(this.renderPostFlightLog) this.renderPostFlightLog();
+        if(this.renderCrewMemo) this.renderCrewMemo(); // ★ ここでメモを確実に生成させます
         this.render();
         this.renderFlightMeta();
     },

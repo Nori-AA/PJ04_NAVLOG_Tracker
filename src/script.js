@@ -15,11 +15,11 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.3', // ★ バージョン更新
+    version: 'v25.9.4', // ★ バージョン更新
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
-        crewMemo: '', // ★ CREW/フライト全体メモ用の状態を追加
+        crewMemo: '', 
         takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' },
         actFob: '', actFod: '',
@@ -44,7 +44,7 @@ const app = {
             if (!this.state.times) this.state.times = { bo: '', bi: '', tkof: '', ldg: '' };
             if (this.state.actFob === undefined) this.state.actFob = '';
             if (this.state.actFod === undefined) this.state.actFod = '';
-            if (this.state.crewMemo === undefined) this.state.crewMemo = ''; // ★ メモの復元
+            if (this.state.crewMemo === undefined) this.state.crewMemo = ''; 
             if (!this.state.crew || this.state.crew.length === 0) {
                 this.state.crew = [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
             }
@@ -87,7 +87,7 @@ const app = {
             
             if(this.renderPostFlightLog) this.renderPostFlightLog();
             
-            this.renderCrewMemo(); // ★ CREWメモの描画を追加
+            this.renderCrewMemo(); // ★ ここで呼ばれます
             
             document.getElementById('tableBody').innerHTML = ''; 
             this.render();
@@ -293,9 +293,10 @@ const app = {
         if (c.style.display === 'none') { c.style.display = 'block'; icon.textContent = '▼'; } else { c.style.display = 'none'; icon.textContent = '▶'; }
     },
 
-    // ★ CREW INFO エリアに全体メモを動的生成・描画する処理
+    // ★ 修正箇所：CREW INFO エリアに全体メモを動的生成・描画する処理
     renderCrewMemo() {
-        const crewContent = document.querySelector('.card-crew .crew-content');
+        // ★ HTMLの正しいID（crewContentEl）を指定して箱を取得するように直しました！
+        const crewContent = document.getElementById('crewContentEl');
         if (!crewContent) return;
         
         let container = document.getElementById('crew_memo_container');
@@ -315,7 +316,6 @@ const app = {
             textarea.value = this.state.crewMemo || '';
         }
         
-        // 空欄の場合はPDF印刷時に自動非表示にするための処理
         if (!this.state.crewMemo || this.state.crewMemo.trim() === '') {
             container.classList.add('no-print');
         } else {
@@ -323,7 +323,6 @@ const app = {
         }
     },
 
-    // ★ CREWメモの保存処理
     updateCrewMemo(val) {
         this.state.crewMemo = val;
         this.saveConfig();
@@ -646,7 +645,7 @@ const app = {
             this.state = { 
                 waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
                 crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
-                crewMemo: '', // ★ メモの初期化
+                crewMemo: '', 
                 takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
                 times: { bo: '', bi: '', tkof: '', ldg: '' },
                 actFob: '', actFod: '',

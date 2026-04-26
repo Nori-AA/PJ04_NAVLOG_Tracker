@@ -1028,7 +1028,7 @@ const app = {
             plannedZwind: zwind, actualZwind: '', estZwindDisplay: zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel: fuel,
             isaDevNum, isaTmp, mwtp, wscp,
             actualTime: '', actualFuelTTL: '', actualFuelCALC: '', calcEstTimeMin: null, calcEstFuel: null, estTimeDisplay: '', estFuelDisplay: 0, timeDiff: null, fuelDiff: null,
-            cumDist: 0, rdis: 0, memo: '', memoOpen: false, turbulence: '' // ★ 追加
+            cumDist: 0, rdis: 0, memo: '', memoOpen: false, turbulence: '' // ★ Turbプロパティ追加
         };
     },
 
@@ -1101,7 +1101,7 @@ const app = {
         }
         
         if (this.state.waypoints[i].turbulence === val) {
-            this.state.waypoints[i].turbulence = ''; // 再タップでクリア
+            this.state.waypoints[i].turbulence = ''; // 再度タップでクリア
         } else {
             this.state.waypoints[i].turbulence = val;
         }
@@ -1124,9 +1124,9 @@ const app = {
                 const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt, isWind = wp.actualZwind !== '', isTmp = wp.actualTmp !== '';
                 const hasMemo = wp.memo && wp.memo.trim() !== '';
                 
-                // ★ Turbインジケーターの作成
+                // ★ Turbインジケーターの作成（画面用とPDF印字用）
                 const hasTurb = wp.turbulence && wp.turbulence !== '';
-                let turbBadge = hasTurb ? `<br><span class="turb-indicator no-print">〰️ ${wp.turbulence}</span><span class="turb-indicator-print" style="display:none;">[〰️${wp.turbulence}]</span>` : '';
+                let turbBadge = hasTurb ? `<br><span class="turb-indicator turb-${wp.turbulence} no-print">〰️ ${wp.turbulence}</span><span class="turb-indicator-print" style="display:none;">[〰️${wp.turbulence}]</span>` : '';
 
                 let currentIsaDevDisplay = '()';
                 if (wp.isaTmp !== null) {
@@ -1177,10 +1177,10 @@ const app = {
                 memoTr.style.display = wp.memoOpen ? 'table-row' : 'none';
                 memoTr.className = hasMemo ? 'memo-row has-content' : 'memo-row';
                 
-                // ★ Turb入力用ボタンエリアの追加
+                // ★ Turb入力用ボタンエリアの追加（クラス名を強度ごとに割り当て）
                 const turbOptions = ['S', 'LM', 'L', 'LP', 'M'];
                 const turbButtonsHtml = turbOptions.map(t => 
-                    `<button class="turb-btn ${wp.turbulence === t ? 'active' : ''}" onclick="app.setTurb(${i}, '${t}')">${t}</button>`
+                    `<button class="turb-btn turb-btn-${t} ${wp.turbulence === t ? 'active' : ''}" onclick="app.setTurb(${i}, '${t}')">${t}</button>`
                 ).join('');
 
                 memoTr.innerHTML = `

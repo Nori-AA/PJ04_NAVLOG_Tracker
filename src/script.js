@@ -5,7 +5,6 @@ if ('serviceWorker' in navigator) {
 }
 
 // Enter（完了）キー押下時にキーボードを即座に引っ込める機能
-// ※テキストエリア（メモ欄）は改行できるように除外しました。
 window.addEventListener('keydown', function(event) {
     if (event.key === 'Enter' || event.keyCode === 13) {
         if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
@@ -15,7 +14,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.10', // ★ バージョン更新
+    version: 'v25.9.11', // ★ バージョン更新
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -570,7 +569,6 @@ const app = {
         document.getElementById('tableContainer').style.display = 'block';
     },
 
-    // ★ 修正箇所：renderStatusBar() 内に、STAとPlanned FODの描画処理を追加
     renderStatusBar() {
         const wps = this.state.waypoints; if (!wps || wps.length === 0) return;
         const last = wps[wps.length - 1];
@@ -610,16 +608,21 @@ const app = {
         document.getElementById('sb-eta').textContent = etaDisp;
         const elEtaDiff = document.getElementById('sb-eta-diff'); elEtaDiff.textContent = etaDiffDisp; elEtaDiff.className = etaClass ? `status-badge ${etaClass}` : 'status-badge';
         
-        // ★ 追加：STA（またはETA）の表示
+        // ★ 修正：STA（またはETA）の Z Time / Local Time 併記表示
         const staEl = document.getElementById('sb-sta-display');
-        if (staEl && this.state.flightMeta) {
-            if (this.state.flightMeta.sta) {
-                // 元のヘッダー情報にSTAが含まれているかチェック
-                const timeType = (this.state.flightMeta.time && this.state.flightMeta.time.includes('STA')) ? 'STA' : 'ETA';
-                staEl.textContent = `${timeType}: ${this.state.flightMeta.sta}Z`;
+        if (staEl && this.state.flightMeta && this.state.flightMeta.time) {
+            // "STA 1234Z/2134L" や "ETA 1234Z/2134L" という文字列を直接抽出
+            const match = this.state.flightMeta.time.match(/(STA|ETA)\s+(\d{4}Z\/\d{4}L)/);
+            if (match) {
+                staEl.textContent = `${match[1]}: ${match[2]}`;
+            } else if (this.state.flightMeta.sta) {
+                // フォールバック（Zタイムだけ見つかった場合）
+                staEl.textContent = `STA: ${this.state.flightMeta.sta}Z`;
             } else {
                 staEl.textContent = '';
             }
+        } else if (staEl) {
+            staEl.textContent = '';
         }
 
         let destFuelDisp = finalFuel !== null ? finalFuel.toFixed(1) : '--'; let destFuelDiffDisp = '', destFuelClass = '';
@@ -630,7 +633,6 @@ const app = {
         document.getElementById('sb-dest-fuel').textContent = destFuelDisp;
         const elFuelDiff = document.getElementById('sb-dest-fuel-diff'); elFuelDiff.textContent = destFuelDiffDisp; elFuelDiff.className = destFuelClass ? `status-badge ${destFuelClass}` : 'status-badge';
 
-        // ★ 追加：Planned FODの表示
         const planFodEl = document.getElementById('sb-plan-fod-display');
         if (planFodEl && last) {
             planFodEl.textContent = `Plan FOD: ${last.plannedFuel.toFixed(1)}`;

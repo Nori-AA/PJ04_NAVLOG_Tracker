@@ -15,7 +15,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.5', // ★ バージョン更新
+    version: 'v25.9.8', // ★ バージョン更新（Turbulence機能追加）
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -55,6 +55,7 @@ const app = {
                 if (wp.isaTmp === undefined) wp.isaTmp = null;
                 if (wp.mwtp === undefined) wp.mwtp = '---';
                 if (wp.wscp === undefined) wp.wscp = '---';
+                if (wp.turbulence === undefined) wp.turbulence = ''; // ★ Turb初期化
             });
         }
         
@@ -324,15 +325,7 @@ const app = {
     updateCrewMemo(val) {
         this.state.crewMemo = val;
         this.saveConfig();
-        
-        const container = document.getElementById('crew_memo_container');
-        if (container) {
-            if (val && val.trim() !== '') {
-                container.classList.remove('no-print');
-            } else {
-                container.classList.add('no-print');
-            }
-        }
+        this.renderCrewMemo();
     },
 
     createWP(name, alt, tmp, zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, fuel, isaDevVal = '', mwtp = '---', wscp = '---') {
@@ -346,7 +339,7 @@ const app = {
             plannedZwind: zwind, actualZwind: '', estZwindDisplay: zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel: fuel,
             isaDevNum, isaTmp, mwtp, wscp,
             actualTime: '', actualFuelTTL: '', actualFuelCALC: '', calcEstTimeMin: null, calcEstFuel: null, estTimeDisplay: '', estFuelDisplay: 0, timeDiff: null, fuelDiff: null,
-            cumDist: 0, rdis: 0, memo: '', memoOpen: false
+            cumDist: 0, rdis: 0, memo: '', memoOpen: false, turbulence: '' // ★ 追加
         };
     },
 
@@ -411,6 +404,23 @@ const app = {
         }
     },
 
+    // ★ Turb設定関数：入力途中のメモが消えないように一時退避する安全設計
+    setTurb(i, val) {
+        const memoEl = document.getElementById(`wp_${i}_memo`);
+        if (memoEl) {
+            this.state.waypoints[i].memo = memoEl.value;
+        }
+        
+        if (this.state.waypoints[i].turbulence === val) {
+            this.state.waypoints[i].turbulence = ''; // 再タップでクリア
+        } else {
+            this.state.waypoints[i].turbulence = val;
+        }
+        this.saveConfig();
+        document.getElementById('tableBody').innerHTML = '';
+        this.render();
+    },
+
     render() {
         const tbody = document.getElementById('tableBody');
         if (!tbody) return;
@@ -424,6 +434,10 @@ const app = {
                 let fClass = (wp.fuelDiff !== null) ? (wp.fuelDiff > 0 ? 'diff-ahead' : (wp.fuelDiff < 0 ? 'diff-behind' : '')) : '';
                 const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt, isWind = wp.actualZwind !== '', isTmp = wp.actualTmp !== '';
                 const hasMemo = wp.memo && wp.memo.trim() !== '';
+                
+                // ★ Turbインジケーターの作成
+                const hasTurb = wp.turbulence && wp.turbulence !== '';
+                let turbBadge = hasTurb ? `<br><span class="turb-indicator no-print">〰️ ${wp.turbulence}</span><span class="turb-indicator-print" style="display:none;">[〰️${wp.turbulence}]</span>` : '';
 
                 let currentIsaDevDisplay = '()';
                 if (wp.isaTmp !== null) {
@@ -440,7 +454,7 @@ const app = {
                 const tr = document.createElement('tr');
                 tr.id = `row-${i}`;
                 tr.innerHTML = `
-                    <td class="log-td col-wp sticky-col-wp" style="padding: 2px;"><div class="wp-cell" onclick="app.toggleMemo(${i})"><strong>${wp.name}</strong>${hasMemo ? '<br><span style="font-size:11px;">📝</span>' : ''}</div></td>
+                    <td class="log-td col-wp sticky-col-wp" style="padding: 2px;"><div class="wp-cell" onclick="app.toggleMemo(${i})"><strong>${wp.name}</strong>${turbBadge}${hasMemo ? '<br><span style="font-size:11px;">📝</span>' : ''}</div></td>
                     <td class="log-td col-alt"><input type="text" id="wp_${i}_alt" class="input-ref ${isAlt ? 'input-modified' : ''}" value="${wp.estAltDisplay}" onchange="app.update(${i}, 'actualAlt', this.value)"></td>
                     <td class="log-td col-wind"><div class="input-stacked">
                         <input type="text" id="wp_${i}_wind" class="input-ref input-wind ${isWind ? 'input-modified' : ''}" value="${wp.estZwindDisplay}" onchange="app.update(${i}, 'actualZwind', this.value)">
@@ -473,8 +487,19 @@ const app = {
                 memoTr.id = `memo-row-${i}`;
                 memoTr.style.display = wp.memoOpen ? 'table-row' : 'none';
                 memoTr.className = hasMemo ? 'memo-row has-content' : 'memo-row';
+                
+                // ★ Turb入力用ボタンエリアの追加
+                const turbOptions = ['S', 'LM', 'L', 'LP', 'M'];
+                const turbButtonsHtml = turbOptions.map(t => 
+                    `<button class="turb-btn ${wp.turbulence === t ? 'active' : ''}" onclick="app.setTurb(${i}, '${t}')">${t}</button>`
+                ).join('');
+
                 memoTr.innerHTML = `
                     <td colspan="12" style="padding: 6px; background-color: var(--memo-bg);">
+                        <div class="no-print" style="display: flex; gap: 5px; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-right: 5px;">〰️ TURB</span>
+                            ${turbButtonsHtml}
+                        </div>
                         <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
                     </td>
                 `;

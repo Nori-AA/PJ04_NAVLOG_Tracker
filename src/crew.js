@@ -1,4 +1,4 @@
-// ====== crew.js (V25.9.6) ======
+// ====== crew.js (V25.9.7) ======
 // appオブジェクトにCREW・PFL関連の機能を追加（拡張）します
 Object.assign(app, {
     
@@ -147,7 +147,6 @@ Object.assign(app, {
     renderPostFlightLog() {
         if(!this.state.postFlightLog) return;
 
-        // ★★★ PDF印刷時専用の2段分割テーブルを生成 (修正V25.9.6) ★★★
         let printPfl = document.getElementById('print-pfl-container');
         if (!printPfl) {
             printPfl = document.createElement('div');
@@ -177,12 +176,16 @@ Object.assign(app, {
 
         const pfl = this.state.postFlightLog;
 
-        // 1段目: T/O Pilot, LDG Pilotを追加
         const labels1 = ['DAY', 'TYPE', 'REG', 'DEP', 'ARR', 'DEP TIME', 'ARR TIME', 'T/O Pilot', 'LDG Pilot'];
         
+        // ★ エラー原因（?.）を徹底排除した安全なプログラム ★
         const buildTable1Rows = () => {
-            const takeoffPilotName = this.state.takeoffPilotId ? (this.state.crew.find(c => c.id === this.state.takeoffPilotId)?.name || '') : '';
-            const landingPilotName = this.state.landingPilotId ? (this.state.crew.find(c => c.id === this.state.landingPilotId)?.name || '') : '';
+            const tPilot = this.state.takeoffPilotId ? this.state.crew.find(c => c.id === this.state.takeoffPilotId) : null;
+            const takeoffPilotName = tPilot ? tPilot.name : '';
+            
+            const lPilot = this.state.landingPilotId ? this.state.crew.find(c => c.id === this.state.landingPilotId) : null;
+            const landingPilotName = lPilot ? lPilot.name : '';
+            
             return `
                 <tr>
                     <td>${pfl.day || ''}</td><td>${pfl.type || ''}</td><td>${pfl.reg || ''}</td><td>${pfl.dep || ''}</td><td>${pfl.arr || ''}</td>
@@ -193,7 +196,6 @@ Object.assign(app, {
             `;
         };
 
-        // 2段目: APCH TYPEを追加
         const labels2 = ['FLT NUMBER', 'FLT TIME', 'PIC TIME', 'SIC TIME', 'NGT(PIC/SIC)', 'COP TIME', 'NGT(COP)', 'IMC', 'APCH TYPE'];
         const keys2 = ['fltNumber', 'fltTime', 'picTime', 'sicTime', 'ngtPicSic', 'copTime', 'ngtCop', 'imc', 'apchType'];
 
@@ -213,7 +215,6 @@ Object.assign(app, {
         if(printPfl) {
             printPfl.innerHTML = buildTable(labels1, buildTable1Rows()) + buildTable(labels2, buildTable2Rows());
         }
-        // ★★★ ここまで ★★★
 
         const btnDom = document.getElementById('btnPflDom'); if(btnDom) btnDom.className = pfl.domInt === 'DOM' ? 'pfl-btn active' : 'pfl-btn';
         const btnInt = document.getElementById('btnPflInt'); if(btnInt) btnInt.className = pfl.domInt === 'INT' ? 'pfl-btn active' : 'pfl-btn';

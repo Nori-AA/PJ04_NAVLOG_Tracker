@@ -1,4 +1,4 @@
-// ====== crew.js ======
+// ====== crew.js (V25.9.6) ======
 // appオブジェクトにCREW・PFL関連の機能を追加（拡張）します
 Object.assign(app, {
     
@@ -147,7 +147,7 @@ Object.assign(app, {
     renderPostFlightLog() {
         if(!this.state.postFlightLog) return;
 
-        // ★★★ 修正: PDF印刷時専用の2段分割テーブルを生成 ★★★
+        // ★★★ PDF印刷時専用の2段分割テーブルを生成 (修正V25.9.6) ★★★
         let printPfl = document.getElementById('print-pfl-container');
         if (!printPfl) {
             printPfl = document.createElement('div');
@@ -155,11 +155,9 @@ Object.assign(app, {
             const pflSection = document.querySelector('.pfl-section');
             if(pflSection) pflSection.appendChild(printPfl);
 
-            // 古いバグのスタイルがあれば削除
             const oldStyle = document.getElementById('pfl_print_style');
             if(oldStyle) oldStyle.remove();
 
-            // 印刷時のみ出現する専用CSSを追加
             const style = document.createElement('style');
             style.id = 'pfl_print_style_v2';
             style.innerHTML = `
@@ -168,35 +166,52 @@ Object.assign(app, {
                 }
                 @media print {
                     #print-pfl-container { display: block !important; width: 100%; margin-bottom: 2mm; margin-top: 2mm; }
-                    .pfl-scroll-wrapper { display: none !important; } /* 元の1行テーブルを印刷時のみ隠す */
+                    .pfl-scroll-wrapper { display: none !important; } 
                     .print-pfl-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 2mm; }
                     .print-pfl-table th { font-size: 7px; padding: 2px 1px; font-weight: bold; border-bottom: 1px dashed black; text-align: center; }
-                    .print-pfl-table td { font-size: 7px; padding: 2px 1px; text-align: center; }
+                    .print-pfl-table td { font-size: 7px; padding: 2px 1px; text-align: center; border: none !important; }
                 }
             `;
             document.head.appendChild(style);
         }
 
         const pfl = this.state.postFlightLog;
+
+        // 1段目: T/O Pilot, LDG Pilotを追加
+        const labels1 = ['DAY', 'TYPE', 'REG', 'DEP', 'ARR', 'DEP TIME', 'ARR TIME', 'T/O Pilot', 'LDG Pilot'];
         
-        // 1段目と2段目に分ける項目を定義
-        const labels1 = ['DAY', 'TYPE', 'REG', 'DEP', 'ARR', 'DEP TIME', 'ARR TIME', 'TKOF', 'LDG'];
-        const keys1 = ['day', 'type', 'reg', 'dep', 'arr', 'depTime', 'arrTime', 'tkof', 'ldg'];
-        
+        const buildTable1Rows = () => {
+            const takeoffPilotName = this.state.takeoffPilotId ? (this.state.crew.find(c => c.id === this.state.takeoffPilotId)?.name || '') : '';
+            const landingPilotName = this.state.landingPilotId ? (this.state.crew.find(c => c.id === this.state.landingPilotId)?.name || '') : '';
+            return `
+                <tr>
+                    <td>${pfl.day || ''}</td><td>${pfl.type || ''}</td><td>${pfl.reg || ''}</td><td>${pfl.dep || ''}</td><td>${pfl.arr || ''}</td>
+                    <td>${pfl.depTime || ''}</td><td>${pfl.arrTime || ''}</td>
+                    <td style="font-family: Arial, sans-serif; font-size: 8px;">${takeoffPilotName ? '✔ '+takeoffPilotName : ''}</td>
+                    <td style="font-family: Arial, sans-serif; font-size: 8px;">${landingPilotName ? '✔ '+landingPilotName : ''}</td>
+                </tr>
+            `;
+        };
+
+        // 2段目: APCH TYPEを追加
         const labels2 = ['FLT NUMBER', 'FLT TIME', 'PIC TIME', 'SIC TIME', 'NGT(PIC/SIC)', 'COP TIME', 'NGT(COP)', 'IMC', 'APCH TYPE'];
         const keys2 = ['fltNumber', 'fltTime', 'picTime', 'sicTime', 'ngtPicSic', 'copTime', 'ngtCop', 'imc', 'apchType'];
 
-        const buildTable = (labels, keys) => {
+        const buildTable = (labels, contentHtml) => {
             return `
                 <table class="print-pfl-table">
                     <thead><tr>${labels.map(l => `<th>${l}</th>`).join('')}</tr></thead>
-                    <tbody><tr>${keys.map(k => `<td>${pfl[k] || ''}</td>`).join('')}</tr></tbody>
+                    <tbody>${contentHtml}</tbody>
                 </table>
             `;
         };
 
+        const buildTable2Rows = () => {
+            return `<tr>${keys2.map(k => `<td>${pfl[k] || ''}</td>`).join('')}</tr>`;
+        };
+
         if(printPfl) {
-            printPfl.innerHTML = buildTable(labels1, keys1) + buildTable(labels2, keys2);
+            printPfl.innerHTML = buildTable(labels1, buildTable1Rows()) + buildTable(labels2, buildTable2Rows());
         }
         // ★★★ ここまで ★★★
 

@@ -240,7 +240,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
     .print-header-container { width: 100% !important; display: block !important; }
     .print-left-col, .print-right-col { float: none !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
 
-    /* ボックス装飾の排除 */
+    /* ボックス装飾の排除 (全ヘッダーカードを統一) */
     .flight-header, .card-crew, .card-drm {
         box-shadow: none !important; border: none !important; background: transparent !important;
         color: black !important; padding: 0 !important; margin: 0 0 3mm 0 !important;
@@ -254,7 +254,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
         color: black !important; padding: 0 !important; font-size: 8px !important;
     }
 
-    /* セクションタイトルをテキスト（点線）で区切る */
+    /* セクションタイトルをテキスト（点線）で区切る (全タイトルデザインを統一) */
     .fh-title, .crew-title, .drm-title {
         color: black !important; font-size: 9px !important; font-weight: bold !important;
         border-bottom: 1px dashed black !important; margin-bottom: 2mm !important; 
@@ -275,7 +275,7 @@ h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accen
     }
     .pfl-table td, .crew-table td { border: none !important; padding: 1px !important; }
 
-    /* ★ 画像での指定通り、ステータスバー領域（ETA/FUEL/TIMES）を完全に非表示 */
+    /* ステータスバー領域（ETA/FUEL/TIMES）を完全に非表示 */
     .status-bar, #statusBar { 
         display: none !important; 
     }

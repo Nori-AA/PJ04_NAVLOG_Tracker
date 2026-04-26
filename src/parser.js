@@ -84,7 +84,7 @@ Object.assign(app, {
         this.renderTimes();
         this.renderActualFuel();
         if(this.renderPostFlightLog) this.renderPostFlightLog();
-        if(this.renderCrewMemo) this.renderCrewMemo();
+        if(this.renderCrewMemo) this.renderCrewMemo(); // ★ ここでメモを確実に生成させます
         this.render();
         this.renderFlightMeta();
     },
@@ -165,7 +165,7 @@ Object.assign(app, {
                 if (keyMatch) {
                     let p = line.split(/\s+/), k = p[0], d1="", t1="", f1="", d2="", t2="", f2="", rm="";
                     if (k==='BOF') { d1=p[1]; t1=p[2]; f1=p[3]; d2=p[4]; t2=p[5]; f2=p[6]; rm=p.slice(7).join(' '); }
-                    else if (k==='ALT') { d1=p[1]||""; t1=p[2]||""; f1=p[3]||\"\"; if (p[4] && p[4].includes('/')) { d2="----"; t2=p[4]; f2=p[5]||\"\"; } else { d2=p[4]||\"\"; t2=p[5]||\"\"; f2=p[6]||\"\"; } }
+                    else if (k==='ALT') { d1=p[1]||""; t1=p[2]||""; f1=p[3]||""; if (p[4] && p[4].includes('/')) { d2="----"; t2=p[4]; f2=p[5]||""; } else { d2=p[4]||""; t2=p[5]||""; f2=p[6]||""; } }
                     else if (k==='TAX') { f1=p[1]; f2=p[2]; } else { t1=p[1]; f1=p[2]; t2=p[3]; f2=p[4]; }
                     formattedLines.push(`${k.padEnd(4, ' ')} ${(d1||"").padEnd(5, ' ')}  ${(t1||"").padStart(5, ' ')}  ${(f1||"").padStart(6, ' ')}   ${(d2||"").padEnd(5, ' ')}  ${(t2||"").padStart(5, ' ')}  ${(f2||"").padStart(6, ' ')}   ${rm}`);
                     continue;

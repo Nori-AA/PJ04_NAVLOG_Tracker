@@ -15,7 +15,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.7', // ★ バージョン・復旧更新
+    version: 'v25.9.6', // ★ バージョン更新
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -106,7 +106,7 @@ const app = {
             document.body.appendChild(vDiv);
         }
     },
-
+    // ...以降のコードは変更なし (省略) ...
     setupFocusScrollBehavior() {
         document.addEventListener('focusin', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
@@ -460,7 +460,7 @@ const app = {
                     <td class="log-td col-actual no-print col-main"><input type="text" id="wp_${i}_actTime" class="input-actual" inputmode="numeric" maxlength="4" value="${wp.actualTime || ''}" ${actTimeReadonly} onchange="app.update(${i}, 'actualTime', this.value)"></td>
                     <td class="log-td col-actual no-print col-main">
                         <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
-                            <input type="number" id="wp_${i}_actFuelTTL" class="input-actual-half" inputmode="decimal" step="0.1" placeholder="TTL" value="${wp.actualFuelTTL || ''}" onchange="app.update(${i}, 'actualFuelCALC', this.value)">
+                            <input type="number" id="wp_${i}_actFuelTTL" class="input-actual-half" inputmode="decimal" step="0.1" placeholder="TTL" value="${wp.actualFuelTTL || ''}" onchange="app.update(${i}, 'actualFuelTTL', this.value)">
                             <input type="number" id="wp_${i}_actFuelCALC" class="input-actual-half" inputmode="decimal" step="0.1" placeholder="CALC" value="${wp.actualFuelCALC || ''}" onchange="app.update(${i}, 'actualFuelCALC', this.value)">
                         </div>
                     </td>
@@ -475,7 +475,7 @@ const app = {
                 memoTr.className = hasMemo ? 'memo-row has-content' : 'memo-row';
                 memoTr.innerHTML = `
                     <td colspan="12" style="padding: 6px; background-color: var(--memo-bg);">
-                        <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
+                        <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
                     </td>
                 `;
                 tbody.appendChild(memoTr);
@@ -664,3 +664,49 @@ const app = {
 };
 
 window.onload = () => app.init();
+```#### 4. `crew.js` (T/O Pilot, LDG Pilot, APCH Type項目のPDF出力追加)
+```javascript
+// ====== crew.js (V25.9.6) ======
+// appオブジェクトにCREW・PFL関連の機能を追加（拡張）します
+Object.assign(app, {
+    
+    toggleCrew() {
+        this.state.crewPanelOpen = !this.state.crewPanelOpen;
+        this.saveConfig();
+        this.updateCrewPanelUI();
+    },
+    
+    updateCrewPanelUI() {
+        const c = document.getElementById('crewContentEl');
+        const icon = document.getElementById('crew-toggle-icon');
+        if (this.state.crewPanelOpen) { c.style.display = 'block'; icon.textContent = '▼'; } 
+        else { c.style.display = 'none'; icon.textContent = '▶'; }
+    },
+
+    handleSelectChange(index, field, val) {
+        if (val === 'other') {
+            const input = prompt(`${field.toUpperCase()} を入力:`);
+            if (input !== null && input.trim() !== '') { this.state.crew[index][field] = input.trim().toUpperCase(); }
+        } else { this.state.crew[index][field] = val; }
+        this.saveConfig();
+        this.renderCrew();
+    },
+
+    renderCrew() {
+        const tbody = document.getElementById('crewTableBody'); tbody.innerHTML = '';
+        this.state.crew.forEach((c, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="radio" name="takeoff_pilot" ${this.state.takeoffPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('takeoff', ${c.id})"></td>
+                <td><input type="radio" name="landing_pilot" ${this.state.landingPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('landing', ${c.id})"></td>
+                <td><select class="input-crew" onchange="app.handleSelectChange(${i}, 'duty', this.value)">
+                    <option value="${c.duty}" selected hidden>${c.duty}</option>
+                    <option value="PIC">PIC</option><option value="COP">COP</option><option value="SIC">SIC</option><option value="other">other</option>
+                </select></td>
+                <td><input type="text" class="input-crew" value="${c.empNo}" placeholder="Emp No" onchange="app.updateCrew(${i}, 'empNo', this.value)"></td>
+                <td><input type="text" class="input-crew input-crew-name" value="${c.name}" placeholder="Name" onchange="app.updateCrew(${i}, 'name', this.value)"></td>
+                <td><select class="input-crew" onchange="app.handleSelectChange(${i}, 'rank', this.value)">
+                    <option value="${c.rank}" selected hidden>${c.rank}</option>
+                    <option value="CAP">CAP</option><option value="COP">COP</option><option value="other">other</option>
+                </select></td>
+                <td>${this.state.crew.length > 2 ? `<button class="btn-danger btn-small" style="padding:2

@@ -645,7 +645,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.7', // ★ バージョン・復旧更新
+    version: 'v25.9.6', // ★ バージョン更新
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -736,7 +736,7 @@ const app = {
             document.body.appendChild(vDiv);
         }
     },
-
+    // ...以降のコードは変更なし (省略) ...
     setupFocusScrollBehavior() {
         document.addEventListener('focusin', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
@@ -1090,7 +1090,7 @@ const app = {
                     <td class="log-td col-actual no-print col-main"><input type="text" id="wp_${i}_actTime" class="input-actual" inputmode="numeric" maxlength="4" value="${wp.actualTime || ''}" ${actTimeReadonly} onchange="app.update(${i}, 'actualTime', this.value)"></td>
                     <td class="log-td col-actual no-print col-main">
                         <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
-                            <input type="number" id="wp_${i}_actFuelTTL" class="input-actual-half" inputmode="decimal" step="0.1" placeholder="TTL" value="${wp.actualFuelTTL || ''}" onchange="app.update(${i}, 'actualFuelCALC', this.value)">
+                            <input type="number" id="wp_${i}_actFuelTTL" class="input-actual-half" inputmode="decimal" step="0.1" placeholder="TTL" value="${wp.actualFuelTTL || ''}" onchange="app.update(${i}, 'actualFuelTTL', this.value)">
                             <input type="number" id="wp_${i}_actFuelCALC" class="input-actual-half" inputmode="decimal" step="0.1" placeholder="CALC" value="${wp.actualFuelCALC || ''}" onchange="app.update(${i}, 'actualFuelCALC', this.value)">
                         </div>
                     </td>
@@ -1105,7 +1105,7 @@ const app = {
                 memoTr.className = hasMemo ? 'memo-row has-content' : 'memo-row';
                 memoTr.innerHTML = `
                     <td colspan="12" style="padding: 6px; background-color: var(--memo-bg);">
-                        <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
+                        <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
                     </td>
                 `;
                 tbody.appendChild(memoTr);
@@ -1294,9 +1294,55 @@ const app = {
 };
 
 window.onload = () => app.init();
+```#### 4. `crew.js` (T/O Pilot, LDG Pilot, APCH Type項目のPDF出力追加)
+```javascript
+// ====== crew.js (V25.9.6) ======
+// appオブジェクトにCREW・PFL関連の機能を追加（拡張）します
+Object.assign(app, {
+    
+    toggleCrew() {
+        this.state.crewPanelOpen = !this.state.crewPanelOpen;
+        this.saveConfig();
+        this.updateCrewPanelUI();
+    },
+    
+    updateCrewPanelUI() {
+        const c = document.getElementById('crewContentEl');
+        const icon = document.getElementById('crew-toggle-icon');
+        if (this.state.crewPanelOpen) { c.style.display = 'block'; icon.textContent = '▼'; } 
+        else { c.style.display = 'none'; icon.textContent = '▶'; }
+    },
+
+    handleSelectChange(index, field, val) {
+        if (val === 'other') {
+            const input = prompt(`${field.toUpperCase()} を入力:`);
+            if (input !== null && input.trim() !== '') { this.state.crew[index][field] = input.trim().toUpperCase(); }
+        } else { this.state.crew[index][field] = val; }
+        this.saveConfig();
+        this.renderCrew();
+    },
+
+    renderCrew() {
+        const tbody = document.getElementById('crewTableBody'); tbody.innerHTML = '';
+        this.state.crew.forEach((c, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="radio" name="takeoff_pilot" ${this.state.takeoffPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('takeoff', ${c.id})"></td>
+                <td><input type="radio" name="landing_pilot" ${this.state.landingPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('landing', ${c.id})"></td>
+                <td><select class="input-crew" onchange="app.handleSelectChange(${i}, 'duty', this.value)">
+                    <option value="${c.duty}" selected hidden>${c.duty}</option>
+                    <option value="PIC">PIC</option><option value="COP">COP</option><option value="SIC">SIC</option><option value="other">other</option>
+                </select></td>
+                <td><input type="text" class="input-crew" value="${c.empNo}" placeholder="Emp No" onchange="app.updateCrew(${i}, 'empNo', this.value)"></td>
+                <td><input type="text" class="input-crew input-crew-name" value="${c.name}" placeholder="Name" onchange="app.updateCrew(${i}, 'name', this.value)"></td>
+                <td><select class="input-crew" onchange="app.handleSelectChange(${i}, 'rank', this.value)">
+                    <option value="${c.rank}" selected hidden>${c.rank}</option>
+                    <option value="CAP">CAP</option><option value="COP">COP</option><option value="other">other</option>
+                </select></td>
+                <td>${this.state.crew.length > 2 ? `<button class="btn-danger btn-small" style="padding:2
 </script>
     <script>
-// ====== crew.js (V25.9.7) ======
+// ====== crew.js (V25.9.6) ======
 // appオブジェクトにCREW・PFL関連の機能を追加（拡張）します
 Object.assign(app, {
     
@@ -1445,6 +1491,7 @@ Object.assign(app, {
     renderPostFlightLog() {
         if(!this.state.postFlightLog) return;
 
+        // ★★★ PDF印刷時専用の2段分割テーブルを生成 (修正V25.9.6) ★★★
         let printPfl = document.getElementById('print-pfl-container');
         if (!printPfl) {
             printPfl = document.createElement('div');
@@ -1474,16 +1521,12 @@ Object.assign(app, {
 
         const pfl = this.state.postFlightLog;
 
+        // 1段目: T/O Pilot, LDG Pilotを追加
         const labels1 = ['DAY', 'TYPE', 'REG', 'DEP', 'ARR', 'DEP TIME', 'ARR TIME', 'T/O Pilot', 'LDG Pilot'];
         
-        // ★ エラー原因（?.）を徹底排除した安全なプログラム ★
         const buildTable1Rows = () => {
-            const tPilot = this.state.takeoffPilotId ? this.state.crew.find(c => c.id === this.state.takeoffPilotId) : null;
-            const takeoffPilotName = tPilot ? tPilot.name : '';
-            
-            const lPilot = this.state.landingPilotId ? this.state.crew.find(c => c.id === this.state.landingPilotId) : null;
-            const landingPilotName = lPilot ? lPilot.name : '';
-            
+            const takeoffPilotName = this.state.takeoffPilotId ? (this.state.crew.find(c => c.id === this.state.takeoffPilotId)?.name || '') : '';
+            const landingPilotName = this.state.landingPilotId ? (this.state.crew.find(c => c.id === this.state.landingPilotId)?.name || '') : '';
             return `
                 <tr>
                     <td>${pfl.day || ''}</td><td>${pfl.type || ''}</td><td>${pfl.reg || ''}</td><td>${pfl.dep || ''}</td><td>${pfl.arr || ''}</td>
@@ -1494,6 +1537,7 @@ Object.assign(app, {
             `;
         };
 
+        // 2段目: APCH TYPEを追加
         const labels2 = ['FLT NUMBER', 'FLT TIME', 'PIC TIME', 'SIC TIME', 'NGT(PIC/SIC)', 'COP TIME', 'NGT(COP)', 'IMC', 'APCH TYPE'];
         const keys2 = ['fltNumber', 'fltTime', 'picTime', 'sicTime', 'ngtPicSic', 'copTime', 'ngtCop', 'imc', 'apchType'];
 
@@ -1513,6 +1557,7 @@ Object.assign(app, {
         if(printPfl) {
             printPfl.innerHTML = buildTable(labels1, buildTable1Rows()) + buildTable(labels2, buildTable2Rows());
         }
+        // ★★★ ここまで ★★★
 
         const btnDom = document.getElementById('btnPflDom'); if(btnDom) btnDom.className = pfl.domInt === 'DOM' ? 'pfl-btn active' : 'pfl-btn';
         const btnInt = document.getElementById('btnPflInt'); if(btnInt) btnInt.className = pfl.domInt === 'INT' ? 'pfl-btn active' : 'pfl-btn';
@@ -1640,7 +1685,7 @@ Object.assign(app, {
         this.renderTimes();
         this.renderActualFuel();
         if(this.renderPostFlightLog) this.renderPostFlightLog();
-        if(this.renderCrewMemo) this.renderCrewMemo();
+        if(this.renderCrewMemo) this.renderCrewMemo(); // ★ ここでメモを確実に生成させます
         this.render();
         this.renderFlightMeta();
     },
@@ -1721,7 +1766,7 @@ Object.assign(app, {
                 if (keyMatch) {
                     let p = line.split(/\s+/), k = p[0], d1="", t1="", f1="", d2="", t2="", f2="", rm="";
                     if (k==='BOF') { d1=p[1]; t1=p[2]; f1=p[3]; d2=p[4]; t2=p[5]; f2=p[6]; rm=p.slice(7).join(' '); }
-                    else if (k==='ALT') { d1=p[1]||""; t1=p[2]||""; f1=p[3]||\"\"; if (p[4] && p[4].includes('/')) { d2="----"; t2=p[4]; f2=p[5]||\"\"; } else { d2=p[4]||\"\"; t2=p[5]||\"\"; f2=p[6]||\"\"; } }
+                    else if (k==='ALT') { d1=p[1]||""; t1=p[2]||""; f1=p[3]||""; if (p[4] && p[4].includes('/')) { d2="----"; t2=p[4]; f2=p[5]||""; } else { d2=p[4]||""; t2=p[5]||""; f2=p[6]||""; } }
                     else if (k==='TAX') { f1=p[1]; f2=p[2]; } else { t1=p[1]; f1=p[2]; t2=p[3]; f2=p[4]; }
                     formattedLines.push(`${k.padEnd(4, ' ')} ${(d1||"").padEnd(5, ' ')}  ${(t1||"").padStart(5, ' ')}  ${(f1||"").padStart(6, ' ')}   ${(d2||"").padEnd(5, ' ')}  ${(t2||"").padStart(5, ' ')}  ${(f2||"").padStart(6, ' ')}   ${rm}`);
                     continue;

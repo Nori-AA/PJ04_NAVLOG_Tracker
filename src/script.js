@@ -13,7 +13,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.12',
+    version: 'v25.9.13',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -23,7 +23,7 @@ const app = {
         actFob: '', actFod: '',
         postFlightLog: null,
         activeInput: null,
-        flightHistory: [] // ★ 履歴保持用
+        flightHistory: []
     },
 
     init() {
@@ -51,7 +51,7 @@ const app = {
                 if (wp.isaDevNum === undefined) wp.isaDevNum = null;
                 if (wp.isaTmp === undefined) wp.isaTmp = null;
                 if (wp.mwtp === undefined) wp.mwtp = '---';
-                if (wp.wscp === undefined) wp.wscp = '---';
+                if (wp.wscp === undefined) wscp = '---';
                 if (wp.turbulence === undefined) wp.turbulence = '';
             });
         }
@@ -75,7 +75,7 @@ const app = {
         if (this.state.waypoints.length > 0) {
             this.showMainUI();
         } else {
-            this.renderFlightHistory(); // 初期画面なら履歴を表示
+            this.renderFlightHistory();
         }
         
         this.setupFocusScrollBehavior();
@@ -176,6 +176,15 @@ const app = {
             this.saveConfig();
             alert(`${h.flt} のCrew編成をセットしました。`);
             if (this.renderCrew) this.renderCrew();
+        }
+    },
+
+    // ★ 変更箇所：履歴をすべて消去する機能 ★
+    clearFlightHistory() {
+        if (confirm("保存されているフライト履歴(Crew情報)をすべて消去しますか？")) {
+            this.state.flightHistory = [];
+            this.saveConfig();
+            this.renderFlightHistory(); // これでエリアが非表示になります
         }
     },
 
@@ -641,7 +650,6 @@ const app = {
         document.getElementById('tableContainer').style.display = 'block';
     },
 
-    // ★ 修正：STA(Z/L)・PlanFODの表示 ＋ リセット時の処理
     renderStatusBar() {
         const wps = this.state.waypoints; if (!wps || wps.length === 0) return;
         const last = wps[wps.length - 1];
@@ -681,7 +689,6 @@ const app = {
         document.getElementById('sb-eta').textContent = etaDisp;
         const elEtaDiff = document.getElementById('sb-eta-diff'); elEtaDiff.textContent = etaDiffDisp; elEtaDiff.className = etaClass ? `status-badge ${etaClass}` : 'status-badge';
         
-        // Z Time / Local Time 併記のSTA表示
         const staEl = document.getElementById('sb-sta-display');
         if (staEl && this.state.flightMeta && this.state.flightMeta.time) {
             const match = this.state.flightMeta.time.match(/(STA|ETA)\s+(\d{4}Z\/\d{4}L)/);

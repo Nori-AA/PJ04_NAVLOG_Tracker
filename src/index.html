@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.9.12 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.9.13 (Offline EFB)</title>
 
     <script>
         try {
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.9.12</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.9.13</h1>
 
     <div class="print-header-container">
         
@@ -228,7 +228,10 @@
         </button>
         
         <div id="historyArea" style="margin-top: 25px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 10px; display: none;">
-            <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">🕒 最近のフライト履歴 (Crewを呼び出す)</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">🕒 最近のフライト履歴 (Crewを呼び出す)</div>
+                <button class="btn-danger btn-small" onclick="app.clearFlightHistory()" style="padding: 3px 8px; font-size: 10px;">🗑️ 履歴を消去</button>
+            </div>
             <div id="historyList" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 

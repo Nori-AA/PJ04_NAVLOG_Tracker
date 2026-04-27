@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.9.10 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.9.12 (Offline EFB)</title>
 
     <script>
         try {
@@ -475,7 +475,7 @@ html.theme-dark .turb-indicator.turb-M { color: #e57373; }
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.9.10</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.9.12</h1>
 
     <div class="print-header-container">
         
@@ -680,6 +680,12 @@ html.theme-dark .turb-indicator.turb-M { color: #e57373; }
         <button class="clipboard-btn" onclick="app.loadFromClipboard()">
             📋 クリップボードから読み込む
         </button>
+        
+        <div id="historyArea" style="margin-top: 25px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 10px; display: none;">
+            <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">🕒 最近のフライト履歴 (Crewを呼び出す)</div>
+            <div id="historyList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
         <div style="margin-top: 20px; text-align: center;">
             <span style="font-size: 12px; color: var(--text-faint); display: block; margin-bottom: 10px;">または手動でファイルを選択</span>
             <label for="fileInput" class="file-upload-btn">📁 ファイルを選択</label>
@@ -771,7 +777,6 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Enter（完了）キー押下時にキーボードを即座に引っ込める機能
 window.addEventListener('keydown', function(event) {
     if (event.key === 'Enter' || event.keyCode === 13) {
         if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
@@ -781,7 +786,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.11', // ★ バージョン更新
+    version: 'v25.9.12',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -790,20 +795,18 @@ const app = {
         times: { bo: '', bi: '', tkof: '', ldg: '' },
         actFob: '', actFod: '',
         postFlightLog: null,
-        activeInput: null 
+        activeInput: null,
+        flightHistory: [] // ★ 履歴保持用
     },
 
     init() {
         const titleEl = document.getElementById('defaultTitle');
-        if (titleEl) {
-            titleEl.textContent = `✈️ NAVLOG Tracker ${this.version}`;
-        }
+        if (titleEl) titleEl.textContent = `✈️ NAVLOG Tracker ${this.version}`;
 
         const saved = localStorage.getItem('navlog_v25_data');
         if (saved) {
             const parsed = JSON.parse(saved);
             this.state = { ...this.state, ...parsed };
-            
             if (!this.state.altns || this.state.altns.length === 0) this.state.altns = [{name:'', fuel:0, rsv:0}];
             if (!this.state.fuelCalcBasis) this.state.fuelCalcBasis = 'CALC';
             if (this.state.destFuelThreshold === undefined) this.state.destFuelThreshold = 0;
@@ -814,6 +817,7 @@ const app = {
             if (!this.state.crew || this.state.crew.length === 0) {
                 this.state.crew = [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
             }
+            if (!this.state.flightHistory) this.state.flightHistory = [];
 
             this.state.waypoints.forEach(wp => {
                 if (wp.actualFuel !== undefined) { wp.actualFuelCALC = wp.actualFuel; wp.actualFuelTTL = ''; delete wp.actualFuel; }
@@ -840,24 +844,11 @@ const app = {
             document.getElementById('headerInfoContent').textContent = this.state.headerInfo;
         }
         if (this.state.flightMeta) this.renderFlightMeta();
+        
         if (this.state.waypoints.length > 0) {
-            document.getElementById('statusBar').style.display = 'flex';
-            document.getElementById('bottomControls').style.display = 'block';
-            document.getElementById('inputArea').style.display = 'none';
-            document.getElementById('crewInfoCard').style.display = 'block';
-            
-            if(this.updateCrewPanelUI) this.updateCrewPanelUI();
-            if(this.renderCrew) this.renderCrew();
-            
-            this.renderTimes();
-            this.renderActualFuel();
-            
-            if(this.renderPostFlightLog) this.renderPostFlightLog();
-            
-            this.renderCrewMemo();
-            
-            document.getElementById('tableBody').innerHTML = ''; 
-            this.render();
+            this.showMainUI();
+        } else {
+            this.renderFlightHistory(); // 初期画面なら履歴を表示
         }
         
         this.setupFocusScrollBehavior();
@@ -871,6 +862,93 @@ const app = {
             vDiv.style.cssText = 'position: fixed; bottom: 5px; right: 10px; font-size: 10px; color: var(--text-faint); z-index: 9999; pointer-events: none; opacity: 0.5; font-family: "SF Mono", monospace;';
             vDiv.textContent = this.version;
             document.body.appendChild(vDiv);
+        }
+    },
+
+    showMainUI() {
+        document.getElementById('statusBar').style.display = 'flex';
+        document.getElementById('bottomControls').style.display = 'block';
+        document.getElementById('inputArea').style.display = 'none';
+        document.getElementById('crewInfoCard').style.display = 'block';
+        if(this.updateCrewPanelUI) this.updateCrewPanelUI();
+        if(this.renderCrew) this.renderCrew();
+        this.renderTimes();
+        this.renderActualFuel();
+        if(this.renderPostFlightLog) this.renderPostFlightLog();
+        this.renderCrewMemo();
+        document.getElementById('tableBody').innerHTML = ''; 
+        this.render();
+    },
+
+    saveFlightToHistory() {
+        if (!this.state.flightMeta) return;
+        const meta = this.state.flightMeta;
+        
+        const entry = {
+            date: meta.date,
+            flt: meta.flt,
+            dep: meta.dep,
+            dest: meta.dest,
+            crew: JSON.parse(JSON.stringify(this.state.crew))
+        };
+
+        this.state.flightHistory = this.state.flightHistory.filter(h => !(h.date === entry.date && h.flt === entry.flt));
+        
+        this.state.flightHistory.unshift(entry);
+        if (this.state.flightHistory.length > 5) this.state.flightHistory.pop();
+        
+        this.saveConfig();
+    },
+
+    renderFlightHistory() {
+        const area = document.getElementById('historyArea');
+        const list = document.getElementById('historyList');
+        if (!area || !list) return;
+
+        if (this.state.flightHistory.length === 0) {
+            area.style.display = 'none';
+            return;
+        }
+
+        area.style.display = 'block';
+        list.innerHTML = '';
+
+        this.state.flightHistory.forEach((h, idx) => {
+            const otherCrewNames = h.crew
+                .map(c => c.name)
+                .filter(name => name !== 'NORIYUKI ARAI' && name.trim() !== '')
+                .join(', ');
+
+            const div = document.createElement('div');
+            div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);';
+            div.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="font-size: 13px; font-weight: bold;">
+                        📅 ${h.date} &nbsp; ✈️ ${h.flt} <span style="font-weight: normal; color: var(--text-faint); font-size: 11px;">(${h.dep} ➔ ${h.dest})</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--accent-color);">👨‍✈️ Crew: ${otherCrewNames || '(No entry)'}</div>
+                </div>
+                <button class="btn-secondary btn-small" onclick="app.applyCrewFromHistory(${idx})" style="padding: 5px 8px; font-size: 10px;">[このCrewを適用]</button>
+            `;
+            list.appendChild(div);
+        });
+    },
+
+    applyCrewFromHistory(index) {
+        const h = this.state.flightHistory[index];
+        if (h && h.crew) {
+            this.state.crew = h.crew.map(c => ({
+                id: c.id,
+                duty: c.duty,
+                empNo: c.empNo,
+                name: c.name,
+                rank: c.rank
+            }));
+            this.state.takeoffPilotId = null;
+            this.state.landingPilotId = null;
+            this.saveConfig();
+            alert(`${h.flt} のCrew編成をセットしました。`);
+            if (this.renderCrew) this.renderCrew();
         }
     },
 
@@ -1336,6 +1414,7 @@ const app = {
         document.getElementById('tableContainer').style.display = 'block';
     },
 
+    // ★ 修正：STA(Z/L)・PlanFODの表示 ＋ リセット時の処理
     renderStatusBar() {
         const wps = this.state.waypoints; if (!wps || wps.length === 0) return;
         const last = wps[wps.length - 1];
@@ -1375,15 +1454,13 @@ const app = {
         document.getElementById('sb-eta').textContent = etaDisp;
         const elEtaDiff = document.getElementById('sb-eta-diff'); elEtaDiff.textContent = etaDiffDisp; elEtaDiff.className = etaClass ? `status-badge ${etaClass}` : 'status-badge';
         
-        // ★ 修正：STA（またはETA）の Z Time / Local Time 併記表示
+        // Z Time / Local Time 併記のSTA表示
         const staEl = document.getElementById('sb-sta-display');
         if (staEl && this.state.flightMeta && this.state.flightMeta.time) {
-            // "STA 1234Z/2134L" や "ETA 1234Z/2134L" という文字列を直接抽出
             const match = this.state.flightMeta.time.match(/(STA|ETA)\s+(\d{4}Z\/\d{4}L)/);
             if (match) {
                 staEl.textContent = `${match[1]}: ${match[2]}`;
             } else if (this.state.flightMeta.sta) {
-                // フォールバック（Zタイムだけ見つかった場合）
                 staEl.textContent = `STA: ${this.state.flightMeta.sta}Z`;
             } else {
                 staEl.textContent = '';
@@ -1448,28 +1525,43 @@ const app = {
     },
 
     resetData() {
-        if(confirm("フライトデータを完全に削除し、初期状態に戻しますか？")) {
-            localStorage.removeItem('navlog_v25_data');
-            this.state = { 
-                waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
-                crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
-                crewMemo: '', 
-                takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
-                times: { bo: '', bi: '', tkof: '', ldg: '' },
-                actFob: '', actFod: '',
-                postFlightLog: null
-            };
-            document.getElementById('flightHeader').style.display = 'none'; document.getElementById('headerInfoCard').style.display = 'none';
-            document.getElementById('crewInfoCard').style.display = 'none'; document.getElementById('tableContainer').style.display = 'none';
-            document.getElementById('statusBar').style.display = 'none'; document.getElementById('bottomControls').style.display = 'none';
-            document.getElementById('settingsPanel').style.display = 'none'; document.getElementById('defaultTitle').style.display = 'block';
-            document.getElementById('inputArea').style.display = 'block';
-            this.renderSettings();
-            this.renderTimes();
-            this.renderActualFuel();
-            this.state.postFlightLog = { domInt: 'DOM', activeDuty: 'PIC', day: '', type: 'B767', reg: '', dep: '', arr: '', fltNumber: '', depTime: '', arrTime: '', tkof: '', ldg: '', fltTime: '', picTime: '', sicTime: '', ngtPicSic: '', copTime: '', ngtCop: '', imc: '', apchType: '' };
-            if(this.renderPostFlightLog) this.renderPostFlightLog();
-        }
+        if (!confirm("フライトデータをリセットしますか？")) return;
+
+        const keepCrew = confirm("Crew情報を次の便に引き継ぎますか？\n(T/O・LDGのチェックは解除されます)");
+
+        const oldCrew = JSON.parse(JSON.stringify(this.state.crew));
+        const oldHistory = JSON.parse(JSON.stringify(this.state.flightHistory));
+
+        this.state = { 
+            waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
+            crew: keepCrew ? oldCrew : [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
+            crewMemo: keepCrew ? this.state.crewMemo : '', 
+            takeoffPilotId: null, 
+            landingPilotId: null, 
+            crewPanelOpen: true,
+            times: { bo: '', bi: '', tkof: '', ldg: '' },
+            actFob: '', actFod: '',
+            postFlightLog: null,
+            activeInput: null,
+            flightHistory: oldHistory
+        };
+
+        document.getElementById('flightHeader').style.display = 'none'; 
+        document.getElementById('headerInfoCard').style.display = 'none';
+        document.getElementById('crewInfoCard').style.display = 'none'; 
+        document.getElementById('tableContainer').style.display = 'none';
+        document.getElementById('statusBar').style.display = 'none'; 
+        document.getElementById('bottomControls').style.display = 'none';
+        document.getElementById('settingsPanel').style.display = 'none'; 
+        document.getElementById('defaultTitle').style.display = 'block';
+        document.getElementById('inputArea').style.display = 'block';
+
+        this.saveConfig();
+        this.renderSettings();
+        this.renderTimes();
+        this.renderActualFuel();
+        this.renderFlightHistory();
+        if (this.renderPostFlightLog) this.renderPostFlightLog();
     }
 };
 
@@ -1804,9 +1896,12 @@ Object.assign(app, {
         this.renderTimes();
         this.renderActualFuel();
         if(this.renderPostFlightLog) this.renderPostFlightLog();
-        if(this.renderCrewMemo) this.renderCrewMemo(); // ★ ここでメモを確実に生成させます
+        if(this.renderCrewMemo) this.renderCrewMemo();
         this.render();
         this.renderFlightMeta();
+
+        // ★ 新機能：ここで履歴に保存！
+        this.saveFlightToHistory();
     },
 
     extractFlightMeta(text) {

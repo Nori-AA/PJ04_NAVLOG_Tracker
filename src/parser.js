@@ -84,9 +84,12 @@ Object.assign(app, {
         this.renderTimes();
         this.renderActualFuel();
         if(this.renderPostFlightLog) this.renderPostFlightLog();
-        if(this.renderCrewMemo) this.renderCrewMemo(); // ★ ここでメモを確実に生成させます
+        if(this.renderCrewMemo) this.renderCrewMemo();
         this.render();
         this.renderFlightMeta();
+
+        // ★ 新機能：ここで履歴に保存！
+        this.saveFlightToHistory();
     },
 
     extractFlightMeta(text) {

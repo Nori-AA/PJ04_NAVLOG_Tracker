@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.9.10 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.9.12 (Offline EFB)</title>
 
     <script>
         try {
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.9.10</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.9.12</h1>
 
     <div class="print-header-container">
         
@@ -226,6 +226,12 @@
         <button class="clipboard-btn" onclick="app.loadFromClipboard()">
             📋 クリップボードから読み込む
         </button>
+        
+        <div id="historyArea" style="margin-top: 25px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 10px; display: none;">
+            <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">🕒 最近のフライト履歴 (Crewを呼び出す)</div>
+            <div id="historyList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
         <div style="margin-top: 20px; text-align: center;">
             <span style="font-size: 12px; color: var(--text-faint); display: block; margin-bottom: 10px;">または手動でファイルを選択</span>
             <label for="fileInput" class="file-upload-btn">📁 ファイルを選択</label>

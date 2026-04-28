@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.9.13 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.9.14 (Offline EFB)</title>
 
     <script>
         try {
@@ -475,7 +475,7 @@ html.theme-dark .turb-indicator.turb-M { color: #e57373; }
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.9.13</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.9.14</h1>
 
     <div class="print-header-container">
         
@@ -682,10 +682,7 @@ html.theme-dark .turb-indicator.turb-M { color: #e57373; }
         </button>
         
         <div id="historyArea" style="margin-top: 25px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 10px; display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">🕒 最近のフライト履歴 (Crewを呼び出す)</div>
-                <button class="btn-danger btn-small" onclick="app.clearFlightHistory()" style="padding: 3px 8px; font-size: 10px;">🗑️ 履歴を消去</button>
-            </div>
+            <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">🕒 最近のフライト履歴 (Crewを呼び出す)</div>
             <div id="historyList" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 
@@ -789,7 +786,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.13',
+    version: 'v25.9.15',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -827,7 +824,7 @@ const app = {
                 if (wp.isaDevNum === undefined) wp.isaDevNum = null;
                 if (wp.isaTmp === undefined) wp.isaTmp = null;
                 if (wp.mwtp === undefined) wp.mwtp = '---';
-                if (wp.wscp === undefined) wscp = '---';
+                if (wp.wscp === undefined) wp.wscp = '---';
                 if (wp.turbulence === undefined) wp.turbulence = '';
             });
         }
@@ -884,7 +881,7 @@ const app = {
     },
 
     saveFlightToHistory() {
-        if (!this.state.flightMeta) return;
+        if (!this.state.flightMeta || this.state.flightMeta.flt === "---") return;
         const meta = this.state.flightMeta;
         
         const entry = {
@@ -900,7 +897,19 @@ const app = {
         this.state.flightHistory.unshift(entry);
         if (this.state.flightHistory.length > 5) this.state.flightHistory.pop();
         
-        this.saveConfig();
+        // saveConfig()は呼び出し元(parser等)で行うか、ここで呼ぶ
+        // 無限ループ防止のためここは変数のみ更新
+    },
+
+    // ★ 新機能：Crew情報を更新した時に、履歴側のデータも同期させる
+    syncCrewToHistory() {
+        if (!this.state.flightMeta || this.state.flightMeta.flt === "---" || !this.state.flightHistory || this.state.flightHistory.length === 0) return;
+        const meta = this.state.flightMeta;
+        // 現在開いている便と一致する履歴を探して、Crew情報を上書きする
+        const idx = this.state.flightHistory.findIndex(h => h.date === meta.date && h.flt === meta.flt);
+        if (idx !== -1) {
+            this.state.flightHistory[idx].crew = JSON.parse(JSON.stringify(this.state.crew));
+        }
     },
 
     renderFlightHistory() {
@@ -924,14 +933,18 @@ const app = {
 
             const div = document.createElement('div');
             div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);';
+            // ★ 修正：個別の「✖（削除）」ボタンを追加
             div.innerHTML = `
-                <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
                     <div style="font-size: 13px; font-weight: bold;">
                         📅 ${h.date} &nbsp; ✈️ ${h.flt} <span style="font-weight: normal; color: var(--text-faint); font-size: 11px;">(${h.dep} ➔ ${h.dest})</span>
                     </div>
-                    <div style="font-size: 11px; color: var(--accent-color);">👨‍✈️ Crew: ${otherCrewNames || '(No entry)'}</div>
+                    <div style="font-size: 11px; color: var(--accent-color);">👨‍✈️ Crew: ${otherCrewNames || '(未入力)'}</div>
                 </div>
-                <button class="btn-secondary btn-small" onclick="app.applyCrewFromHistory(${idx})" style="padding: 5px 8px; font-size: 10px;">[このCrewを適用]</button>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    <button class="btn-secondary btn-small" onclick="app.applyCrewFromHistory(${idx})" style="padding: 5px 8px; font-size: 10px; white-space: nowrap;">[このCrewを適用]</button>
+                    <button class="btn-danger btn-small" onclick="app.deleteHistoryEntry(${idx})" style="padding: 5px 8px; font-size: 10px;" title="この履歴を削除">✖</button>
+                </div>
             `;
             list.appendChild(div);
         });
@@ -955,12 +968,12 @@ const app = {
         }
     },
 
-    // ★ 変更箇所：履歴をすべて消去する機能 ★
-    clearFlightHistory() {
-        if (confirm("保存されているフライト履歴(Crew情報)をすべて消去しますか？")) {
-            this.state.flightHistory = [];
+    // ★ 追加：便ごとに履歴を削除する機能
+    deleteHistoryEntry(index) {
+        if (confirm("このフライト履歴を削除しますか？")) {
+            this.state.flightHistory.splice(index, 1);
             this.saveConfig();
-            this.renderFlightHistory(); // これでエリアが非表示になります
+            this.renderFlightHistory();
         }
     },
 
@@ -1078,6 +1091,10 @@ const app = {
     saveConfig() {
         this.state.alertThreshold = parseFloat(document.getElementById('alertThreshold').value) || 0;
         this.state.destFuelThreshold = parseFloat(document.getElementById('destFuelThreshold').value) || 0;
+        
+        // ★ ここで入力中のCrew情報を常に履歴側と同期させる
+        this.syncCrewToHistory();
+
         try { localStorage.setItem('navlog_v25_data', JSON.stringify(this.state)); } catch(e){}
         this.renderStatusBar(); 
     },
@@ -1534,18 +1551,17 @@ const app = {
         setTimeout(() => this.updateStickyHeight(), 50);
     },
 
+    // ★ 変更箇所：リセットボタンをシンプルに。ポップアップは1回だけで初期化します。
     resetData() {
-        if (!confirm("フライトデータをリセットしますか？")) return;
+        if (!confirm("フライトデータをリセットして初期画面に戻りますか？\n（※Crew情報を引き継ぎたい場合は、初期画面の履歴から選択してください）")) return;
 
-        const keepCrew = confirm("Crew情報を次の便に引き継ぎますか？\n(T/O・LDGのチェックは解除されます)");
-
-        const oldCrew = JSON.parse(JSON.stringify(this.state.crew));
+        // 履歴だけ残して完全リセット
         const oldHistory = JSON.parse(JSON.stringify(this.state.flightHistory));
 
         this.state = { 
             waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
-            crew: keepCrew ? oldCrew : [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
-            crewMemo: keepCrew ? this.state.crewMemo : '', 
+            crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
+            crewMemo: '', 
             takeoffPilotId: null, 
             landingPilotId: null, 
             crewPanelOpen: true,
@@ -1850,7 +1866,8 @@ Object.assign(app, {
         const rdisMatch = text.match(/([A-Z]{4})\s+\(RDIS\)\s+(\d{3,4}\.\d)/);
         if (rdisMatch) { waypoints.push(this.createWP(rdisMatch[1], "---", "---", "---", "00.00", "---", "0.00", 0, 0, parseFloat(rdisMatch[2]), "", "---", "---")); }
         
-        const regex = /(?:\(\s*\d+\s*\)\s+(?:-\s*){4,6}(?:\(\s*(-?\d+)\s*\))?[\s\S]{1,150}?)?(\d{2}\.\d{2})\s+[NS]\d{5}[EW]\d{5,6}[\s\.]+(\d+\.\d{2})\s+(CLM|DEC|\d{5})?\s*(\d{3}\.\d)\s*([+-]\d{2}|\.{1,2})?\s*(\d{6}|\.{1,2})?\s*([\d\/]{5}|\.{1,2})?[\s\S]{1,150}?(\d{2}\.\d{2})\s+([A-Z0-9\-]{3,})\s+\.\s+(\d{3})\s+FL.*?(?:\s+|\/)(\d{2}|\.{1,2})\s*$/gm;
+        // ★ 修正箇所：ウェイポイント名の抽出条件を {3,} から + (1文字以上無制限) に変更しました
+        const regex = /(?:\(\s*\d+\s*\)\s+(?:-\s*){4,6}(?:\(\s*(-?\d+)\s*\))?[\s\S]{1,150}?)?(\d{2}\.\d{2})\s+[NS]\d{5}[EW]\d{5,6}[\s\.]+(\d+\.\d{2})\s+(CLM|DEC|\d{5})?\s*(\d{3}\.\d)\s*([+-]\d{2}|\.{1,2})?\s*(\d{6}|\.{1,2})?\s*([\d\/]{5}|\.{1,2})?[\s\S]{1,150}?(\d{2}\.\d{2})\s+([A-Z0-9\-]+)\s+\.\s+(\d{3})\s+FL.*?(?:\s+|\/)(\d{2}|\.{1,2})\s*$/gm;
         
         let match;
         while ((match = regex.exec(text)) !== null) {
@@ -1866,7 +1883,7 @@ Object.assign(app, {
             if (match[7] && !match[7].includes('.')) zwind = match[7].substring(0,3) + '/' + match[7].substring(3,6);
             const mwtp = (match[8] && !match[8].includes('.')) ? match[8] : '---';
             const rtme = match[9];
-            const name = match[10];
+            const name = match[10]; // ★ ここが 1文字以上のどんな長さのWPT名でも正しく入るようになります
             const dist = parseInt(match[11], 10);
             const wscp = (match[12] && !match[12].includes('.')) ? match[12] : '---';
 
@@ -1910,7 +1927,7 @@ Object.assign(app, {
         this.render();
         this.renderFlightMeta();
 
-        // ★ 新機能：ここで履歴に保存！
+        // 履歴に保存
         this.saveFlightToHistory();
     },
 

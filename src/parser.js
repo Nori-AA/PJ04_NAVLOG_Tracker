@@ -28,8 +28,7 @@ Object.assign(app, {
         const rdisMatch = text.match(/([A-Z]{4})\s+\(RDIS\)\s+(\d{3,4}\.\d)/);
         if (rdisMatch) { waypoints.push(this.createWP(rdisMatch[1], "---", "---", "---", "00.00", "---", "0.00", 0, 0, parseFloat(rdisMatch[2]), "", "---", "---")); }
         
-        // ★ 修正箇所：ウェイポイント名の抽出条件を {3,} から + (1文字以上無制限) に変更しました
-        const regex = /(?:\(\s*\d+\s*\)\s+(?:-\s*){4,6}(?:\(\s*(-?\d+)\s*\))?[\s\S]{1,150}?)?(\d{2}\.\d{2})\s+[NS]\d{5}[EW]\d{5,6}[\s\.]+(\d+\.\d{2})\s+(CLM|DEC|\d{5})?\s*(\d{3}\.\d)\s*([+-]\d{2}|\.{1,2})?\s*(\d{6}|\.{1,2})?\s*([\d\/]{5}|\.{1,2})?[\s\S]{1,150}?(\d{2}\.\d{2})\s+([A-Z0-9\-]+)\s+\.\s+(\d{3})\s+FL.*?(?:\s+|\/)(\d{2}|\.{1,2})\s*$/gm;
+        const regex = /(?:\(\s*\d+\s*\)\s+(?:-\s*){4,6}(?:\(\s*(-?\d+)\s*\))?[\s\S]{1,150}?)?(\d{2}\.\d{2})\s+[NS]\d{5}[EW]\d{5,6}[\s\.]+(\d+\.\d{2})\s+(CLM|DEC|\d{5})?\s*(\d{3}\.\d)\s*([+-]\d{2}|\.{1,2})?\s*(\d{6}|\.{1,2})?\s*([\d\/]{5}|\.{1,2})?[\s\S]{1,150}?(\d{2}\.\d{2})\s+([A-Z0-9\-]{3,})\s+\.\s+(\d{3})\s+FL.*?(?:\s+|\/)(\d{2}|\.{1,2})\s*$/gm;
         
         let match;
         while ((match = regex.exec(text)) !== null) {
@@ -45,7 +44,7 @@ Object.assign(app, {
             if (match[7] && !match[7].includes('.')) zwind = match[7].substring(0,3) + '/' + match[7].substring(3,6);
             const mwtp = (match[8] && !match[8].includes('.')) ? match[8] : '---';
             const rtme = match[9];
-            const name = match[10]; // ★ ここが 1文字以上のどんな長さのWPT名でも正しく入るようになります
+            const name = match[10];
             const dist = parseInt(match[11], 10);
             const wscp = (match[12] && !match[12].includes('.')) ? match[12] : '---';
 
@@ -89,7 +88,7 @@ Object.assign(app, {
         this.render();
         this.renderFlightMeta();
 
-        // 履歴に保存
+        // ★ 新機能：ここで履歴に保存！
         this.saveFlightToHistory();
     },
 

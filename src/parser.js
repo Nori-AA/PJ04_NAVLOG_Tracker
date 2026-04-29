@@ -59,7 +59,7 @@ Object.assign(app, {
         }
 
         // =========================================================
-        // ★ フェーズ1：WINDS/TEMP ALOFT FCST 抽出・紐付けロジック (修正版)
+        // ★ フェーズ1：WINDS/TEMP ALOFT FCST 抽出・紐付けロジック
         // =========================================================
         const fcstSection = text.split("-WINDS/TEMP ALOFT FCST")[1];
         if (fcstSection) {
@@ -75,8 +75,7 @@ Object.assign(app, {
                 let nameList = [];
                 let dataStartIndex = 1;
                 for (let i = 1; i < lines.length; i++) {
-                    // 【修正】データ行の始まりは「数字4ケタ＋アルファベット1文字＋数字2ケタ」 (例: 2820P00)
-                    if (lines[i].match(/^\d{4}[A-Z]\d{2}/)) { 
+                    if (lines[i].match(/^\d{7}/)) { // 7桁以上の数字(2820P00等)で始まる行はデータ
                         dataStartIndex = i;
                         break;
                     }
@@ -108,7 +107,7 @@ Object.assign(app, {
                     }
                 });
                 
-                // 確認用ログ
+                // 確認用ログ（PCブラウザの「開発者ツール」等で確認できます）
                 console.log(`[Phase 1 完了] WIND/TEMP 予報: ${nameList.length}地点中、${fcstPointer}地点の紐付けに成功しました！`);
             }
         }

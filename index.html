@@ -528,7 +528,7 @@ html.theme-dark .wind-data {
 }
 
 /* =========================================
-   フェーズ2&3: 風・気温予報バッジのスタイル
+   フェーズ3: 風・気温予報バッジのスタイル
    ========================================= */
 .forecast-container {
     display: flex;
@@ -547,13 +547,13 @@ html.theme-dark .wind-data {
     font-size: 11px;
 }
 
-/* 通常時の高度バッジ（DAYモード） */
+/* 通常時のバッジ（背景白＋枠線） */
 .wind-badge {
-    background: var(--table-header-bg);
-    color: var(--text-color);
+    background: var(--card-bg);
+    color: var(--text-muted);
     padding: 2px 6px;
     border-radius: 4px 0 0 4px;
-    font-weight: bold;
+    font-weight: normal;
     min-width: 45px;
     text-align: center;
     border: 1px solid var(--border-color);
@@ -576,39 +576,19 @@ html.theme-dark .wind-data {
     justify-content: center;
 }
 
-/* ★ フェーズ3：現在高度に一番近いデータの強調表示（DAYモード） */
-.highlight-alt .wind-badge {
-    background: var(--accent-color);
-    color: white;
-    border-color: var(--accent-color);
-}
+/* ★ 現在高度に一番近いデータの強調表示（太文字になるだけ） */
+.highlight-alt .wind-badge,
 .highlight-alt .wind-data {
-    font-weight: bold;
-    border: 2px solid var(--accent-color);
-    border-left: 1px solid var(--border-color);
-    background: var(--modified-bg);
-    color: var(--modified-text);
+    font-weight: 900;
+    color: var(--text-color);
 }
 
-/* =========================================
-   ★ ダークモード(NGT) 用の目に優しいカラー調整
-   ========================================= */
+/* ダークモード(NGT)用調整 */
 html.theme-dark .forecast-container { background: rgba(255, 255, 255, 0.02); }
 html.theme-dark .wind-badge { background: #222; color: #888; border-color: #444; }
 html.theme-dark .wind-data { background: #1a1a1a; color: #aaa; border-color: #444; }
-
-/* NGTモードでのハイライトを超控えめに */
-html.theme-dark .highlight-alt .wind-badge { 
-    background: #233547; /* 落ち着いた暗いネイビー */
-    color: #ccc; 
-    border-color: #2c3e50; 
-}
-html.theme-dark .highlight-alt .wind-data { 
-    background: #111; 
-    border: 1px solid #34495e; /* 太い枠線をやめて細く */
-    border-left: none;
-    color: #7fb3d5; /* 眩しくない淡い青文字 */
-}
+html.theme-dark .highlight-alt .wind-badge,
+html.theme-dark .highlight-alt .wind-data { font-weight: 900; color: #eee; }
 </style>
 </head>
 <body>
@@ -924,7 +904,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.10.2',
+    version: 'v25.10.3',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -1280,7 +1260,7 @@ const app = {
             if (wp.actualAlt !== '') { wp.estAltDisplay = wp.actualAlt; cAlt = wp.actualAlt; oAlt = wp.plannedAlt; }
             else { if (cAlt !== null && wp.plannedAlt === oAlt) wp.estAltDisplay = cAlt; else { cAlt = null; oAlt = null; wp.estAltDisplay = wp.plannedAlt; } }
             
-            // [2] ★ 修正：計画高度から「変更された場合のみ」予報データを見に行く（初期値の上書きを防ぐ）
+            // [2] ★ 修正: 計画高度から「ズレた場合のみ」予報データを引っ張ってくる（初期データの保護）
             let autoWind = wp.plannedZwind;
             let autoTmp = wp.plannedTmp;
             
@@ -1346,7 +1326,7 @@ const app = {
                 let tClass = (wp.timeDiff !== null) ? (wp.timeDiff > 0 ? 'diff-behind' : (wp.timeDiff < 0 ? 'diff-ahead' : '')) : '';
                 let fClass = (wp.fuelDiff !== null) ? (wp.fuelDiff > 0 ? 'diff-ahead' : (wp.fuelDiff < 0 ? 'diff-behind' : '')) : '';
                 
-                // ★ 修正：デフォルト値から変わっているかどうかで色分けを決定
+                // ★ 変更を検知するフラグ
                 const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt;
                 const isWind = wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind;
                 const isTmp = wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp;
@@ -1366,13 +1346,20 @@ const app = {
                 const fuelStrikeClass = (actFuelStr !== '') ? 'strikethrough-est' : '';
 
                 const tr = document.createElement('tr'); tr.id = `row-${i}`;
+                
+                // ★ ALTの2段表示化（変更された場合のみ下にオリジナルを小さく取り消し線で表示）
                 tr.innerHTML = `
                         <td class="log-td col-wp sticky-col-wp" style="padding: 2px;"><div class="wp-cell" onclick="app.toggleMemo(${i})"><strong>${wp.name}</strong>${turbBadge}${hasMemo ? '<br><span style="font-size:11px;">📝</span>' : ''}</div></td>
-                        <td class="log-td col-alt"><input type="text" id="wp_${i}_alt" class="input-ref ${isAlt ? 'input-modified' : ''}" value="${wp.estAltDisplay}" onchange="app.update(${i}, 'actualAlt', this.value)"></td>
+                        <td class="log-td col-alt">
+                            <div style="display:flex; flex-direction:column; align-items:center;">
+                                <input type="text" id="wp_${i}_alt" class="input-ref ${isAlt ? 'input-modified' : ''}" style="width: 100%; text-align: center; ${isAlt ? 'font-weight: bold;' : ''}" value="${wp.estAltDisplay}" onchange="app.update(${i}, 'actualAlt', this.value)">
+                                <span id="wp_${i}_alt_orig" style="font-size: 9px; color: var(--text-faint); text-decoration: line-through; line-height: 1; margin-top: 2px; ${isAlt ? '' : 'visibility: hidden;'}">${wp.plannedAlt}</span>
+                            </div>
+                        </td>
                         <td class="log-td col-wind"><div class="input-stacked">
-                            <input type="text" id="wp_${i}_wind" class="input-ref input-wind ${isWind ? 'input-modified' : ''}" value="${wp.estZwindDisplay}" onchange="app.update(${i}, 'actualZwind', this.value)">
+                            <input type="text" id="wp_${i}_wind" class="input-ref input-wind ${isWind ? 'input-modified' : ''}" style="${isWind ? 'font-weight: bold;' : ''}" value="${wp.estZwindDisplay}" onchange="app.update(${i}, 'actualZwind', this.value)">
                             <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <input type="text" id="wp_${i}_tmp" class="input-ref input-tmp ${isTmp ? 'input-modified' : ''}" value="${wp.estTmpDisplay}" onchange="app.update(${i}, 'actualTmp', this.value)">
+                                <input type="text" id="wp_${i}_tmp" class="input-ref input-tmp ${isTmp ? 'input-modified' : ''}" style="${isTmp ? 'font-weight: bold;' : ''}" value="${wp.estTmpDisplay}" onchange="app.update(${i}, 'actualTmp', this.value)">
                                 <span id="wp_${i}_isaDev" class="isa-dev-text">${currentIsaDevDisplay}</span>
                             </div>
                         </div></td>
@@ -1441,16 +1428,51 @@ const app = {
                 tbody.appendChild(memoTr);
             });
         } else {
+            // DOMのみのアップデート処理
             this.state.waypoints.forEach((wp, i) => {
                 const altEl = document.getElementById(`wp_${i}_alt`);
-                if (altEl && document.activeElement !== altEl) { altEl.value = wp.estAltDisplay; if (wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt) altEl.classList.add('input-modified'); else altEl.classList.remove('input-modified'); }
+                if (altEl && document.activeElement !== altEl) { 
+                    altEl.value = wp.estAltDisplay; 
+                    if (wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt) {
+                        altEl.classList.add('input-modified'); 
+                        altEl.style.fontWeight = 'bold';
+                    } else {
+                        altEl.classList.remove('input-modified');
+                        altEl.style.fontWeight = 'normal';
+                    }
+                }
+                const altOrigEl = document.getElementById(`wp_${i}_alt_orig`);
+                if (altOrigEl) {
+                    if (wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt) {
+                        altOrigEl.style.visibility = 'visible';
+                    } else {
+                        altOrigEl.style.visibility = 'hidden';
+                    }
+                }
                 
-                // ★ 修正：再描画時も、風・気温がデフォルト値から変わっていれば色を変える
                 const windEl = document.getElementById(`wp_${i}_wind`);
-                if (windEl && document.activeElement !== windEl) { windEl.value = wp.estZwindDisplay; if (wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind) windEl.classList.add('input-modified'); else windEl.classList.remove('input-modified'); }
+                if (windEl && document.activeElement !== windEl) { 
+                    windEl.value = wp.estZwindDisplay; 
+                    if (wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind) {
+                        windEl.classList.add('input-modified'); 
+                        windEl.style.fontWeight = 'bold';
+                    } else {
+                        windEl.classList.remove('input-modified');
+                        windEl.style.fontWeight = 'normal';
+                    }
+                }
                 
                 const tmpEl = document.getElementById(`wp_${i}_tmp`);
-                if (tmpEl && document.activeElement !== tmpEl) { tmpEl.value = wp.estTmpDisplay; if (wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp) tmpEl.classList.add('input-modified'); else tmpEl.classList.remove('input-modified'); }
+                if (tmpEl && document.activeElement !== tmpEl) { 
+                    tmpEl.value = wp.estTmpDisplay; 
+                    if (wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp) {
+                        tmpEl.classList.add('input-modified'); 
+                        tmpEl.style.fontWeight = 'bold';
+                    } else {
+                        tmpEl.classList.remove('input-modified');
+                        tmpEl.style.fontWeight = 'normal';
+                    }
+                }
 
                 const isaDevEl = document.getElementById(`wp_${i}_isaDev`);
                 if (isaDevEl) {

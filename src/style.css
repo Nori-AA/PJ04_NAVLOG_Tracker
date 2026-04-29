@@ -457,3 +457,52 @@ html.theme-dark .turb-indicator.turb-M { color: #e57373; }
     color: var(--text-faint) !important;
     opacity: 0.6;
 }
+/* =========================================
+   フェーズ2: 風・気温予報バッジのスタイル
+   ========================================= */
+.forecast-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 6px;
+}
+
+.wind-entry {
+    display: flex;
+    align-items: center;
+    font-family: 'SF Mono', monospace;
+    font-size: 11px;
+}
+
+.wind-badge {
+    background: var(--accent-color);
+    color: white;
+    padding: 2px 5px;
+    border-radius: 4px 0 0 4px;
+    font-weight: bold;
+    min-width: 25px;
+    text-align: center;
+}
+
+.wind-data {
+    background: var(--input-bg);
+    color: var(--text-color);
+    padding: 2px 6px;
+    border: 1px solid var(--border-color);
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+    min-width: 60px;
+}
+
+/* ダークモード用調整 */
+html.theme-dark .forecast-container {
+    background: rgba(255, 255, 255, 0.03);
+}
+html.theme-dark .wind-data {
+    background: #222;
+    color: #eee;
+    border-color: #444;
+}

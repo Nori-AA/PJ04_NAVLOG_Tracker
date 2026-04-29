@@ -595,8 +595,31 @@ const app = {
                     `<button class="turb-btn turb-btn-${t} ${wp.turbulence === t ? 'active' : ''}" onclick="app.setTurb(${i}, '${t}')">${t}</button>`
                 ).join('');
 
+                // --- 予報バッジのHTML生成 (Phase 2) ---
+                let fcstHtml = '';
+                if (wp.forecast && Object.keys(wp.forecast).length > 0) {
+                    fcstHtml = '<div class="forecast-container no-print">';
+                    // 高度を低い順（12000 -> 45000等）に並べ替え
+                    const sortedAlts = Object.keys(wp.forecast).sort((a, b) => parseInt(a) - parseInt(b));
+
+                    sortedAlts.forEach(alt => {
+                        const fl = parseInt(alt) / 100;
+                        const val = wp.forecast[alt];
+                        fcstHtml += `
+                            <div class="wind-entry">
+                                <div class="wind-badge">${fl}</div>
+                                <div class="wind-data">${val}</div>
+                            </div>`;
+                    });
+                    fcstHtml += '</div>';
+                } else {
+                    // データがない場合のメッセージ
+                    fcstHtml = '<div class="no-print" style="font-size: 10px; color: var(--text-faint); margin-bottom: 8px; font-style: italic;">(No forecast data available for this point)</div>';
+                }
+
                 memoTr.innerHTML = `
-                    <td colspan="12" style="padding: 6px; background-color: var(--memo-bg);">
+                    <td colspan="12" style="padding: 8px; background-color: var(--memo-bg);">
+                        ${fcstHtml}
                         <div class="no-print" style="display: flex; gap: 5px; align-items: center; margin-bottom: 8px;">
                             <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-right: 5px;">〰️ TURB</span>
                             ${turbButtonsHtml}
@@ -604,6 +627,7 @@ const app = {
                         <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
                     </td>
                 `;
+                
                 tbody.appendChild(memoTr);
             });
         } else {

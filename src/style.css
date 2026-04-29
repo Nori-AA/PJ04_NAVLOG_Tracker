@@ -451,3 +451,9 @@ html.theme-dark .turb-indicator.turb-M { color: #e57373; }
         white-space: nowrap !important;
     }
 }
+/* Act値が入力された際のEst無効化（薄グレー＆取り消し線） */
+.strikethrough-est {
+    text-decoration: line-through !important;
+    color: var(--text-faint) !important;
+    opacity: 0.6;
+}

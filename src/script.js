@@ -13,7 +13,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.16',
+    version: 'v25.9.17',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -549,6 +549,11 @@ const app = {
                 const isFirstRow = (i === 0);
                 const actTimeReadonly = isFirstRow ? 'readonly' : '';
 
+                // ★ 追加：Act Time / Act Fuel が入力されているか判定
+                const timeStrikeClass = (wp.actualTime && wp.actualTime.length === 4) ? 'strikethrough-est' : '';
+                let actFuelStr = app.state.fuelCalcBasis === 'TTL' ? (wp.actualFuelTTL || '') : (wp.actualFuelCALC || '');
+                const fuelStrikeClass = (actFuelStr !== '') ? 'strikethrough-est' : '';
+
                 const tr = document.createElement('tr');
                 tr.id = `row-${i}`;
                 tr.innerHTML = `
@@ -567,8 +572,8 @@ const app = {
                     </td>
                     <td class="log-td col-ctme" style="white-space: nowrap;">${wp.ctme} / ${wp.cumDist}<br><span style="color: var(--text-faint); font-size:10px;">${wp.rtme} / ${wp.rdis}</span></td>
                     <td class="log-td col-ztme" style="white-space: nowrap;">${wp.ztmeDisplay}<br><span style="color: var(--text-faint); font-size:10px;">(${wp.dist})</span></td>
-                    <td class="log-td col-main" style="font-size:15px; font-weight:bold;" id="wp_${i}_estTime">${wp.estTimeDisplay}</td>
-                    <td class="log-td col-main"><div class="fuel-primary" id="wp_${i}_estFuel">${wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--'}</div><div class="fuel-secondary">(${wp.plannedFuel.toFixed(1)})</div></td>
+                    <td class="log-td col-main ${timeStrikeClass}" style="font-size:15px; font-weight:bold;" id="wp_${i}_estTime">${wp.estTimeDisplay}</td>
+                    <td class="log-td col-main ${fuelStrikeClass}" id="wp_${i}_estFuel_td"><div class="fuel-primary" id="wp_${i}_estFuel">${wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--'}</div><div class="fuel-secondary">(${wp.plannedFuel.toFixed(1)})</div></td>
                     <td class="log-td col-actual no-print col-main"><input type="text" id="wp_${i}_actTime" class="input-actual" inputmode="numeric" maxlength="4" value="${wp.actualTime || ''}" ${actTimeReadonly} onchange="app.update(${i}, 'actualTime', this.value)"></td>
                     <td class="log-td col-actual no-print col-main">
                         <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
@@ -636,7 +641,18 @@ const app = {
                 }
 
                 const estTimeEl = document.getElementById(`wp_${i}_estTime`);
-                if (estTimeEl) estTimeEl.textContent = wp.estTimeDisplay;
+                if (estTimeEl) {
+                    estTimeEl.textContent = wp.estTimeDisplay;
+                    if (wp.actualTime && wp.actualTime.length === 4) estTimeEl.classList.add('strikethrough-est');
+                    else estTimeEl.classList.remove('strikethrough-est');
+                }
+
+                const estFuelTdEl = document.getElementById(`wp_${i}_estFuel_td`);
+                if (estFuelTdEl) {
+                    let actFuelStr = app.state.fuelCalcBasis === 'TTL' ? (wp.actualFuelTTL || '') : (wp.actualFuelCALC || '');
+                    if (actFuelStr !== '') estFuelTdEl.classList.add('strikethrough-est');
+                    else estFuelTdEl.classList.remove('strikethrough-est');
+                }
 
                 const estFuelEl = document.getElementById(`wp_${i}_estFuel`);
                 if (estFuelEl) estFuelEl.textContent = wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--';

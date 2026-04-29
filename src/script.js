@@ -13,7 +13,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.10.4',
+    version: 'v25.10.5',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -88,7 +88,7 @@ const app = {
         document.getElementById('inputArea').style.display = 'none';
         document.getElementById('crewInfoCard').style.display = 'block';
         
-        this.renderForecastCard(); // 気象情報カードの表示
+        this.renderForecastCard(); // ★ 気象情報カードの表示
 
         if(this.updateCrewPanelUI) this.updateCrewPanelUI();
         if(this.renderCrew) this.renderCrew();
@@ -293,15 +293,16 @@ const app = {
         if (!card) {
             card = document.createElement('div');
             card.id = 'forecastInfoCard';
-            // ★ CREWやDRMと完全に同じ「card」クラスを適用し、標準のデザインに合わせる
+            // ★ CREWやDRMと完全に同じ「card」クラスのみを適用。不要な色は全て排除。
             card.className = 'card no-print';
+            card.style.marginBottom = '15px'; // 他のカードと同じ余白を設定
             
-            // ★ タイトルバーもCREW/DRMと同じ「card-header」クラスを使用。中身はDRM風(黒)を維持
+            // ★ h2タグで標準のcard-headerを適用。中身も標準のcard-contentを使用。
             card.innerHTML = `
-                <h2 class="card-header" onclick="app.toggleForecast()">☁️ WINDS/TEMP ALOFT FCST <span id="fcst-toggle-icon" style="float: right;">▶</span></h2>
-                <div id="forecastInfoContent" class="card-content drm-content" style="display: none; font-family: 'SF Mono', monospace; white-space: pre; font-size: 11px; overflow-x: auto;"></div>
+                <h2 class="card-header" onclick="app.toggleForecast()" style="cursor: pointer;">☁️ WINDS/TEMP ALOFT FCST <span id="fcst-toggle-icon" style="float: right;">▶</span></h2>
+                <div id="forecastInfoContent" class="card-content" style="display: none; font-family: 'SF Mono', Consolas, monospace; white-space: pre; font-size: 11px; overflow-x: auto; padding: 15px; color: var(--text-color); background: var(--card-bg);"></div>
             `;
-            // ★ DRMカードの「後」に挿入
+            // ★ DRMカードの「後（下）」に挿入
             headerCard.parentNode.insertBefore(card, headerCard.nextSibling);
         }
         

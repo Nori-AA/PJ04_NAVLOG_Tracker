@@ -59,7 +59,7 @@ Object.assign(app, {
         }
 
         // =========================================================
-        // ★ フェーズ1：WINDS/TEMP ALOFT FCST 抽出・紐付けロジック (究極のフルオート版)
+        // ★ WINDS/TEMP ALOFT FCST 抽出・整形・紐付けロジック
         // =========================================================
         const fcstSection = text.split("-WINDS/TEMP ALOFT FCST")[1];
         if (fcstSection) {
@@ -69,52 +69,70 @@ Object.assign(app, {
             let nameList = [];
             let dataList = [];
             let isHeaderFound = false;
+            
+            // ★ 整形用（アスキーアート化）配列
+            let formattedLines = ["-WINDS/TEMP ALOFT FCST"];
 
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i];
 
-                // ゴミ行の完全排除
-                if (line === '' || line === '_' || line.includes('ipobs-aps') || line.includes('token=') || line.includes('ページ') || line.includes('FD DATA') || line.includes('BASED ON')) {
+                // URL等のゴミ行を完全に除去
+                if (line === '' || line === '_' || line.includes('ipobs-aps') || line.includes('token=') || line.includes('ページ')) {
                     continue;
                 }
 
-                // 高度ヘッダーの取得 (12000 18000...)
+                if (line.includes('FD DATA') || line.includes('BASED ON')) {
+                    formattedLines.push(line);
+                    continue;
+                }
+
                 if (!isHeaderFound) {
                     if (line.match(/^(\d{4,5}\s+)+\d{4,5}$/)) {
                         heights = line.split(/\s+/);
                         isHeaderFound = true;
+                        
+                        // 高度ヘッダーを綺麗に右揃えフォーマット
+                        let str = "".padEnd(8, " ");
+                        heights.forEach(h => str += h.padStart(8, " "));
+                        formattedLines.push(str);
                     }
                     continue;
                 }
 
                 let tokens = line.split(/\s+/).filter(t => t !== '');
                 let rowData = [];
+                let wptNames = [];
 
                 for (let t of tokens) {
-                    // 風データの完全キャッチ (4桁の数字 ＋ オプションで P/M と2桁の数字) -> 2820M05, 9900, 2820 等
+                    // データかWPT名かの判別
                     if (/^\d{4}([PM]\d{2})?$/.test(t)) {
                         rowData.push(t);
                     } else {
                         nameList.push(t);
+                        wptNames.push(t);
                     }
                 }
 
                 if (rowData.length > 0) {
                     dataList.push(rowData);
+                    
+                    // データ行を綺麗にフォーマット（WPT名8文字左揃え、データ8文字右揃え）
+                    let str = wptNames.join(' ').padEnd(8, " ");
+                    rowData.forEach(d => str += d.padStart(8, " "));
+                    formattedLines.push(str);
                 }
             }
 
-            // 【超強力ポインター・マッチング】
+            // ★ 抽出した美しい文字列をStateに保存 (ここで初めて中身が入る！)
+            this.state.rawForecastText = formattedLines.join('\n');
+
+            // ポインター・マッチング
             let fcstPointer = 0;
             let matchedCount = 0;
-            
             waypoints.forEach((wp, wpIdx) => {
-                if (wpIdx === 0) return; // 出発空港はスキップ
-
-                // nameListの中から、現在のポインター以降でWPT名を探す（ジャンプ機能）
+                if (wpIdx === 0) return; 
                 let foundIdx = nameList.indexOf(wp.name, fcstPointer);
                 if (foundIdx !== -1) {
-                    // WPT名が見つかったら、同じインデックスにあるデータ行を取り込む
                     if (dataList[foundIdx]) {
                         const rowValues = dataList[foundIdx];
                         wp.forecast = {};
@@ -123,13 +141,10 @@ Object.assign(app, {
                         });
                         matchedCount++;
                     }
-                    // 見つけた位置の次から探索を再開する
                     fcstPointer = foundIdx + 1;
                 }
             });
-            
-            // コンソールログで結果を確認
-            console.log(`[Phase 1 完了] WIND/TEMP 予報: リスト上の${nameList.length}地点中、${matchedCount}地点の紐付けに成功しました！`);
+            console.log(`[Phase 1] WIND/TEMP 紐付け完了: ${matchedCount} / ${nameList.length}`);
         }
         // =========================================================
 
@@ -160,6 +175,10 @@ Object.assign(app, {
         this.renderActualFuel();
         if(this.renderPostFlightLog) this.renderPostFlightLog();
         if(this.renderCrewMemo) this.renderCrewMemo();
+        
+        // ★ 気象情報カードの描画を呼び出し
+        if(this.renderForecastCard) this.renderForecastCard();
+
         this.render();
         this.renderFlightMeta();
 

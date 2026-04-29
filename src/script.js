@@ -13,14 +13,14 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.10.2',
+    version: 'v25.10.3',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
         crewMemo: '', takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' }, actFob: '', actFod: '',
         postFlightLog: null, activeInput: null, flightHistory: [],
-        rawForecastText: "" // ★ 抽出した風予報のアスキーアートデータを保持
+        rawForecastText: "" 
     },
 
     init() {
@@ -88,7 +88,7 @@ const app = {
         document.getElementById('inputArea').style.display = 'none';
         document.getElementById('crewInfoCard').style.display = 'block';
         
-        this.renderForecastCard(); // ★ 気象情報カードの描画
+        this.renderForecastCard(); 
 
         if(this.updateCrewPanelUI) this.updateCrewPanelUI();
         if(this.renderCrew) this.renderCrew();
@@ -279,7 +279,6 @@ const app = {
         if (c.style.display === 'none') { c.style.display = 'block'; icon.textContent = '▼'; } else { c.style.display = 'none'; icon.textContent = '▶'; }
     },
 
-    // ★ 気象情報パネルのトグル機能
     toggleForecast() {
         const c = document.getElementById('forecastInfoContent'), icon = document.getElementById('fcst-toggle-icon');
         if (c.style.display === 'none') { c.style.display = 'block'; icon.textContent = '▼'; } else { c.style.display = 'none'; icon.textContent = '▶'; }
@@ -288,31 +287,27 @@ const app = {
     // ★ 気象情報カードのDOM生成・挿入
     renderForecastCard() {
         const headerCard = document.getElementById('headerInfoCard');
-        if (!headerCard) return; // DRMカードがない場合は何もしない
+        if (!headerCard) return; 
         
         let card = document.getElementById('forecastInfoCard');
         if (!card) {
-            // HTMLファイルに存在しない要素をJS側で自作してねじ込む
             card = document.createElement('div');
             card.id = 'forecastInfoCard';
-            card.className = 'card no-print';
-            card.style.display = 'none';
-            card.style.marginTop = '10px';
-            card.style.marginBottom = '10px';
+            card.className = 'no-print';
+            card.style.cssText = 'margin-bottom: 10px; border-radius: 8px; overflow: hidden; border: 1px solid #333;';
             
-            // DRMと同じデザイン（黒背景・緑文字）のアスキーアートビューア
+            // ★ margin-top のめり込みを削除し、完全に独立した要素として描画
             card.innerHTML = `
-                <div class="card-header" onclick="app.toggleForecast()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 8px;">
+                <div onclick="app.toggleForecast()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: var(--drm-bg); color: var(--drm-text); padding: 10px 15px; font-family: 'SF Mono', monospace;">
                     <span style="font-weight: bold; font-size: 13px;">☁️ WINDS/TEMP ALOFT FCST</span>
                     <span id="fcst-toggle-icon" style="font-size: 12px;">▶</span>
                 </div>
-                <div id="forecastInfoContent" style="display: none; font-family: 'SF Mono', monospace; white-space: pre; font-size: 11px; padding: 12px; overflow-x: auto; background: var(--drm-bg); color: var(--drm-text); border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; margin-top: -5px;"></div>
+                <div id="forecastInfoContent" style="display: none; font-family: 'SF Mono', monospace; white-space: pre; font-size: 11px; padding: 12px 15px; overflow-x: auto; background: var(--drm-bg); color: var(--drm-text); border-top: 1px dashed #333;"></div>
             `;
-            // DRMカードの直後（下）に挿入する
-            headerCard.parentNode.insertBefore(card, headerCard.nextSibling);
+            // DRMカードの前（Flight Status DashboardとDRMの間）に挿入
+            headerCard.parentNode.insertBefore(card, headerCard);
         }
         
-        // 抽出されたテキストが存在する場合のみ表示を有効にする
         if (this.state.rawForecastText && this.state.rawForecastText.trim() !== '') {
             card.style.display = 'block';
             document.getElementById('forecastInfoContent').textContent = this.state.rawForecastText;
@@ -409,167 +404,6 @@ const app = {
         return String(closest);
     },
 
-    processData(text) {
-        this.extractFlightMeta(text);
-        this.extractAndFormatHeaderInfo(text);
-        
-        const waypoints = [];
-        const rdisMatch = text.match(/([A-Z]{4})\s+\(RDIS\)\s+(\d{3,4}\.\d)/);
-        if (rdisMatch) { waypoints.push(this.createWP(rdisMatch[1], "---", "---", "---", "00.00", "---", "0.00", 0, 0, parseFloat(rdisMatch[2]), "", "---", "---")); }
-        
-        const regex = /(?:\(\s*\d+\s*\)\s+(?:-\s*){4,6}(?:\(\s*(-?\d+)\s*\))?[\s\S]{1,150}?)?(\d{2}\.\d{2})\s+[NS]\d{5}[EW]\d{5,6}[\s\.]+(\d+\.\d{2})\s+(CLM|DEC|\d{5})?\s*(\d{3}\.\d)\s*([+-]\d{2}|\.{1,2})?\s*(\d{6}|\.{1,2})?\s*([\d\/]{5}|\.{1,2})?[\s\S]{1,150}?(\d{2}\.\d{2})\s+([A-Z0-9\-]+)\s+\.\s+(\d{3})\s+FL.*?(?:\s+|\/)(\d{2}|\.{1,2})\s*$/gm;
-        
-        let match;
-        while ((match = regex.exec(text)) !== null) {
-            const isaDevVal = match[1] ? match[1].replace(/\s+/g, '') : '';
-            const ctme = match[2];
-            const ztmeDisplay = match[3];
-            const ztmeMin = this.parseLegTime(ztmeDisplay);
-            const alt = match[4] || '---';
-            const plannedFuel = parseFloat(match[5]);
-            
-            const tmp = (match[6] && !match[6].includes('.')) ? match[6] : '---';
-            let zwind = '---'; 
-            if (match[7] && !match[7].includes('.')) zwind = match[7].substring(0,3) + '/' + match[7].substring(3,6);
-            const mwtp = (match[8] && !match[8].includes('.')) ? match[8] : '---';
-            const rtme = match[9];
-            const name = match[10]; 
-            const dist = parseInt(match[11], 10);
-            const wscp = (match[12] && !match[12].includes('.')) ? match[12] : '---';
-
-            waypoints.push(this.createWP(name, alt, tmp, zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel, isaDevVal, mwtp, wscp));
-        }
-        
-        if (waypoints.length <= 1) return alert("データを抽出できませんでした。正しいNAVLOGテキストか確認してください。");
-        if (waypoints.length > 1 && waypoints[1].rtme !== "---") {
-            const firstWpRtmeMin = this.parseLegTime(waypoints[1].rtme);
-            const firstWpZtmeMin = waypoints[1].ztmeMin;
-            waypoints[0].rtme = this.formatLegTime(firstWpRtmeMin + firstWpZtmeMin);
-        }
-
-        // =========================================================
-        // WINDS/TEMP ALOFT FCST 抽出・整形・紐付けロジック
-        // =========================================================
-        const fcstSection = text.split("-WINDS/TEMP ALOFT FCST")[1];
-        if (fcstSection) {
-            const lines = fcstSection.split('\n').map(l => l.trim());
-
-            let heights = [];
-            let nameList = [];
-            let dataList = [];
-            let isHeaderFound = false;
-            
-            // ★ 整形用（アスキーアート化）配列
-            let formattedLines = ["-WINDS/TEMP ALOFT FCST"];
-
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i];
-
-                if (line === '' || line === '_' || line.includes('ipobs-aps') || line.includes('token=') || line.includes('ページ')) {
-                    continue;
-                }
-
-                if (line.includes('FD DATA') || line.includes('BASED ON')) {
-                    formattedLines.push(line);
-                    continue;
-                }
-
-                if (!isHeaderFound) {
-                    if (line.match(/^(\d{4,5}\s+)+\d{4,5}$/)) {
-                        heights = line.split(/\s+/);
-                        isHeaderFound = true;
-                        
-                        // 高度ヘッダーを綺麗に右揃えフォーマット
-                        let str = "".padEnd(8, " ");
-                        heights.forEach(h => str += h.padStart(8, " "));
-                        formattedLines.push(str);
-                    }
-                    continue;
-                }
-
-                let tokens = line.split(/\s+/).filter(t => t !== '');
-                let rowData = [];
-                let wptNames = [];
-
-                for (let t of tokens) {
-                    if (/^\d{4}([PM]\d{2})?$/.test(t)) {
-                        rowData.push(t);
-                    } else {
-                        nameList.push(t);
-                        wptNames.push(t);
-                    }
-                }
-
-                if (rowData.length > 0) {
-                    dataList.push(rowData);
-                    
-                    // データ行を綺麗にフォーマット（WPT名8文字左揃え、データ8文字右揃え）
-                    let str = wptNames.join(' ').padEnd(8, " ");
-                    rowData.forEach(d => str += d.padStart(8, " "));
-                    formattedLines.push(str);
-                }
-            }
-
-            // 抽出した美しい文字列をStateに保存
-            this.state.rawForecastText = formattedLines.join('\n');
-
-            let fcstPointer = 0;
-            let matchedCount = 0;
-            waypoints.forEach((wp, wpIdx) => {
-                if (wpIdx === 0) return; 
-                let foundIdx = nameList.indexOf(wp.name, fcstPointer);
-                if (foundIdx !== -1) {
-                    if (dataList[foundIdx]) {
-                        const rowValues = dataList[foundIdx];
-                        wp.forecast = {};
-                        heights.forEach((h, hIdx) => {
-                            wp.forecast[h] = rowValues[hIdx] || "---";
-                        });
-                        matchedCount++;
-                    }
-                    fcstPointer = foundIdx + 1;
-                }
-            });
-            console.log(`[Phase 1] WIND/TEMP 紐付け完了: ${matchedCount} / ${nameList.length}`);
-        }
-        // =========================================================
-
-        let cumDist = 0;
-        waypoints.forEach(wp => { cumDist += wp.dist; wp.cumDist = cumDist; });
-        let totalRouteDist = cumDist;
-        waypoints.forEach(wp => { wp.rdis = totalRouteDist - wp.cumDist; });
-        
-        if (this.state.flightMeta) { this.state.flightMeta.dist = totalRouteDist; }
-        this.state.waypoints = waypoints;
-        if (this.state.flightMeta && this.state.flightMeta.altns && this.state.flightMeta.altns.length > 0) {
-            this.state.altns = this.state.flightMeta.altns;
-            this.renderSettings();
-        }
-        
-        document.getElementById('statusBar').style.display = 'flex';
-        document.getElementById('bottomControls').style.display = 'block';
-        document.getElementById('inputArea').style.display = 'none';
-        document.getElementById('crewInfoCard').style.display = 'block';
-        
-        this.state.crewPanelOpen = true;
-        if(this.updateCrewPanelUI) this.updateCrewPanelUI();
-        
-        document.getElementById('tableBody').innerHTML = ''; 
-        this.calculate();
-        if(this.renderCrew) this.renderCrew();
-        this.renderTimes();
-        this.renderActualFuel();
-        if(this.renderPostFlightLog) this.renderPostFlightLog();
-        if(this.renderCrewMemo) this.renderCrewMemo();
-        
-        this.renderForecastCard(); // パース直後にも生成・描画
-
-        this.render();
-        this.renderFlightMeta();
-
-        this.saveFlightToHistory();
-    },
-
     update(i, field, val) {
         if (field === 'actualAlt' && val !== '') { 
             let cleanVal = val.toUpperCase().replace(/^FL/, '').trim(); 
@@ -605,7 +439,6 @@ const app = {
             wp.estZwindDisplay = wp.actualZwind !== '' ? wp.actualZwind : autoWind;
             wp.estTmpDisplay = wp.actualTmp !== '' ? wp.actualTmp : autoTmp;
             
-            // ISA DEV 算出ロジック
             const currentAltFeet = this.getAltFeet(wp.estAltDisplay);
             if (currentAltFeet !== null && wp.estTmpDisplay && wp.estTmpDisplay !== '---') {
                 const currentTmpNum = parseInt(wp.estTmpDisplay, 10);

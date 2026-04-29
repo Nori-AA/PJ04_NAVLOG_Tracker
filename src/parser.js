@@ -59,7 +59,7 @@ Object.assign(app, {
         }
 
         // =========================================================
-        // ★ WINDS/TEMP ALOFT FCST 抽出・整形・紐付けロジック
+        // WINDS/TEMP ALOFT FCST 抽出・整形・紐付けロジック
         // =========================================================
         const fcstSection = text.split("-WINDS/TEMP ALOFT FCST")[1];
         if (fcstSection) {
@@ -107,8 +107,8 @@ Object.assign(app, {
                 }
             }
 
-            // ★ アスキーアート風にフォーマット（1対1ペア出力）
-            let formattedLines = ["-WINDS/TEMP ALOFT FCST"];
+            // ★ アスキーアート風にフォーマット
+            let formattedLines = []; // 重複する -WINDS/TEMP ALOFT FCST を削除
             if (fdDataLine) formattedLines.push(fdDataLine);
 
             if (heights.length > 0) {
@@ -119,7 +119,7 @@ Object.assign(app, {
 
             for (let i = 0; i < allDataRows.length; i++) {
                 let wptName = allWptNames[i] || "???";
-                if (wptName.length > 8) wptName = wptName.substring(0, 8); // 長すぎる名前はカット
+                if (wptName.length > 8) wptName = wptName.substring(0, 8); 
                 let str = wptName.padEnd(8, " ");
                 
                 let rowData = allDataRows[i];
@@ -129,7 +129,6 @@ Object.assign(app, {
 
             this.state.rawForecastText = formattedLines.join('\n');
 
-            // ポインター・マッチング
             let fcstPointer = 0;
             let matchedCount = 0;
             waypoints.forEach((wp, wpIdx) => {

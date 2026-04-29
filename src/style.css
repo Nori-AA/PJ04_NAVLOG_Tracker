@@ -508,7 +508,7 @@ html.theme-dark .wind-data {
 }
 
 /* =========================================
-   フェーズ2: 風・気温予報バッジのスタイル
+   フェーズ2&3: 風・気温予報バッジのスタイル
    ========================================= */
 .forecast-container {
     display: flex;
@@ -522,19 +522,25 @@ html.theme-dark .wind-data {
 
 .wind-entry {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     font-family: 'SF Mono', monospace;
     font-size: 11px;
 }
 
+/* 通常時の高度バッジ（目立たないグレー・白ベースに変更） */
 .wind-badge {
-    background: var(--accent-color);
-    color: white;
-    padding: 2px 5px;
+    background: var(--table-header-bg);
+    color: var(--text-color);
+    padding: 2px 6px;
     border-radius: 4px 0 0 4px;
     font-weight: bold;
-    min-width: 25px;
+    min-width: 45px;
     text-align: center;
+    border: 1px solid var(--border-color);
+    border-right: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .wind-data {
@@ -542,18 +548,31 @@ html.theme-dark .wind-data {
     color: var(--text-color);
     padding: 2px 6px;
     border: 1px solid var(--border-color);
-    border-left: none;
     border-radius: 0 4px 4px 0;
     min-width: 80px;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ★ フェーズ3：現在高度に一番近いデータの強調表示 */
+.highlight-alt .wind-badge {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+.highlight-alt .wind-data {
+    font-weight: bold;
+    border: 2px solid var(--accent-color);
+    border-left: 1px solid var(--border-color);
+    background: var(--modified-bg); /* 薄い青色 */
+    color: var(--modified-text);
 }
 
 /* ダークモード用調整 */
-html.theme-dark .forecast-container {
-    background: rgba(255, 255, 255, 0.03);
-}
-html.theme-dark .wind-data {
-    background: #222;
-    color: #eee;
-    border-color: #444;
-}
+html.theme-dark .forecast-container { background: rgba(255, 255, 255, 0.03); }
+html.theme-dark .wind-badge { background: #333; color: #ccc; border-color: #555; }
+html.theme-dark .wind-data { background: #222; color: #eee; border-color: #555; }
+html.theme-dark .highlight-alt .wind-badge { background: #2980b9; color: white; border-color: #2980b9; }
+html.theme-dark .highlight-alt .wind-data { background: #1a252f; border-color: #2980b9; color: #64b5f6; }

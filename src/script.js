@@ -13,7 +13,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.18',
+    version: 'v25.9.19',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -123,16 +123,11 @@ const app = {
         
         this.state.flightHistory.unshift(entry);
         if (this.state.flightHistory.length > 5) this.state.flightHistory.pop();
-        
-        // saveConfig()は呼び出し元(parser等)で行うか、ここで呼ぶ
-        // 無限ループ防止のためここは変数のみ更新
     },
 
-    // ★ 新機能：Crew情報を更新した時に、履歴側のデータも同期させる
     syncCrewToHistory() {
         if (!this.state.flightMeta || this.state.flightMeta.flt === "---" || !this.state.flightHistory || this.state.flightHistory.length === 0) return;
         const meta = this.state.flightMeta;
-        // 現在開いている便と一致する履歴を探して、Crew情報を上書きする
         const idx = this.state.flightHistory.findIndex(h => h.date === meta.date && h.flt === meta.flt);
         if (idx !== -1) {
             this.state.flightHistory[idx].crew = JSON.parse(JSON.stringify(this.state.crew));
@@ -160,7 +155,6 @@ const app = {
 
             const div = document.createElement('div');
             div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);';
-            // ★ 修正：個別の「✖（削除）」ボタンを追加
             div.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
                     <div style="font-size: 13px; font-weight: bold;">
@@ -195,12 +189,19 @@ const app = {
         }
     },
 
-    // ★ 追加：便ごとに履歴を削除する機能
     deleteHistoryEntry(index) {
         if (confirm("このフライト履歴を削除しますか？")) {
             this.state.flightHistory.splice(index, 1);
             this.saveConfig();
             this.renderFlightHistory();
+        }
+    },
+
+    clearFlightHistory() {
+        if (confirm("保存されているフライト履歴(Crew情報)をすべて消去しますか？")) {
+            this.state.flightHistory = [];
+            this.saveConfig();
+            this.renderFlightHistory(); 
         }
     },
 
@@ -319,7 +320,6 @@ const app = {
         this.state.alertThreshold = parseFloat(document.getElementById('alertThreshold').value) || 0;
         this.state.destFuelThreshold = parseFloat(document.getElementById('destFuelThreshold').value) || 0;
         
-        // ★ ここで入力中のCrew情報を常に履歴側と同期させる
         this.syncCrewToHistory();
 
         try { localStorage.setItem('navlog_v25_data', JSON.stringify(this.state)); } catch(e){}
@@ -549,7 +549,6 @@ const app = {
                 const isFirstRow = (i === 0);
                 const actTimeReadonly = isFirstRow ? 'readonly' : '';
 
-                // ★ 追加：Act Time / Act Fuel が入力されているか判定
                 const timeStrikeClass = (wp.actualTime && wp.actualTime.length === 4) ? 'strikethrough-est' : '';
                 let actFuelStr = app.state.fuelCalcBasis === 'TTL' ? (wp.actualFuelTTL || '') : (wp.actualFuelCALC || '');
                 const fuelStrikeClass = (actFuelStr !== '') ? 'strikethrough-est' : '';
@@ -654,9 +653,6 @@ const app = {
                     if (actFuelStr !== '') estFuelEl.classList.add('strikethrough-est');
                     else estFuelEl.classList.remove('strikethrough-est');
                 }
-
-                const estFuelEl = document.getElementById(`wp_${i}_estFuel`);
-                if (estFuelEl) estFuelEl.textContent = wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--';
 
                 const actTimeEl = document.getElementById(`wp_${i}_actTime`);
                 if (actTimeEl && document.activeElement !== actTimeEl) actTimeEl.value = wp.actualTime || '';
@@ -795,11 +791,9 @@ const app = {
         setTimeout(() => this.updateStickyHeight(), 50);
     },
 
-    // ★ 変更箇所：リセットボタンをシンプルに。ポップアップは1回だけで初期化します。
     resetData() {
         if (!confirm("フライトデータをリセットして初期画面に戻りますか？\n（※Crew情報を引き継ぎたい場合は、初期画面の履歴から選択してください）")) return;
 
-        // 履歴だけ残して完全リセット
         const oldHistory = JSON.parse(JSON.stringify(this.state.flightHistory));
 
         this.state = { 

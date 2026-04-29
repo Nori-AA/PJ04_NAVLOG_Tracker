@@ -786,7 +786,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.15',
+    version: 'v25.9.16',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -1621,187 +1621,200 @@ Object.assign(app, {
     },
 
     renderCrew() {
-        const tbody = document.getElementById('crewTableBody'); tbody.innerHTML = '';
+        const tbody = document.getElementById('crewTableBody'); 
+        if(!tbody) return;
+        tbody.innerHTML = '';
         this.state.crew.forEach((c, i) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><input type="radio" name="takeoff_pilot" ${this.state.takeoffPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('takeoff', ${c.id})"></td>
-                <td><input type="radio" name="landing_pilot" ${this.state.landingPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('landing', ${c.id})"></td>
-                <td><select class="input-crew" onchange="app.handleSelectChange(${i}, 'duty', this.value)">
-                    <option value="${c.duty}" selected hidden>${c.duty}</option>
-                    <option value="PIC">PIC</option><option value="COP">COP</option><option value="SIC">SIC</option><option value="other">other</option>
-                </select></td>
-                <td><input type="text" class="input-crew" value="${c.empNo}" placeholder="Emp No" onchange="app.updateCrew(${i}, 'empNo', this.value)"></td>
-                <td><input type="text" class="input-crew input-crew-name" value="${c.name}" placeholder="Name" onchange="app.updateCrew(${i}, 'name', this.value)"></td>
-                <td><select class="input-crew" onchange="app.handleSelectChange(${i}, 'rank', this.value)">
-                    <option value="${c.rank}" selected hidden>${c.rank}</option>
-                    <option value="CAP">CAP</option><option value="COP">COP</option><option value="other">other</option>
-                </select></td>
-                <td>${this.state.crew.length > 2 ? `<button class="btn-danger btn-small" style="padding:2px 4px;font-size:10px;" onclick="app.removeCrew(${i})">✖</button>` : ''}</td>
+                <td><input type="radio" name="takeoffPilot" value="${c.id}" ${this.state.takeoffPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('takeoff', ${c.id})"></td>
+                <td><input type="radio" name="landingPilot" value="${c.id}" ${this.state.landingPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('landing', ${c.id})"></td>
+                <td>
+                    <select class="crew-input" onchange="app.handleSelectChange(${i}, 'duty', this.value)">
+                        <option value="PIC" ${c.duty === 'PIC' ? 'selected' : ''}>PIC</option>
+                        <option value="SIC" ${c.duty === 'SIC' ? 'selected' : ''}>SIC</option>
+                        <option value="COP" ${c.duty === 'COP' ? 'selected' : ''}>COP</option>
+                        <option value="OBS" ${c.duty === 'OBS' ? 'selected' : ''}>OBS</option>
+                        <option value="OPE" ${c.duty === 'OPE' ? 'selected' : ''}>OPE</option>
+                        <option value="other" ${!['PIC','SIC','COP','OBS','OPE'].includes(c.duty) ? 'selected' : ''}>${!['PIC','SIC','COP','OBS','OPE'].includes(c.duty) ? c.duty : '---'}</option>
+                    </select>
+                </td>
+                <td><input type="text" class="crew-input" value="${c.empNo}" onchange="app.updateCrew(${i}, 'empNo', this.value)"></td>
+                <td style="padding-left: 10px;"><input type="text" class="crew-input" style="text-align: left;" value="${c.name}" onchange="app.updateCrew(${i}, 'name', this.value)"></td>
+                <td>
+                    <select class="crew-input" onchange="app.handleSelectChange(${i}, 'rank', this.value)">
+                        <option value="CAP" ${c.rank === 'CAP' ? 'selected' : ''}>CAP</option>
+                        <option value="COP" ${c.rank === 'COP' ? 'selected' : ''}>COP</option>
+                        <option value="TR" ${c.rank === 'TR' ? 'selected' : ''}>TR</option>
+                        <option value="other" ${!['CAP','COP','TR'].includes(c.rank) ? 'selected' : ''}>${!['CAP','COP','TR'].includes(c.rank) ? c.rank : '---'}</option>
+                    </select>
+                </td>
+                <td class="no-print">
+                    ${i > 1 ? `<button class="btn-danger btn-small" onclick="app.removeCrew(${i})">✖</button>` : ''}
+                </td>
             `;
             tbody.appendChild(tr);
         });
     },
 
-    updateCrew(index, field, val) { this.state.crew[index][field] = val.toUpperCase(); this.saveConfig(); },
-    
+    updateCrew(index, field, val) {
+        this.state.crew[index][field] = val.toUpperCase();
+        this.saveConfig();
+    },
+
     updateCrewPilot(type, id) {
         if (type === 'takeoff') this.state.takeoffPilotId = id;
         if (type === 'landing') this.state.landingPilotId = id;
         this.saveConfig();
     },
-    
+
     addCrew() {
         const newId = this.state.crew.length > 0 ? Math.max(...this.state.crew.map(c => c.id)) + 1 : 1;
-        this.state.crew.push({ id: newId, duty: '', empNo: '', name: '', rank: '' });
-        if(!this.state.crewPanelOpen) this.toggleCrew(); 
-        this.saveConfig(); this.renderCrew();
+        this.state.crew.push({ id: newId, duty: 'OBS', empNo: '', name: '', rank: 'COP' });
+        this.saveConfig();
+        this.renderCrew();
     },
-    
+
     removeCrew(index) {
-        const id = this.state.crew[index].id;
-        if (this.state.takeoffPilotId === id) this.state.takeoffPilotId = null;
-        if (this.state.landingPilotId === id) this.state.landingPilotId = null;
+        if (index <= 1) return;
+        const cId = this.state.crew[index].id;
+        if (this.state.takeoffPilotId === cId) this.state.takeoffPilotId = null;
+        if (this.state.landingPilotId === cId) this.state.landingPilotId = null;
         this.state.crew.splice(index, 1);
-        this.saveConfig(); this.renderCrew();
+        this.saveConfig();
+        this.renderCrew();
     },
 
     setPflToggle(field, val) {
         if(!this.state.postFlightLog) return;
-        if (field === 'activeDuty') {
-            const oldDuty = this.state.postFlightLog.activeDuty;
-            if (oldDuty !== val) {
-                if (oldDuty === 'PIC') this.state.postFlightLog.picTime = '';
-                if (oldDuty === 'SIC') this.state.postFlightLog.sicTime = '';
-                if (oldDuty === 'COP') this.state.postFlightLog.copTime = '';
-                this.state.postFlightLog.activeDuty = val;
-                if (this.state.postFlightLog.fltTime) {
-                    if (val === 'PIC') this.state.postFlightLog.picTime = this.state.postFlightLog.fltTime;
-                    if (val === 'SIC') this.state.postFlightLog.sicTime = this.state.postFlightLog.fltTime;
-                    if (val === 'COP') this.state.postFlightLog.copTime = this.state.postFlightLog.fltTime;
-                }
-            }
-        } else if (field === 'domInt') {
-            this.state.postFlightLog.domInt = val;
+        this.state.postFlightLog[field] = val;
+        
+        if (field === 'domInt') {
+            document.getElementById('btnPflDom').classList.toggle('active', val === 'DOM');
+            document.getElementById('btnPflInt').classList.toggle('active', val === 'INT');
+            if (this.calcPflTimes) this.calcPflTimes();
+        } else if (field === 'activeDuty') {
+            document.getElementById('btnPflPic').classList.toggle('active', val === 'PIC');
+            document.getElementById('btnPflSic').classList.toggle('active', val === 'SIC');
+            document.getElementById('btnPflCop').classList.toggle('active', val === 'COP');
+            if (this.calcPflTimes) this.calcPflTimes();
         }
-        this.calcPflTimes(); 
+        this.saveConfig();
     },
-    
+
     updatePfl(field, val, isDuration = false) {
         if(!this.state.postFlightLog) return;
-        if (isDuration && val.trim() !== '') {
-            let clean = val.replace(/[^\d]/g, '');
-            if (clean.length >= 3 && clean.length <= 4) {
-                let h = clean.length === 3 ? clean.slice(0, 1) : clean.slice(0, 2);
-                let m = clean.slice(-2);
-                val = parseInt(h, 10) + '+' + m;
-            }
+        
+        if (isDuration && val && !val.includes('.')) {
+            if (val.length <= 2) val = "0." + val.padStart(2, '0');
+            else val = val.slice(0, -2) + "." + val.slice(-2);
         }
+        
         this.state.postFlightLog[field] = val;
         this.saveConfig();
         this.renderPostFlightLog();
     },
-    
+
     calcPflTimes() {
-        if(!this.state.postFlightLog) return;
-        const bo = this.state.times.bo;
-        const bi = this.state.times.bi;
-        const pfl = this.state.postFlightLog;
+        if(!this.state.postFlightLog || !this.state.times.bo || !this.state.times.bi) return;
+        const bo = this.toMin(this.state.times.bo);
+        const bi = this.toMin(this.state.times.bi);
+        if (isNaN(bo) || isNaN(bi)) return;
 
-        if (bo && bo.length === 4) pfl.depTime = this.convertZtoLocal(bo, pfl.domInt);
-        if (bi && bi.length === 4) pfl.arrTime = this.convertZtoLocal(bi, pfl.domInt);
+        let diff = bi - bo;
+        if (diff < 0) diff += 1440;
+        const fltTimeStr = this.formatLegTime(diff);
 
-        if (bo && bo.length === 4 && bi && bi.length === 4) {
-            let m1 = this.toMin(bo);
-            let m2 = this.toMin(bi);
-            let diff = m2 - m1;
-            if (diff < 0) diff += 1440; 
-            
-            let h = Math.floor(diff / 60);
-            let m = String(diff % 60).padStart(2, '0');
-            let newFltStr = `${h}+${m}`;
-            
-            if (pfl.fltTime !== newFltStr) {
-                pfl.fltTime = newFltStr;
-                pfl.picTime = ''; pfl.sicTime = ''; pfl.copTime = '';
-                if (pfl.activeDuty === 'PIC') pfl.picTime = newFltStr;
-                if (pfl.activeDuty === 'SIC') pfl.sicTime = newFltStr;
-                if (pfl.activeDuty === 'COP') pfl.copTime = newFltStr;
-            }
+        this.state.postFlightLog.fltTime = fltTimeStr;
+        
+        const duty = this.state.postFlightLog.activeDuty;
+        if (duty === 'PIC') {
+            this.state.postFlightLog.picTime = fltTimeStr;
+            this.state.postFlightLog.sicTime = '';
+            this.state.postFlightLog.copTime = '';
+        } else if (duty === 'SIC') {
+            this.state.postFlightLog.picTime = '';
+            this.state.postFlightLog.sicTime = fltTimeStr;
+            this.state.postFlightLog.copTime = '';
+        } else if (duty === 'COP') {
+            this.state.postFlightLog.picTime = '';
+            this.state.postFlightLog.sicTime = '';
+            this.state.postFlightLog.copTime = fltTimeStr;
         }
+
+        const domInt = this.state.postFlightLog.domInt;
+        this.state.postFlightLog.depTime = this.convertZtoLocal(this.state.times.bo, domInt);
+        this.state.postFlightLog.arrTime = this.convertZtoLocal(this.state.times.bi, domInt);
+
         this.saveConfig();
         this.renderPostFlightLog();
     },
-    
+
     convertZtoLocal(zTime, domInt) {
-        if (domInt === 'INT') return zTime;
-        let m = this.toMin(zTime) + 9 * 60; 
-        m = m % 1440;
-        return this.toHHMM(m);
+        if (!zTime || zTime.length !== 4) return zTime;
+        if (domInt === 'INT') return zTime; 
+        let m = this.toMin(zTime) + 540; 
+        return this.toHHMM(m % 1440);
     },
-    
+
     renderPostFlightLog() {
         if(!this.state.postFlightLog) return;
-
-        // ★★★ 修正: PDF印刷時専用の2段分割テーブルを生成 ★★★
+        
         let printPfl = document.getElementById('print-pfl-container');
         if (!printPfl) {
             printPfl = document.createElement('div');
             printPfl.id = 'print-pfl-container';
-            const pflSection = document.querySelector('.pfl-section');
-            if(pflSection) pflSection.appendChild(printPfl);
-
-            // 古いバグのスタイルがあれば削除
-            const oldStyle = document.getElementById('pfl_print_style');
-            if(oldStyle) oldStyle.remove();
-
-            // 印刷時のみ出現する専用CSSを追加
+            const section = document.querySelector('.pfl-section');
+            if (section) section.appendChild(printPfl);
+            
             const style = document.createElement('style');
-            style.id = 'pfl_print_style_v2';
             style.innerHTML = `
-                @media screen {
-                    #print-pfl-container { display: none !important; }
-                }
+                @media screen { #print-pfl-container { display: none; } }
                 @media print {
-                    #print-pfl-container { display: block !important; width: 100%; margin-bottom: 2mm; margin-top: 2mm; }
-                    .pfl-scroll-wrapper { display: none !important; } /* 元の1行テーブルを印刷時のみ隠す */
-                    .print-pfl-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 2mm; }
-                    .print-pfl-table th { font-size: 7px; padding: 2px 1px; font-weight: bold; border-bottom: 1px dashed black; text-align: center; }
-                    .print-pfl-table td { font-size: 7px; padding: 2px 1px; text-align: center; }
+                    #print-pfl-container { display: block; width: 100%; margin-top: 10px; }
+                    .pfl-scroll-wrapper { display: none; }
+                    .pfl-header-controls { display: none; }
+                    .print-pfl-table { width: 100%; border-collapse: collapse; margin-bottom: 2mm; }
+                    .print-pfl-table th, .print-pfl-table td { font-size: 7px; border-bottom: 1px dashed black; text-align: center; padding: 2px; }
                 }
             `;
             document.head.appendChild(style);
         }
-
+        
         const pfl = this.state.postFlightLog;
         
-        // 1段目と2段目に分ける項目を定義
-        const labels1 = ['DAY', 'TYPE', 'REG', 'DEP', 'ARR', 'DEP TIME', 'ARR TIME', 'TKOF', 'LDG'];
-        const keys1 = ['day', 'type', 'reg', 'dep', 'arr', 'depTime', 'arrTime', 'tkof', 'ldg'];
-        
-        const labels2 = ['FLT NUMBER', 'FLT TIME', 'PIC TIME', 'SIC TIME', 'NGT(PIC/SIC)', 'COP TIME', 'NGT(COP)', 'IMC', 'APCH TYPE'];
-        const keys2 = ['fltNumber', 'fltTime', 'picTime', 'sicTime', 'ngtPicSic', 'copTime', 'ngtCop', 'imc', 'apchType'];
+        if (document.getElementById('btnPflDom')) {
+            document.getElementById('btnPflDom').classList.toggle('active', pfl.domInt === 'DOM');
+            document.getElementById('btnPflInt').classList.toggle('active', pfl.domInt === 'INT');
+            document.getElementById('btnPflPic').classList.toggle('active', pfl.activeDuty === 'PIC');
+            document.getElementById('btnPflSic').classList.toggle('active', pfl.activeDuty === 'SIC');
+            document.getElementById('btnPflCop').classList.toggle('active', pfl.activeDuty === 'COP');
+        }
 
-        const buildTable = (labels, keys) => {
-            return `
-                <table class="print-pfl-table">
-                    <thead><tr>${labels.map(l => `<th>${l}</th>`).join('')}</tr></thead>
-                    <tbody><tr>${keys.map(k => `<td>${pfl[k] || ''}</td>`).join('')}</tr></tbody>
-                </table>
-            `;
+        const keys1 = ['day', 'type', 'reg', 'dep', 'arr', 'depTime', 'arrTime', 'tkof', 'ldg'];
+        const keys2 = ['fltNumber', 'fltTime', 'picTime', 'sicTime', 'ngtPicSic', 'copTime', 'ngtCop', 'imc', 'apchType'];
+        
+        const buildTr = (keys) => {
+            return `<tr>${keys.map(k => `<td>${pfl[k] || ''}</td>`).join('')}</tr>`;
+        };
+        const buildTh = (keys) => {
+            const labels = {
+                day:'DAY', type:'TYPE', reg:'REG', dep:'DEP', arr:'ARR', depTime:'DEP TIME', arrTime:'ARR TIME', tkof:'TKOF', ldg:'LDG',
+                fltNumber:'FLT NUMBER', fltTime:'FLT TIME', picTime:'PIC TIME', sicTime:'SIC TIME', ngtPicSic:'NGT(PIC/SIC)', copTime:'COP TIME', ngtCop:'NGT(COP)', imc:'IMC', apchType:'APCH TYPE'
+            };
+            return `<tr>${keys.map(k => `<th>${labels[k]}</th>`).join('')}</tr>`;
         };
 
-        if(printPfl) {
-            printPfl.innerHTML = buildTable(labels1, keys1) + buildTable(labels2, keys2);
+        if (printPfl) {
+            printPfl.innerHTML = `
+                <table class="print-pfl-table">
+                    <thead>${buildTh(keys1)}</thead><tbody>${buildTr(keys1)}</tbody>
+                </table>
+                <table class="print-pfl-table">
+                    <thead>${buildTh(keys2)}</thead><tbody>${buildTr(keys2)}</tbody>
+                </table>
+            `;
         }
-        // ★★★ ここまで ★★★
-
-        const btnDom = document.getElementById('btnPflDom'); if(btnDom) btnDom.className = pfl.domInt === 'DOM' ? 'pfl-btn active' : 'pfl-btn';
-        const btnInt = document.getElementById('btnPflInt'); if(btnInt) btnInt.className = pfl.domInt === 'INT' ? 'pfl-btn active' : 'pfl-btn';
-        
-        const btnPic = document.getElementById('btnPflPic'); if(btnPic) btnPic.className = pfl.activeDuty === 'PIC' ? 'pfl-btn active' : 'pfl-btn';
-        const btnSic = document.getElementById('btnPflSic'); if(btnSic) btnSic.className = pfl.activeDuty === 'SIC' ? 'pfl-btn active' : 'pfl-btn';
-        const btnCop = document.getElementById('btnPflCop'); if(btnCop) btnCop.className = pfl.activeDuty === 'COP' ? 'pfl-btn active' : 'pfl-btn';
 
         const fields = ['day', 'type', 'reg', 'dep', 'arr', 'depTime', 'arrTime', 'tkof', 'ldg', 'fltNumber', 'fltTime', 'picTime', 'sicTime', 'ngtPicSic', 'copTime', 'ngtCop', 'imc', 'apchType'];
         fields.forEach(f => {
@@ -1810,6 +1823,7 @@ Object.assign(app, {
         });
     },
     
+    // ★ 修正箇所：オフライン（ローカルファイル）でも確実にコピーできるように改修！
     async copyPflToCsv() {
         if(!this.state.postFlightLog) return;
         const pfl = this.state.postFlightLog;
@@ -1823,15 +1837,58 @@ Object.assign(app, {
         
         const csvString = fields.map(v => v || '').join(',');
         
-        try {
-            await navigator.clipboard.writeText(csvString);
-            const btn = document.getElementById('btnPflCsv');
-            if (btn) {
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '✅ コピー完了！'; btn.style.background = 'var(--success-color)';
-                setTimeout(() => { btn.innerHTML = originalText; btn.style.background = ''; }, 2000);
+        const btn = document.getElementById('btnPflCsv');
+        const originalText = btn.textContent;
+        
+        const successAction = () => {
+            btn.textContent = '✅ COPIED!';
+            btn.style.backgroundColor = 'var(--success-color)';
+            btn.style.color = '#fff';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+            }, 2000);
+        };
+
+        // 1. セキュア環境（HTTPS）であれば最新のAPIを使用
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(csvString);
+                successAction();
+            } catch (err) {
+                console.warn('Clipboard API failed, trying fallback...', err);
+                this.fallbackCopyTextToClipboard(csvString, successAction);
             }
-        } catch (err) { alert("クリップボードへのコピーに失敗しました。"); }
+        } else {
+            // 2. ローカルファイルや非セキュア環境では旧式のコピー方法へ自動切り替え
+            this.fallbackCopyTextToClipboard(csvString, successAction);
+        }
+    },
+
+    // ★ 追加：旧式のコピー手法（透明なメモ帳を作って強引にコピーさせる）
+    fallbackCopyTextToClipboard(text, successCallback) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        // 画面外に隠す
+        textArea.style.position = "fixed";
+        textArea.style.top = "0";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                successCallback();
+            } else {
+                alert("コピーに失敗しました。");
+            }
+        } catch (err) {
+            alert("コピーに失敗しました。手動でコピーしてください。");
+        }
+        document.body.removeChild(textArea);
     }
 });
 </script>

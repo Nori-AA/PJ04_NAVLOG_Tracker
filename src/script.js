@@ -13,7 +13,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.10.0',
+    version: 'v25.10.5',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -291,12 +291,13 @@ const app = {
     updateCrewMemo(val) { this.state.crewMemo = val; this.saveConfig(); this.renderCrewMemo(); },
 
     createWP(name, alt, tmp, zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, fuel, isaDevVal = '', mwtp = '---', wscp = '---') {
+        // 旧システムではテキストからの切り出しのみを行っていたが、v25.10.5からは動的計算するためパース値は参考に留める
         let isaDevNum = null, isaTmp = null;
         if (isaDevVal !== '' && tmp !== '---') { isaDevNum = parseInt(isaDevVal, 10); isaTmp = parseInt(tmp, 10) - isaDevNum; }
         return {
             name, plannedAlt: alt, actualAlt: '', estAltDisplay: alt, plannedTmp: tmp, actualTmp: '', estTmpDisplay: tmp,
             plannedZwind: zwind, actualZwind: '', estZwindDisplay: zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel: fuel,
-            isaDevNum, isaTmp, mwtp, wscp,
+            isaDevNum, isaTmp, mwtp, wscp, calcIsaDev: null, // 動的ISA DEV保持用
             actualTime: '', actualFuelTTL: '', actualFuelCALC: '', calcEstTimeMin: null, calcEstFuel: null, estTimeDisplay: '', estFuelDisplay: 0, timeDiff: null, fuelDiff: null,
             cumDist: 0, rdis: 0, memo: '', memoOpen: false, turbulence: '', forecast: null
         };
@@ -308,7 +309,7 @@ const app = {
     toHHMM(m) { let tm = Math.round(m); return String(Math.floor(tm/60)%24).padStart(2,'0') + String(tm%60).padStart(2,'0'); },
     diffMin(act, est) { let d = act - est; while(d > 720) d -= 1440; while(d < -720) d += 1440; return d; },
 
-    // 気象データデコードエンジン (ex: 7337M45 -> 230/137 -45)
+    // 気象データデコードエンジン
     formatWindTemp(raw) {
         if (!raw || raw === "---") return "---";
         const match = raw.match(/^(\d{2})(\d{2})([PM])?(\d{2})?$/);
@@ -333,12 +334,25 @@ const app = {
         return `${dirStr}/${spdStr}${tempStr}`;
     },
 
+    // 高度文字列からFeet(数値)を算出
+    getAltFeet(altStr) {
+        if (!altStr || altStr === '---') return null;
+        let targetNum = parseInt(altStr.replace(/\D/g, ''));
+        if (isNaN(targetNum)) return null;
+        if (altStr.includes('FL') || targetNum < 1000) targetNum *= 100; 
+        return targetNum;
+    },
+
+    // ★ ISA (国際標準大気) 温度計算エンジン
+    getISA(altFeet) {
+        if (altFeet >= 36089) return -56.5; // 圏界面以上は一定
+        return 15.0 - (0.0019812 * altFeet);
+    },
+
     getClosestAlt(forecastObj, targetAltStr) {
         if (!forecastObj || Object.keys(forecastObj).length === 0) return null;
-        if (!targetAltStr || targetAltStr === '---') return null;
-        
-        let targetNum = parseInt(targetAltStr.replace(/\D/g, ''));
-        if (targetAltStr.includes('FL') || targetNum < 1000) targetNum *= 100; 
+        const targetNum = this.getAltFeet(targetAltStr);
+        if (targetNum === null) return null;
         
         const alts = Object.keys(forecastObj).map(Number).sort((a, b) => a - b);
         let closest = alts[0];
@@ -365,11 +379,9 @@ const app = {
     calculate() {
         let pTimeMin = null, pFuel = null, cAlt = null, oAlt = null;
         this.state.waypoints.forEach((wp, i) => {
-            // [1] 高度伝播ロジック（手入力高度から、次の予定高度変更ポイントまで自動伝播）
             if (wp.actualAlt !== '') { wp.estAltDisplay = wp.actualAlt; cAlt = wp.actualAlt; oAlt = wp.plannedAlt; }
             else { if (cAlt !== null && wp.plannedAlt === oAlt) wp.estAltDisplay = cAlt; else { cAlt = null; oAlt = null; wp.estAltDisplay = wp.plannedAlt; } }
             
-            // [2] ★ 修正：計画高度から「ズレた場合のみ」予報データを引っ張ってくる（初期データの保護）
             let autoWind = wp.plannedZwind;
             let autoTmp = wp.plannedTmp;
             
@@ -388,6 +400,20 @@ const app = {
             
             wp.estZwindDisplay = wp.actualZwind !== '' ? wp.actualZwind : autoWind;
             wp.estTmpDisplay = wp.actualTmp !== '' ? wp.actualTmp : autoTmp;
+            
+            // ★ 動的 ISA DEV 算出ロジック (v25.10.5)
+            const currentAltFeet = this.getAltFeet(wp.estAltDisplay);
+            if (currentAltFeet !== null && wp.estTmpDisplay && wp.estTmpDisplay !== '---') {
+                const currentTmpNum = parseInt(wp.estTmpDisplay, 10);
+                if (!isNaN(currentTmpNum)) {
+                    const isaTemp = this.getISA(currentAltFeet);
+                    wp.calcIsaDev = Math.round(currentTmpNum - isaTemp); // DEV = Current Tmp - ISA Temp
+                } else {
+                    wp.calcIsaDev = null;
+                }
+            } else {
+                wp.calcIsaDev = null;
+            }
             
             let actFuelStr = this.state.fuelCalcBasis === 'TTL' ? (wp.actualFuelTTL || '') : (wp.actualFuelCALC || '');
             let actTimeStr = wp.actualTime || '';
@@ -435,7 +461,6 @@ const app = {
                 let tClass = (wp.timeDiff !== null) ? (wp.timeDiff > 0 ? 'diff-behind' : (wp.timeDiff < 0 ? 'diff-ahead' : '')) : '';
                 let fClass = (wp.fuelDiff !== null) ? (wp.fuelDiff > 0 ? 'diff-ahead' : (wp.fuelDiff < 0 ? 'diff-behind' : '')) : '';
                 
-                // 変更を検知するフラグ
                 const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt;
                 const isWind = wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind;
                 const isTmp = wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp;
@@ -444,10 +469,10 @@ const app = {
                 const hasTurb = wp.turbulence && wp.turbulence !== '';
                 let turbBadge = hasTurb ? `<br><span class="turb-indicator turb-${wp.turbulence} no-print">〰️ ${wp.turbulence}</span><span class="turb-indicator-print" style="display:none;">[〰️${wp.turbulence}]</span>` : '';
 
+                // ★ ISA DEV 動的表示反映
                 let currentIsaDevDisplay = '()';
-                if (wp.isaTmp !== null) {
-                    let currentTmp = parseInt(wp.estTmpDisplay, 10);
-                    if (!isNaN(currentTmp)) { let currentIsaDevNum = currentTmp - wp.isaTmp; currentIsaDevDisplay = `(${currentIsaDevNum >= 0 ? ' ' : ''}${currentIsaDevNum})`; }
+                if (wp.calcIsaDev !== undefined && wp.calcIsaDev !== null) {
+                    currentIsaDevDisplay = `(${wp.calcIsaDev >= 0 ? '+' : ''}${wp.calcIsaDev})`;
                 }
 
                 const timeStrikeClass = (wp.actualTime && wp.actualTime.length === 4) ? 'strikethrough-est' : '';
@@ -456,7 +481,6 @@ const app = {
 
                 const tr = document.createElement('tr'); tr.id = `row-${i}`;
                 
-                // ★ ALTの2段表示化（変更された場合のみ下にオリジナルを小さく取り消し線で表示）
                 tr.innerHTML = `
                         <td class="log-td col-wp sticky-col-wp" style="padding: 2px;"><div class="wp-cell" onclick="app.toggleMemo(${i})"><strong>${wp.name}</strong>${turbBadge}${hasMemo ? '<br><span style="font-size:11px;">📝</span>' : ''}</div></td>
                         <td class="log-td col-alt">
@@ -577,10 +601,13 @@ const app = {
                     }
                 }
 
+                // ★ ISA DEV DOM更新
                 const isaDevEl = document.getElementById(`wp_${i}_isaDev`);
                 if (isaDevEl) {
                     let currentIsaDevDisplay = '()';
-                    if (wp.isaTmp !== null) { let currentTmp = parseInt(wp.estTmpDisplay, 10); if (!isNaN(currentTmp)) { let currentIsaDevNum = currentTmp - wp.isaTmp; currentIsaDevDisplay = `(${currentIsaDevNum >= 0 ? ' ' : ''}${currentIsaDevNum})`; } }
+                    if (wp.calcIsaDev !== undefined && wp.calcIsaDev !== null) {
+                        currentIsaDevDisplay = `(${wp.calcIsaDev >= 0 ? '+' : ''}${wp.calcIsaDev})`;
+                    }
                     isaDevEl.textContent = currentIsaDevDisplay;
                 }
 

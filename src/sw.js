@@ -1,5 +1,5 @@
 // ★ アプリを更新する時は、ここの数字を必ず変更してください（例：v25.9.2）
-const CACHE_NAME = 'navlog-cache-v25.9.17';
+const CACHE_NAME = 'navlog-cache-v25.9.18';
 
 // オフライン用に保存しておく基本ファイルのリスト
 const urlsToCache = [

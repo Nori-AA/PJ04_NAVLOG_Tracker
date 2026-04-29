@@ -13,7 +13,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.9.17',
+    version: 'v25.9.18',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -557,25 +557,25 @@ const app = {
                 const tr = document.createElement('tr');
                 tr.id = `row-${i}`;
                 tr.innerHTML = `
-                    <td class="log-td col-wp sticky-col-wp" style="padding: 2px;"><div class="wp-cell" onclick="app.toggleMemo(${i})"><strong>${wp.name}</strong>${turbBadge}${hasMemo ? '<br><span style="font-size:11px;">📝</span>' : ''}</div></td>
-                    <td class="log-td col-alt"><input type="text" id="wp_${i}_alt" class="input-ref ${isAlt ? 'input-modified' : ''}" value="${wp.estAltDisplay}" onchange="app.update(${i}, 'actualAlt', this.value)"></td>
-                    <td class="log-td col-wind"><div class="input-stacked">
-                        <input type="text" id="wp_${i}_wind" class="input-ref input-wind ${isWind ? 'input-modified' : ''}" value="${wp.estZwindDisplay}" onchange="app.update(${i}, 'actualZwind', this.value)">
-                        <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                            <input type="text" id="wp_${i}_tmp" class="input-ref input-tmp ${isTmp ? 'input-modified' : ''}" value="${wp.estTmpDisplay}" onchange="app.update(${i}, 'actualTmp', this.value)">
-                            <span id="wp_${i}_isaDev" class="isa-dev-text">${currentIsaDevDisplay}</span>
-                        </div>
-                    </div></td>
-                    <td class="log-td col-mwtp">
-                        <div style="font-size: 13px; font-weight: normal; white-space: nowrap;">${wp.mwtp}</div>
-                        <div style="font-size: 11px; color: var(--text-faint);">${wp.wscp}</div>
-                    </td>
-                    <td class="log-td col-ctme" style="white-space: nowrap;">${wp.ctme} / ${wp.cumDist}<br><span style="color: var(--text-faint); font-size:10px;">${wp.rtme} / ${wp.rdis}</span></td>
-                    <td class="log-td col-ztme" style="white-space: nowrap;">${wp.ztmeDisplay}<br><span style="color: var(--text-faint); font-size:10px;">(${wp.dist})</span></td>
-                    <td class="log-td col-main ${timeStrikeClass}" style="font-size:15px; font-weight:bold;" id="wp_${i}_estTime">${wp.estTimeDisplay}</td>
-                    <td class="log-td col-main ${fuelStrikeClass}" id="wp_${i}_estFuel_td"><div class="fuel-primary" id="wp_${i}_estFuel">${wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--'}</div><div class="fuel-secondary">(${wp.plannedFuel.toFixed(1)})</div></td>
-                    <td class="log-td col-actual no-print col-main"><input type="text" id="wp_${i}_actTime" class="input-actual" inputmode="numeric" maxlength="4" value="${wp.actualTime || ''}" ${actTimeReadonly} onchange="app.update(${i}, 'actualTime', this.value)"></td>
-                    <td class="log-td col-actual no-print col-main">
+                        <td class="log-td col-wp sticky-col-wp" style="padding: 2px;"><div class="wp-cell" onclick="app.toggleMemo(${i})"><strong>${wp.name}</strong>${turbBadge}${hasMemo ? '<br><span style="font-size:11px;">📝</span>' : ''}</div></td>
+                        <td class="log-td col-alt"><input type="text" id="wp_${i}_alt" class="input-ref ${isAlt ? 'input-modified' : ''}" value="${wp.estAltDisplay}" onchange="app.update(${i}, 'actualAlt', this.value)"></td>
+                        <td class="log-td col-wind"><div class="input-stacked">
+                            <input type="text" id="wp_${i}_wind" class="input-ref input-wind ${isWind ? 'input-modified' : ''}" value="${wp.estZwindDisplay}" onchange="app.update(${i}, 'actualZwind', this.value)">
+                            <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                                <input type="text" id="wp_${i}_tmp" class="input-ref input-tmp ${isTmp ? 'input-modified' : ''}" value="${wp.estTmpDisplay}" onchange="app.update(${i}, 'actualTmp', this.value)">
+                                <span id="wp_${i}_isaDev" class="isa-dev-text">${currentIsaDevDisplay}</span>
+                            </div>
+                        </div></td>
+                        <td class="log-td col-mwtp">
+                            <div style="font-size: 13px; font-weight: normal; white-space: nowrap;">${wp.mwtp}</div>
+                            <div style="font-size: 11px; color: var(--text-faint);">${wp.wscp}</div>
+                        </td>
+                        <td class="log-td col-ctme" style="white-space: nowrap;">${wp.ctme} / ${wp.cumDist}<br><span style="color: var(--text-faint); font-size:10px;">${wp.rtme} / ${wp.rdis}</span></td>
+                        <td class="log-td col-ztme" style="white-space: nowrap;">${wp.ztmeDisplay}<br><span style="color: var(--text-faint); font-size:10px;">(${wp.dist})</span></td>
+                        <td class="log-td col-main ${timeStrikeClass}" style="font-size:15px; font-weight:bold;" id="wp_${i}_estTime">${wp.estTimeDisplay}</td>
+                        <td class="log-td col-main" id="wp_${i}_estFuel_td"><div class="fuel-primary ${fuelStrikeClass}" id="wp_${i}_estFuel">${wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--'}</div><div class="fuel-secondary">(${wp.plannedFuel.toFixed(1)})</div></td>
+                        <td class="log-td col-actual no-print col-main"><input type="text" id="wp_${i}_actTime" class="input-actual" inputmode="numeric" maxlength="4" value="${wp.actualTime || ''}" ${actTimeReadonly} onchange="app.update(${i}, 'actualTime', this.value)"></td>
+                        <td class="log-td col-actual no-print col-main">
                         <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
                             <input type="number" id="wp_${i}_actFuelTTL" class="input-actual-half" inputmode="decimal" step="0.1" placeholder="TTL" value="${wp.actualFuelTTL || ''}" onchange="app.update(${i}, 'actualFuelTTL', this.value)">
                             <input type="number" id="wp_${i}_actFuelCALC" class="input-actual-half" inputmode="decimal" step="0.1" placeholder="CALC" value="${wp.actualFuelCALC || ''}" onchange="app.update(${i}, 'actualFuelCALC', this.value)">
@@ -647,11 +647,12 @@ const app = {
                     else estTimeEl.classList.remove('strikethrough-est');
                 }
 
-                const estFuelTdEl = document.getElementById(`wp_${i}_estFuel_td`);
-                if (estFuelTdEl) {
+                const estFuelEl = document.getElementById(`wp_${i}_estFuel`);
+                if (estFuelEl) {
+                    estFuelEl.textContent = wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--';
                     let actFuelStr = app.state.fuelCalcBasis === 'TTL' ? (wp.actualFuelTTL || '') : (wp.actualFuelCALC || '');
-                    if (actFuelStr !== '') estFuelTdEl.classList.add('strikethrough-est');
-                    else estFuelTdEl.classList.remove('strikethrough-est');
+                    if (actFuelStr !== '') estFuelEl.classList.add('strikethrough-est');
+                    else estFuelEl.classList.remove('strikethrough-est');
                 }
 
                 const estFuelEl = document.getElementById(`wp_${i}_estFuel`);

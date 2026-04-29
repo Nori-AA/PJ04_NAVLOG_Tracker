@@ -1940,7 +1940,6 @@ Object.assign(app, {
         const rdisMatch = text.match(/([A-Z]{4})\s+\(RDIS\)\s+(\d{3,4}\.\d)/);
         if (rdisMatch) { waypoints.push(this.createWP(rdisMatch[1], "---", "---", "---", "00.00", "---", "0.00", 0, 0, parseFloat(rdisMatch[2]), "", "---", "---")); }
         
-        // ★ 修正箇所：ウェイポイント名の抽出条件を {3,} から + (1文字以上無制限) に変更しました
         const regex = /(?:\(\s*\d+\s*\)\s+(?:-\s*){4,6}(?:\(\s*(-?\d+)\s*\))?[\s\S]{1,150}?)?(\d{2}\.\d{2})\s+[NS]\d{5}[EW]\d{5,6}[\s\.]+(\d+\.\d{2})\s+(CLM|DEC|\d{5})?\s*(\d{3}\.\d)\s*([+-]\d{2}|\.{1,2})?\s*(\d{6}|\.{1,2})?\s*([\d\/]{5}|\.{1,2})?[\s\S]{1,150}?(\d{2}\.\d{2})\s+([A-Z0-9\-]+)\s+\.\s+(\d{3})\s+FL.*?(?:\s+|\/)(\d{2}|\.{1,2})\s*$/gm;
         
         let match;
@@ -1957,7 +1956,7 @@ Object.assign(app, {
             if (match[7] && !match[7].includes('.')) zwind = match[7].substring(0,3) + '/' + match[7].substring(3,6);
             const mwtp = (match[8] && !match[8].includes('.')) ? match[8] : '---';
             const rtme = match[9];
-            const name = match[10]; // ★ ここが 1文字以上のどんな長さのWPT名でも正しく入るようになります
+            const name = match[10]; 
             const dist = parseInt(match[11], 10);
             const wscp = (match[12] && !match[12].includes('.')) ? match[12] : '---';
 
@@ -1970,6 +1969,61 @@ Object.assign(app, {
             const firstWpZtmeMin = waypoints[1].ztmeMin;
             waypoints[0].rtme = this.formatLegTime(firstWpRtmeMin + firstWpZtmeMin);
         }
+
+        // =========================================================
+        // ★ フェーズ1：WINDS/TEMP ALOFT FCST 抽出・紐付けロジック
+        // =========================================================
+        const fcstSection = text.split("-WINDS/TEMP ALOFT FCST")[1];
+        if (fcstSection) {
+            const lines = fcstSection.split('\n')
+                .map(l => l.trim())
+                .filter(l => l !== '' && !l.includes('token=') && !l.includes('ページ'));
+
+            if (lines.length > 0) {
+                // 1. 高度ヘッダー (例: 12000 18000...) を取得
+                const heights = lines[0].split(/\s+/);
+                
+                // 2. 予報セクション内の「WPT名リスト」と「データ行」を分離
+                let nameList = [];
+                let dataStartIndex = 1;
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].match(/^\d{7}/)) { // 7桁以上の数字(2820P00等)で始まる行はデータ
+                        dataStartIndex = i;
+                        break;
+                    }
+                    nameList = nameList.concat(lines[i].split(/\s+/));
+                }
+
+                const dataLines = lines.slice(dataStartIndex);
+
+                // 3. 【ポインター・マッチング】メイン表のWPTと、予報のWPT名を突き合わせ
+                let fcstPointer = 0;
+                waypoints.forEach((wp, wpIdx) => {
+                    if (wpIdx === 0) return; // 出発空港は予報がないためスキップ
+
+                    // 予報ポインターがまだ残っているか確認
+                    if (fcstPointer < nameList.length) {
+                        // メイン表のWPT名と、予報側のWPT名が一致するかチェック
+                        if (wp.name === nameList[fcstPointer]) {
+                            // 一致したらデータを取り込む
+                            if (dataLines[fcstPointer]) {
+                                const rowValues = dataLines[fcstPointer].trim().split(/\s+/);
+                                wp.forecast = {};
+                                heights.forEach((h, hIdx) => {
+                                    wp.forecast[h] = rowValues[hIdx] || "---"; // 高度をキーにして保存
+                                });
+                            }
+                            // 無事に紐付けられたので、ポインターを1つ進める（消費する）
+                            fcstPointer++;
+                        }
+                    }
+                });
+                
+                // 確認用ログ（PCブラウザの「開発者ツール」等で確認できます）
+                console.log(`[Phase 1 完了] WIND/TEMP 予報: ${nameList.length}地点中、${fcstPointer}地点の紐付けに成功しました！`);
+            }
+        }
+        // =========================================================
 
         let cumDist = 0;
         waypoints.forEach(wp => { cumDist += wp.dist; wp.cumDist = cumDist; });
@@ -2001,7 +2055,6 @@ Object.assign(app, {
         this.render();
         this.renderFlightMeta();
 
-        // 履歴に保存
         this.saveFlightToHistory();
     },
 

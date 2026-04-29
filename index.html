@@ -952,7 +952,7 @@ const app = {
         crewMemo: '', takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' }, actFob: '', actFod: '',
         postFlightLog: null, activeInput: null, flightHistory: [],
-        rawForecastText: "" // ★ 抽出した風予報の生データを保持
+        rawForecastText: "" // ★ 抽出した風予報のアスキーアートデータを保持
     },
 
     init() {
@@ -1020,7 +1020,7 @@ const app = {
         document.getElementById('inputArea').style.display = 'none';
         document.getElementById('crewInfoCard').style.display = 'block';
         
-        this.renderForecastCard(); // ★ 気象情報カードの表示
+        this.renderForecastCard(); // ★ 気象情報カードの描画
 
         if(this.updateCrewPanelUI) this.updateCrewPanelUI();
         if(this.renderCrew) this.renderCrew();
@@ -1220,17 +1220,19 @@ const app = {
     // ★ 気象情報カードのDOM生成・挿入
     renderForecastCard() {
         const headerCard = document.getElementById('headerInfoCard');
-        if (!headerCard) return;
+        if (!headerCard) return; // DRMカードがない場合は何もしない
         
         let card = document.getElementById('forecastInfoCard');
         if (!card) {
+            // HTMLファイルに存在しない要素をJS側で自作してねじ込む
             card = document.createElement('div');
             card.id = 'forecastInfoCard';
             card.className = 'card no-print';
             card.style.display = 'none';
             card.style.marginTop = '10px';
             card.style.marginBottom = '10px';
-            // DRMと同じカラースキームを継承してアスキー文字風の表示に
+            
+            // DRMと同じデザイン（黒背景・緑文字）のアスキーアートビューア
             card.innerHTML = `
                 <div class="card-header" onclick="app.toggleForecast()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 8px;">
                     <span style="font-weight: bold; font-size: 13px;">☁️ WINDS/TEMP ALOFT FCST</span>
@@ -1238,10 +1240,11 @@ const app = {
                 </div>
                 <div id="forecastInfoContent" style="display: none; font-family: 'SF Mono', monospace; white-space: pre; font-size: 11px; padding: 12px; overflow-x: auto; background: var(--drm-bg); color: var(--drm-text); border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; margin-top: -5px;"></div>
             `;
-            // DRMカードとステータスバーの間に挿入
+            // DRMカードの直後（下）に挿入する
             headerCard.parentNode.insertBefore(card, headerCard.nextSibling);
         }
         
+        // 抽出されたテキストが存在する場合のみ表示を有効にする
         if (this.state.rawForecastText && this.state.rawForecastText.trim() !== '') {
             card.style.display = 'block';
             document.getElementById('forecastInfoContent').textContent = this.state.rawForecastText;
@@ -1491,7 +1494,7 @@ const app = {
         if(this.renderPostFlightLog) this.renderPostFlightLog();
         if(this.renderCrewMemo) this.renderCrewMemo();
         
-        this.renderForecastCard(); // パース直後にも生成
+        this.renderForecastCard(); // パース直後にも生成・描画
 
         this.render();
         this.renderFlightMeta();
@@ -1534,6 +1537,7 @@ const app = {
             wp.estZwindDisplay = wp.actualZwind !== '' ? wp.actualZwind : autoWind;
             wp.estTmpDisplay = wp.actualTmp !== '' ? wp.actualTmp : autoTmp;
             
+            // ISA DEV 算出ロジック
             const currentAltFeet = this.getAltFeet(wp.estAltDisplay);
             if (currentAltFeet !== null && wp.estTmpDisplay && wp.estTmpDisplay !== '---') {
                 const currentTmpNum = parseInt(wp.estTmpDisplay, 10);

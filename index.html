@@ -2236,23 +2236,20 @@ Object.assign(app, {
             const lines = fcstSection.split('\n').map(l => l.trim());
 
             let heights = [];
-            let nameList = [];
-            let dataList = [];
+            let allWptNames = [];
+            let allDataRows = [];
             let isHeaderFound = false;
-            
-            // ★ 整形用（アスキーアート化）配列
-            let formattedLines = ["-WINDS/TEMP ALOFT FCST"];
+            let fdDataLine = "";
 
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i];
 
-                // URL等のゴミ行を完全に除去
                 if (line === '' || line === '_' || line.includes('ipobs-aps') || line.includes('token=') || line.includes('ページ')) {
                     continue;
                 }
 
                 if (line.includes('FD DATA') || line.includes('BASED ON')) {
-                    formattedLines.push(line);
+                    fdDataLine = line;
                     continue;
                 }
 
@@ -2260,40 +2257,46 @@ Object.assign(app, {
                     if (line.match(/^(\d{4,5}\s+)+\d{4,5}$/)) {
                         heights = line.split(/\s+/);
                         isHeaderFound = true;
-                        
-                        // 高度ヘッダーを綺麗に右揃えフォーマット
-                        let str = "".padEnd(8, " ");
-                        heights.forEach(h => str += h.padStart(8, " "));
-                        formattedLines.push(str);
                     }
                     continue;
                 }
 
                 let tokens = line.split(/\s+/).filter(t => t !== '');
                 let rowData = [];
-                let wptNames = [];
 
                 for (let t of tokens) {
-                    // データかWPT名かの判別
                     if (/^\d{4}([PM]\d{2})?$/.test(t)) {
                         rowData.push(t);
                     } else {
-                        nameList.push(t);
-                        wptNames.push(t);
+                        allWptNames.push(t);
                     }
                 }
 
                 if (rowData.length > 0) {
-                    dataList.push(rowData);
-                    
-                    // データ行を綺麗にフォーマット（WPT名8文字左揃え、データ8文字右揃え）
-                    let str = wptNames.join(' ').padEnd(8, " ");
-                    rowData.forEach(d => str += d.padStart(8, " "));
-                    formattedLines.push(str);
+                    allDataRows.push(rowData);
                 }
             }
 
-            // ★ 抽出した美しい文字列をStateに保存 (ここで初めて中身が入る！)
+            // ★ アスキーアート風にフォーマット（1対1ペア出力）
+            let formattedLines = ["-WINDS/TEMP ALOFT FCST"];
+            if (fdDataLine) formattedLines.push(fdDataLine);
+
+            if (heights.length > 0) {
+                let str = "".padEnd(8, " ");
+                heights.forEach(h => str += h.padStart(8, " "));
+                formattedLines.push(str);
+            }
+
+            for (let i = 0; i < allDataRows.length; i++) {
+                let wptName = allWptNames[i] || "???";
+                if (wptName.length > 8) wptName = wptName.substring(0, 8); // 長すぎる名前はカット
+                let str = wptName.padEnd(8, " ");
+                
+                let rowData = allDataRows[i];
+                rowData.forEach(d => str += d.padStart(8, " "));
+                formattedLines.push(str);
+            }
+
             this.state.rawForecastText = formattedLines.join('\n');
 
             // ポインター・マッチング
@@ -2301,10 +2304,10 @@ Object.assign(app, {
             let matchedCount = 0;
             waypoints.forEach((wp, wpIdx) => {
                 if (wpIdx === 0) return; 
-                let foundIdx = nameList.indexOf(wp.name, fcstPointer);
+                let foundIdx = allWptNames.indexOf(wp.name, fcstPointer);
                 if (foundIdx !== -1) {
-                    if (dataList[foundIdx]) {
-                        const rowValues = dataList[foundIdx];
+                    if (allDataRows[foundIdx]) {
+                        const rowValues = allDataRows[foundIdx];
                         wp.forecast = {};
                         heights.forEach((h, hIdx) => {
                             wp.forecast[h] = rowValues[hIdx] || "---";
@@ -2314,7 +2317,7 @@ Object.assign(app, {
                     fcstPointer = foundIdx + 1;
                 }
             });
-            console.log(`[Phase 1] WIND/TEMP 紐付け完了: ${matchedCount} / ${nameList.length}`);
+            console.log(`[Phase 1] WIND/TEMP 紐付け完了: ${matchedCount} / ${allWptNames.length}`);
         }
         // =========================================================
 
@@ -2346,7 +2349,6 @@ Object.assign(app, {
         if(this.renderPostFlightLog) this.renderPostFlightLog();
         if(this.renderCrewMemo) this.renderCrewMemo();
         
-        // ★ 気象情報カードの描画を呼び出し
         if(this.renderForecastCard) this.renderForecastCard();
 
         this.render();

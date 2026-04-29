@@ -508,7 +508,7 @@ html.theme-dark .wind-data {
 }
 
 /* =========================================
-   フェーズ2&3: 風・気温予報バッジのスタイル
+   フェーズ3: 風・気温予報バッジのスタイル
    ========================================= */
 .forecast-container {
     display: flex;
@@ -527,13 +527,13 @@ html.theme-dark .wind-data {
     font-size: 11px;
 }
 
-/* 通常時の高度バッジ（DAYモード） */
+/* 通常時のバッジ（背景白＋枠線） */
 .wind-badge {
-    background: var(--table-header-bg);
-    color: var(--text-color);
+    background: var(--card-bg);
+    color: var(--text-muted);
     padding: 2px 6px;
     border-radius: 4px 0 0 4px;
-    font-weight: bold;
+    font-weight: normal;
     min-width: 45px;
     text-align: center;
     border: 1px solid var(--border-color);
@@ -556,36 +556,16 @@ html.theme-dark .wind-data {
     justify-content: center;
 }
 
-/* ★ フェーズ3：現在高度に一番近いデータの強調表示（DAYモード） */
-.highlight-alt .wind-badge {
-    background: var(--accent-color);
-    color: white;
-    border-color: var(--accent-color);
-}
+/* ★ 現在高度に一番近いデータの強調表示（太文字になるだけ） */
+.highlight-alt .wind-badge,
 .highlight-alt .wind-data {
-    font-weight: bold;
-    border: 2px solid var(--accent-color);
-    border-left: 1px solid var(--border-color);
-    background: var(--modified-bg);
-    color: var(--modified-text);
+    font-weight: 900;
+    color: var(--text-color);
 }
 
-/* =========================================
-   ★ ダークモード(NGT) 用の目に優しいカラー調整
-   ========================================= */
+/* ダークモード(NGT)用調整 */
 html.theme-dark .forecast-container { background: rgba(255, 255, 255, 0.02); }
 html.theme-dark .wind-badge { background: #222; color: #888; border-color: #444; }
 html.theme-dark .wind-data { background: #1a1a1a; color: #aaa; border-color: #444; }
-
-/* NGTモードでのハイライトを超控えめに */
-html.theme-dark .highlight-alt .wind-badge { 
-    background: #233547; /* 落ち着いた暗いネイビー */
-    color: #ccc; 
-    border-color: #2c3e50; 
-}
-html.theme-dark .highlight-alt .wind-data { 
-    background: #111; 
-    border: 1px solid #34495e; /* 太い枠線をやめて細く */
-    border-left: none;
-    color: #7fb3d5; /* 眩しくない淡い青文字 */
-}
+html.theme-dark .highlight-alt .wind-badge,
+html.theme-dark .highlight-alt .wind-data { font-weight: 900; color: #eee; }

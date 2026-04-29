@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NAVLOG">
     
-    <title>NAVLOG Tracker V25.10.0 (Offline EFB)</title>
+    <title>NAVLOG Tracker V25.10.2 (Offline EFB)</title>
 
     <script>
         try {
@@ -634,7 +634,7 @@ html.theme-dark .highlight-alt .wind-data {
 </head>
 <body>
 
-    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.10.0</h1>
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V25.10.2</h1>
 
     <div class="print-header-container">
         
@@ -945,13 +945,14 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.10.5',
+    version: 'v25.10.2',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
         crewMemo: '', takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
         times: { bo: '', bi: '', tkof: '', ldg: '' }, actFob: '', actFod: '',
-        postFlightLog: null, activeInput: null, flightHistory: []
+        postFlightLog: null, activeInput: null, flightHistory: [],
+        rawForecastText: "" // ★ 抽出した風予報の生データを保持
     },
 
     init() {
@@ -969,6 +970,7 @@ const app = {
             if (this.state.actFob === undefined) this.state.actFob = '';
             if (this.state.actFod === undefined) this.state.actFod = '';
             if (this.state.crewMemo === undefined) this.state.crewMemo = ''; 
+            if (this.state.rawForecastText === undefined) this.state.rawForecastText = ''; 
             if (!this.state.crew || this.state.crew.length === 0) {
                 this.state.crew = [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
             }
@@ -1017,6 +1019,9 @@ const app = {
         document.getElementById('bottomControls').style.display = 'block';
         document.getElementById('inputArea').style.display = 'none';
         document.getElementById('crewInfoCard').style.display = 'block';
+        
+        this.renderForecastCard(); // ★ 気象情報カードの表示
+
         if(this.updateCrewPanelUI) this.updateCrewPanelUI();
         if(this.renderCrew) this.renderCrew();
         this.renderTimes();
@@ -1206,6 +1211,45 @@ const app = {
         if (c.style.display === 'none') { c.style.display = 'block'; icon.textContent = '▼'; } else { c.style.display = 'none'; icon.textContent = '▶'; }
     },
 
+    // ★ 気象情報パネルのトグル機能
+    toggleForecast() {
+        const c = document.getElementById('forecastInfoContent'), icon = document.getElementById('fcst-toggle-icon');
+        if (c.style.display === 'none') { c.style.display = 'block'; icon.textContent = '▼'; } else { c.style.display = 'none'; icon.textContent = '▶'; }
+    },
+
+    // ★ 気象情報カードのDOM生成・挿入
+    renderForecastCard() {
+        const headerCard = document.getElementById('headerInfoCard');
+        if (!headerCard) return;
+        
+        let card = document.getElementById('forecastInfoCard');
+        if (!card) {
+            card = document.createElement('div');
+            card.id = 'forecastInfoCard';
+            card.className = 'card no-print';
+            card.style.display = 'none';
+            card.style.marginTop = '10px';
+            card.style.marginBottom = '10px';
+            // DRMと同じカラースキームを継承してアスキー文字風の表示に
+            card.innerHTML = `
+                <div class="card-header" onclick="app.toggleForecast()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 8px;">
+                    <span style="font-weight: bold; font-size: 13px;">☁️ WINDS/TEMP ALOFT FCST</span>
+                    <span id="fcst-toggle-icon" style="font-size: 12px;">▶</span>
+                </div>
+                <div id="forecastInfoContent" style="display: none; font-family: 'SF Mono', monospace; white-space: pre; font-size: 11px; padding: 12px; overflow-x: auto; background: var(--drm-bg); color: var(--drm-text); border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; margin-top: -5px;"></div>
+            `;
+            // DRMカードとステータスバーの間に挿入
+            headerCard.parentNode.insertBefore(card, headerCard.nextSibling);
+        }
+        
+        if (this.state.rawForecastText && this.state.rawForecastText.trim() !== '') {
+            card.style.display = 'block';
+            document.getElementById('forecastInfoContent').textContent = this.state.rawForecastText;
+        } else {
+            card.style.display = 'none';
+        }
+    },
+
     renderCrewMemo() {
         const crewContent = document.getElementById('crewContentEl'); if (!crewContent) return;
         let container = document.getElementById('crew_memo_container');
@@ -1223,13 +1267,12 @@ const app = {
     updateCrewMemo(val) { this.state.crewMemo = val; this.saveConfig(); this.renderCrewMemo(); },
 
     createWP(name, alt, tmp, zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, fuel, isaDevVal = '', mwtp = '---', wscp = '---') {
-        // 旧システムではテキストからの切り出しのみを行っていたが、v25.10.5からは動的計算するためパース値は参考に留める
         let isaDevNum = null, isaTmp = null;
         if (isaDevVal !== '' && tmp !== '---') { isaDevNum = parseInt(isaDevVal, 10); isaTmp = parseInt(tmp, 10) - isaDevNum; }
         return {
             name, plannedAlt: alt, actualAlt: '', estAltDisplay: alt, plannedTmp: tmp, actualTmp: '', estTmpDisplay: tmp,
             plannedZwind: zwind, actualZwind: '', estZwindDisplay: zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel: fuel,
-            isaDevNum, isaTmp, mwtp, wscp, calcIsaDev: null, // 動的ISA DEV保持用
+            isaDevNum, isaTmp, mwtp, wscp, calcIsaDev: null, 
             actualTime: '', actualFuelTTL: '', actualFuelCALC: '', calcEstTimeMin: null, calcEstFuel: null, estTimeDisplay: '', estFuelDisplay: 0, timeDiff: null, fuelDiff: null,
             cumDist: 0, rdis: 0, memo: '', memoOpen: false, turbulence: '', forecast: null
         };
@@ -1241,7 +1284,6 @@ const app = {
     toHHMM(m) { let tm = Math.round(m); return String(Math.floor(tm/60)%24).padStart(2,'0') + String(tm%60).padStart(2,'0'); },
     diffMin(act, est) { let d = act - est; while(d > 720) d -= 1440; while(d < -720) d += 1440; return d; },
 
-    // 気象データデコードエンジン
     formatWindTemp(raw) {
         if (!raw || raw === "---") return "---";
         const match = raw.match(/^(\d{2})(\d{2})([PM])?(\d{2})?$/);
@@ -1266,7 +1308,6 @@ const app = {
         return `${dirStr}/${spdStr}${tempStr}`;
     },
 
-    // 高度文字列からFeet(数値)を算出
     getAltFeet(altStr) {
         if (!altStr || altStr === '---') return null;
         let targetNum = parseInt(altStr.replace(/\D/g, ''));
@@ -1275,9 +1316,8 @@ const app = {
         return targetNum;
     },
 
-    // ★ ISA (国際標準大気) 温度計算エンジン
     getISA(altFeet) {
-        if (altFeet >= 36089) return -56.5; // 圏界面以上は一定
+        if (altFeet >= 36089) return -56.5; 
         return 15.0 - (0.0019812 * altFeet);
     },
 
@@ -1296,6 +1336,167 @@ const app = {
             else if (diff === minDiff) { if (alts[i] > closest) closest = alts[i]; } 
         }
         return String(closest);
+    },
+
+    processData(text) {
+        this.extractFlightMeta(text);
+        this.extractAndFormatHeaderInfo(text);
+        
+        const waypoints = [];
+        const rdisMatch = text.match(/([A-Z]{4})\s+\(RDIS\)\s+(\d{3,4}\.\d)/);
+        if (rdisMatch) { waypoints.push(this.createWP(rdisMatch[1], "---", "---", "---", "00.00", "---", "0.00", 0, 0, parseFloat(rdisMatch[2]), "", "---", "---")); }
+        
+        const regex = /(?:\(\s*\d+\s*\)\s+(?:-\s*){4,6}(?:\(\s*(-?\d+)\s*\))?[\s\S]{1,150}?)?(\d{2}\.\d{2})\s+[NS]\d{5}[EW]\d{5,6}[\s\.]+(\d+\.\d{2})\s+(CLM|DEC|\d{5})?\s*(\d{3}\.\d)\s*([+-]\d{2}|\.{1,2})?\s*(\d{6}|\.{1,2})?\s*([\d\/]{5}|\.{1,2})?[\s\S]{1,150}?(\d{2}\.\d{2})\s+([A-Z0-9\-]+)\s+\.\s+(\d{3})\s+FL.*?(?:\s+|\/)(\d{2}|\.{1,2})\s*$/gm;
+        
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+            const isaDevVal = match[1] ? match[1].replace(/\s+/g, '') : '';
+            const ctme = match[2];
+            const ztmeDisplay = match[3];
+            const ztmeMin = this.parseLegTime(ztmeDisplay);
+            const alt = match[4] || '---';
+            const plannedFuel = parseFloat(match[5]);
+            
+            const tmp = (match[6] && !match[6].includes('.')) ? match[6] : '---';
+            let zwind = '---'; 
+            if (match[7] && !match[7].includes('.')) zwind = match[7].substring(0,3) + '/' + match[7].substring(3,6);
+            const mwtp = (match[8] && !match[8].includes('.')) ? match[8] : '---';
+            const rtme = match[9];
+            const name = match[10]; 
+            const dist = parseInt(match[11], 10);
+            const wscp = (match[12] && !match[12].includes('.')) ? match[12] : '---';
+
+            waypoints.push(this.createWP(name, alt, tmp, zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel, isaDevVal, mwtp, wscp));
+        }
+        
+        if (waypoints.length <= 1) return alert("データを抽出できませんでした。正しいNAVLOGテキストか確認してください。");
+        if (waypoints.length > 1 && waypoints[1].rtme !== "---") {
+            const firstWpRtmeMin = this.parseLegTime(waypoints[1].rtme);
+            const firstWpZtmeMin = waypoints[1].ztmeMin;
+            waypoints[0].rtme = this.formatLegTime(firstWpRtmeMin + firstWpZtmeMin);
+        }
+
+        // =========================================================
+        // WINDS/TEMP ALOFT FCST 抽出・整形・紐付けロジック
+        // =========================================================
+        const fcstSection = text.split("-WINDS/TEMP ALOFT FCST")[1];
+        if (fcstSection) {
+            const lines = fcstSection.split('\n').map(l => l.trim());
+
+            let heights = [];
+            let nameList = [];
+            let dataList = [];
+            let isHeaderFound = false;
+            
+            // ★ 整形用（アスキーアート化）配列
+            let formattedLines = ["-WINDS/TEMP ALOFT FCST"];
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+
+                if (line === '' || line === '_' || line.includes('ipobs-aps') || line.includes('token=') || line.includes('ページ')) {
+                    continue;
+                }
+
+                if (line.includes('FD DATA') || line.includes('BASED ON')) {
+                    formattedLines.push(line);
+                    continue;
+                }
+
+                if (!isHeaderFound) {
+                    if (line.match(/^(\d{4,5}\s+)+\d{4,5}$/)) {
+                        heights = line.split(/\s+/);
+                        isHeaderFound = true;
+                        
+                        // 高度ヘッダーを綺麗に右揃えフォーマット
+                        let str = "".padEnd(8, " ");
+                        heights.forEach(h => str += h.padStart(8, " "));
+                        formattedLines.push(str);
+                    }
+                    continue;
+                }
+
+                let tokens = line.split(/\s+/).filter(t => t !== '');
+                let rowData = [];
+                let wptNames = [];
+
+                for (let t of tokens) {
+                    if (/^\d{4}([PM]\d{2})?$/.test(t)) {
+                        rowData.push(t);
+                    } else {
+                        nameList.push(t);
+                        wptNames.push(t);
+                    }
+                }
+
+                if (rowData.length > 0) {
+                    dataList.push(rowData);
+                    
+                    // データ行を綺麗にフォーマット（WPT名8文字左揃え、データ8文字右揃え）
+                    let str = wptNames.join(' ').padEnd(8, " ");
+                    rowData.forEach(d => str += d.padStart(8, " "));
+                    formattedLines.push(str);
+                }
+            }
+
+            // 抽出した美しい文字列をStateに保存
+            this.state.rawForecastText = formattedLines.join('\n');
+
+            let fcstPointer = 0;
+            let matchedCount = 0;
+            waypoints.forEach((wp, wpIdx) => {
+                if (wpIdx === 0) return; 
+                let foundIdx = nameList.indexOf(wp.name, fcstPointer);
+                if (foundIdx !== -1) {
+                    if (dataList[foundIdx]) {
+                        const rowValues = dataList[foundIdx];
+                        wp.forecast = {};
+                        heights.forEach((h, hIdx) => {
+                            wp.forecast[h] = rowValues[hIdx] || "---";
+                        });
+                        matchedCount++;
+                    }
+                    fcstPointer = foundIdx + 1;
+                }
+            });
+            console.log(`[Phase 1] WIND/TEMP 紐付け完了: ${matchedCount} / ${nameList.length}`);
+        }
+        // =========================================================
+
+        let cumDist = 0;
+        waypoints.forEach(wp => { cumDist += wp.dist; wp.cumDist = cumDist; });
+        let totalRouteDist = cumDist;
+        waypoints.forEach(wp => { wp.rdis = totalRouteDist - wp.cumDist; });
+        
+        if (this.state.flightMeta) { this.state.flightMeta.dist = totalRouteDist; }
+        this.state.waypoints = waypoints;
+        if (this.state.flightMeta && this.state.flightMeta.altns && this.state.flightMeta.altns.length > 0) {
+            this.state.altns = this.state.flightMeta.altns;
+            this.renderSettings();
+        }
+        
+        document.getElementById('statusBar').style.display = 'flex';
+        document.getElementById('bottomControls').style.display = 'block';
+        document.getElementById('inputArea').style.display = 'none';
+        document.getElementById('crewInfoCard').style.display = 'block';
+        
+        this.state.crewPanelOpen = true;
+        if(this.updateCrewPanelUI) this.updateCrewPanelUI();
+        
+        document.getElementById('tableBody').innerHTML = ''; 
+        this.calculate();
+        if(this.renderCrew) this.renderCrew();
+        this.renderTimes();
+        this.renderActualFuel();
+        if(this.renderPostFlightLog) this.renderPostFlightLog();
+        if(this.renderCrewMemo) this.renderCrewMemo();
+        
+        this.renderForecastCard(); // パース直後にも生成
+
+        this.render();
+        this.renderFlightMeta();
+
+        this.saveFlightToHistory();
     },
 
     update(i, field, val) {
@@ -1333,13 +1534,12 @@ const app = {
             wp.estZwindDisplay = wp.actualZwind !== '' ? wp.actualZwind : autoWind;
             wp.estTmpDisplay = wp.actualTmp !== '' ? wp.actualTmp : autoTmp;
             
-            // ★ 動的 ISA DEV 算出ロジック (v25.10.5)
             const currentAltFeet = this.getAltFeet(wp.estAltDisplay);
             if (currentAltFeet !== null && wp.estTmpDisplay && wp.estTmpDisplay !== '---') {
                 const currentTmpNum = parseInt(wp.estTmpDisplay, 10);
                 if (!isNaN(currentTmpNum)) {
                     const isaTemp = this.getISA(currentAltFeet);
-                    wp.calcIsaDev = Math.round(currentTmpNum - isaTemp); // DEV = Current Tmp - ISA Temp
+                    wp.calcIsaDev = Math.round(currentTmpNum - isaTemp); 
                 } else {
                     wp.calcIsaDev = null;
                 }
@@ -1401,7 +1601,6 @@ const app = {
                 const hasTurb = wp.turbulence && wp.turbulence !== '';
                 let turbBadge = hasTurb ? `<br><span class="turb-indicator turb-${wp.turbulence} no-print">〰️ ${wp.turbulence}</span><span class="turb-indicator-print" style="display:none;">[〰️${wp.turbulence}]</span>` : '';
 
-                // ★ ISA DEV 動的表示反映
                 let currentIsaDevDisplay = '()';
                 if (wp.calcIsaDev !== undefined && wp.calcIsaDev !== null) {
                     currentIsaDevDisplay = `(${wp.calcIsaDev >= 0 ? '+' : ''}${wp.calcIsaDev})`;
@@ -1493,7 +1692,6 @@ const app = {
                 tbody.appendChild(memoTr);
             });
         } else {
-            // DOMのみのアップデート処理
             this.state.waypoints.forEach((wp, i) => {
                 const altEl = document.getElementById(`wp_${i}_alt`);
                 if (altEl && document.activeElement !== altEl) { 
@@ -1533,7 +1731,6 @@ const app = {
                     }
                 }
 
-                // ★ ISA DEV DOM更新
                 const isaDevEl = document.getElementById(`wp_${i}_isaDev`);
                 if (isaDevEl) {
                     let currentIsaDevDisplay = '()';
@@ -1652,9 +1849,10 @@ const app = {
             waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
             crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
             crewMemo: '', takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
-            times: { bo: '', bi: '', tkof: '', ldg: '' }, actFob: '', actFod: '', postFlightLog: null, activeInput: null, flightHistory: oldHistory
+            times: { bo: '', bi: '', tkof: '', ldg: '' }, actFob: '', actFod: '', postFlightLog: null, activeInput: null, flightHistory: oldHistory, rawForecastText: ""
         };
         document.getElementById('flightHeader').style.display = 'none'; document.getElementById('headerInfoCard').style.display = 'none';
+        if (document.getElementById('forecastInfoCard')) document.getElementById('forecastInfoCard').style.display = 'none';
         document.getElementById('crewInfoCard').style.display = 'none'; document.getElementById('tableContainer').style.display = 'none';
         document.getElementById('statusBar').style.display = 'none'; document.getElementById('bottomControls').style.display = 'none';
         document.getElementById('settingsPanel').style.display = 'none'; document.getElementById('defaultTitle').style.display = 'block';

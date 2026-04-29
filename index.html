@@ -924,7 +924,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.10.0',
+    version: 'v25.10.2',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -1244,12 +1244,10 @@ const app = {
         return `${dirStr}/${spdStr}${tempStr}`;
     },
 
-    // ★ Phase 3: 目標高度に最も近い予報高度を見つけるエンジン
     getClosestAlt(forecastObj, targetAltStr) {
         if (!forecastObj || Object.keys(forecastObj).length === 0) return null;
         if (!targetAltStr || targetAltStr === '---') return null;
         
-        // "FL340" や "34000" を数値に変換
         let targetNum = parseInt(targetAltStr.replace(/\D/g, ''));
         if (targetAltStr.includes('FL') || targetNum < 1000) targetNum *= 100; 
         
@@ -1260,32 +1258,16 @@ const app = {
         for (let i = 1; i < alts.length; i++) {
             let diff = Math.abs(targetNum - alts[i]);
             if (diff < minDiff) { closest = alts[i]; minDiff = diff; } 
-            else if (diff === minDiff) { if (alts[i] > closest) closest = alts[i]; } // 差が同じなら高い方を優先
+            else if (diff === minDiff) { if (alts[i] > closest) closest = alts[i]; } 
         }
         return String(closest);
     },
 
     update(i, field, val) {
-        // ★ Phase 3: 高度変更時の自動反映ロジック
         if (field === 'actualAlt' && val !== '') { 
             let cleanVal = val.toUpperCase().replace(/^FL/, '').trim(); 
             val = /^\d{2,3}$/.test(cleanVal) ? cleanVal + "00" : cleanVal; 
-            
-            const wp = this.state.waypoints[i];
-            if (wp.forecast && Object.keys(wp.forecast).length > 0) {
-                const closestAlt = this.getClosestAlt(wp.forecast, val);
-                if (closestAlt) {
-                    const rawData = wp.forecast[closestAlt];
-                    if (rawData && rawData !== "---") {
-                        const decodedStr = this.formatWindTemp(rawData); // 例: "230/123 -44"
-                        const parts = decodedStr.split(' ');
-                        if (parts.length >= 1) wp.actualZwind = parts[0]; // 風向風速を自動入力
-                        if (parts.length >= 2) wp.actualTmp = parts[1];   // 気温を自動入力
-                    }
-                }
-            }
         }
-
         this.state.waypoints[i][field] = val; 
         if(i === 0 && field === 'actualTime') { this.state.times.tkof = val; this.renderTimes(); }
         this.calculate(); this.render();
@@ -1294,10 +1276,29 @@ const app = {
     calculate() {
         let pTimeMin = null, pFuel = null, cAlt = null, oAlt = null;
         this.state.waypoints.forEach((wp, i) => {
+            // [1] 高度伝播ロジック（手入力高度から、次の予定高度変更ポイントまで自動伝播）
             if (wp.actualAlt !== '') { wp.estAltDisplay = wp.actualAlt; cAlt = wp.actualAlt; oAlt = wp.plannedAlt; }
             else { if (cAlt !== null && wp.plannedAlt === oAlt) wp.estAltDisplay = cAlt; else { cAlt = null; oAlt = null; wp.estAltDisplay = wp.plannedAlt; } }
-            wp.estZwindDisplay = wp.actualZwind !== '' ? wp.actualZwind : wp.plannedZwind;
-            wp.estTmpDisplay = wp.actualTmp !== '' ? wp.actualTmp : wp.plannedTmp;
+            
+            // [2] ★ 修正：計画高度から「変更された場合のみ」予報データを見に行く（初期値の上書きを防ぐ）
+            let autoWind = wp.plannedZwind;
+            let autoTmp = wp.plannedTmp;
+            
+            if (wp.estAltDisplay !== wp.plannedAlt && wp.forecast && Object.keys(wp.forecast).length > 0) {
+                const closestAlt = this.getClosestAlt(wp.forecast, wp.estAltDisplay);
+                if (closestAlt) {
+                    const rawData = wp.forecast[closestAlt];
+                    if (rawData && rawData !== "---") {
+                        const decodedStr = this.formatWindTemp(rawData); 
+                        const parts = decodedStr.split(' ');
+                        if (parts.length >= 1) autoWind = parts[0];
+                        if (parts.length >= 2) autoTmp = parts[1];
+                    }
+                }
+            }
+            
+            wp.estZwindDisplay = wp.actualZwind !== '' ? wp.actualZwind : autoWind;
+            wp.estTmpDisplay = wp.actualTmp !== '' ? wp.actualTmp : autoTmp;
             
             let actFuelStr = this.state.fuelCalcBasis === 'TTL' ? (wp.actualFuelTTL || '') : (wp.actualFuelCALC || '');
             let actTimeStr = wp.actualTime || '';
@@ -1344,7 +1345,12 @@ const app = {
             this.state.waypoints.forEach((wp, i) => {
                 let tClass = (wp.timeDiff !== null) ? (wp.timeDiff > 0 ? 'diff-behind' : (wp.timeDiff < 0 ? 'diff-ahead' : '')) : '';
                 let fClass = (wp.fuelDiff !== null) ? (wp.fuelDiff > 0 ? 'diff-ahead' : (wp.fuelDiff < 0 ? 'diff-behind' : '')) : '';
-                const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt, isWind = wp.actualZwind !== '', isTmp = wp.actualTmp !== '';
+                
+                // ★ 修正：デフォルト値から変わっているかどうかで色分けを決定
+                const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt;
+                const isWind = wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind;
+                const isTmp = wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp;
+                
                 const hasMemo = wp.memo && wp.memo.trim() !== '';
                 const hasTurb = wp.turbulence && wp.turbulence !== '';
                 let turbBadge = hasTurb ? `<br><span class="turb-indicator turb-${wp.turbulence} no-print">〰️ ${wp.turbulence}</span><span class="turb-indicator-print" style="display:none;">[〰️${wp.turbulence}]</span>` : '';
@@ -1398,20 +1404,18 @@ const app = {
                 const turbOptions = ['S', 'LM', 'L', 'LP', 'M'];
                 const turbButtonsHtml = turbOptions.map(t => `<button class="turb-btn turb-btn-${t} ${wp.turbulence === t ? 'active' : ''}" onclick="app.setTurb(${i}, '${t}')">${t}</button>`).join('');
 
-                // ★ Phase 3: バッジ生成とハイライトの適用
                 let fcstHtml = '';
                 if (wp.forecast && Object.keys(wp.forecast).length > 0) {
                     fcstHtml = '<div class="forecast-container no-print">';
                     const sortedAlts = Object.keys(wp.forecast).sort((a, b) => parseInt(a) - parseInt(b));
                     
-                    // 現在飛んでいる（または入力された）高度に最も近い高度を見つける
-                    const currentAltStr = wp.actualAlt !== '' ? wp.actualAlt : wp.plannedAlt;
+                    const currentAltStr = wp.estAltDisplay;
                     const closestAlt = app.getClosestAlt(wp.forecast, currentAltStr);
 
                     sortedAlts.forEach(alt => {
-                        const flStr = 'FL' + String(parseInt(alt) / 100).padStart(3, '0'); // FL120表記
+                        const flStr = 'FL' + String(parseInt(alt) / 100).padStart(3, '0');
                         const displayVal = app.formatWindTemp(wp.forecast[alt]);
-                        const isCurrent = (alt === closestAlt); // 一致すればハイライト
+                        const isCurrent = (alt === closestAlt);
 
                         fcstHtml += `
                             <div class="wind-entry ${isCurrent ? 'highlight-alt' : ''}">
@@ -1440,10 +1444,13 @@ const app = {
             this.state.waypoints.forEach((wp, i) => {
                 const altEl = document.getElementById(`wp_${i}_alt`);
                 if (altEl && document.activeElement !== altEl) { altEl.value = wp.estAltDisplay; if (wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt) altEl.classList.add('input-modified'); else altEl.classList.remove('input-modified'); }
+                
+                // ★ 修正：再描画時も、風・気温がデフォルト値から変わっていれば色を変える
                 const windEl = document.getElementById(`wp_${i}_wind`);
-                if (windEl && document.activeElement !== windEl) { windEl.value = wp.estZwindDisplay; if (wp.actualZwind !== '') windEl.classList.add('input-modified'); else windEl.classList.remove('input-modified'); }
+                if (windEl && document.activeElement !== windEl) { windEl.value = wp.estZwindDisplay; if (wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind) windEl.classList.add('input-modified'); else windEl.classList.remove('input-modified'); }
+                
                 const tmpEl = document.getElementById(`wp_${i}_tmp`);
-                if (tmpEl && document.activeElement !== tmpEl) { tmpEl.value = wp.estTmpDisplay; if (wp.actualTmp !== '') tmpEl.classList.add('input-modified'); else tmpEl.classList.remove('input-modified'); }
+                if (tmpEl && document.activeElement !== tmpEl) { tmpEl.value = wp.estTmpDisplay; if (wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp) tmpEl.classList.add('input-modified'); else tmpEl.classList.remove('input-modified'); }
 
                 const isaDevEl = document.getElementById(`wp_${i}_isaDev`);
                 if (isaDevEl) {

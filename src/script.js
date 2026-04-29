@@ -13,7 +13,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.10.3',
+    version: 'v25.10.4',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -88,7 +88,7 @@ const app = {
         document.getElementById('inputArea').style.display = 'none';
         document.getElementById('crewInfoCard').style.display = 'block';
         
-        this.renderForecastCard(); 
+        this.renderForecastCard(); // 気象情報カードの表示
 
         if(this.updateCrewPanelUI) this.updateCrewPanelUI();
         if(this.renderCrew) this.renderCrew();
@@ -293,19 +293,16 @@ const app = {
         if (!card) {
             card = document.createElement('div');
             card.id = 'forecastInfoCard';
-            card.className = 'no-print';
-            card.style.cssText = 'margin-bottom: 10px; border-radius: 8px; overflow: hidden; border: 1px solid #333;';
+            // ★ CREWやDRMと完全に同じ「card」クラスを適用し、標準のデザインに合わせる
+            card.className = 'card no-print';
             
-            // ★ margin-top のめり込みを削除し、完全に独立した要素として描画
+            // ★ タイトルバーもCREW/DRMと同じ「card-header」クラスを使用。中身はDRM風(黒)を維持
             card.innerHTML = `
-                <div onclick="app.toggleForecast()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: var(--drm-bg); color: var(--drm-text); padding: 10px 15px; font-family: 'SF Mono', monospace;">
-                    <span style="font-weight: bold; font-size: 13px;">☁️ WINDS/TEMP ALOFT FCST</span>
-                    <span id="fcst-toggle-icon" style="font-size: 12px;">▶</span>
-                </div>
-                <div id="forecastInfoContent" style="display: none; font-family: 'SF Mono', monospace; white-space: pre; font-size: 11px; padding: 12px 15px; overflow-x: auto; background: var(--drm-bg); color: var(--drm-text); border-top: 1px dashed #333;"></div>
+                <h2 class="card-header" onclick="app.toggleForecast()">☁️ WINDS/TEMP ALOFT FCST <span id="fcst-toggle-icon" style="float: right;">▶</span></h2>
+                <div id="forecastInfoContent" class="card-content drm-content" style="display: none; font-family: 'SF Mono', monospace; white-space: pre; font-size: 11px; overflow-x: auto;"></div>
             `;
-            // DRMカードの前（Flight Status DashboardとDRMの間）に挿入
-            headerCard.parentNode.insertBefore(card, headerCard);
+            // ★ DRMカードの「後」に挿入
+            headerCard.parentNode.insertBefore(card, headerCard.nextSibling);
         }
         
         if (this.state.rawForecastText && this.state.rawForecastText.trim() !== '') {

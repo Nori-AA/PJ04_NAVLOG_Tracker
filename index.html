@@ -924,7 +924,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.10.1',
+    version: 'v25.10.0',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -1219,26 +1219,37 @@ const app = {
     toHHMM(m) { let tm = Math.round(m); return String(Math.floor(tm/60)%24).padStart(2,'0') + String(tm%60).padStart(2,'0'); },
     diffMin(act, est) { let d = act - est; while(d > 720) d -= 1440; while(d < -720) d += 1440; return d; },
 
+    // 気象データデコード (ex: 7337M45 -> 230/137 -45)
     formatWindTemp(raw) {
         if (!raw || raw === "---") return "---";
         const match = raw.match(/^(\d{2})(\d{2})([PM])?(\d{2})?$/);
         if (!match) return raw;
         
-        let dirCode = parseInt(match[1], 10), spdCode = parseInt(match[2], 10);
+        let dirCode = parseInt(match[1], 10);
+        let spdCode = parseInt(match[2], 10);
+        
         let dir, spd;
         if (dirCode === 99) { dir = "VRB"; spd = spdCode; } 
         else if (dirCode >= 50) { dir = (dirCode - 50) * 10; spd = spdCode + 100; } 
         else { dir = dirCode * 10; spd = spdCode; }
         
-        let dirStr = dir === "VRB" ? "VRB" : String(dir).padStart(3, '0'), spdStr = String(spd).padStart(3, '0');
-        let tempStr = (match[3] && match[4]) ? " " + (match[3] === 'M' ? '-' : '') + match[4] : "";
+        let dirStr = dir === "VRB" ? "VRB" : String(dir).padStart(3, '0');
+        let spdStr = String(spd).padStart(3, '0');
+        
+        let tempStr = "";
+        if (match[3] && match[4]) {
+            let sign = match[3] === 'M' ? '-' : '';
+            tempStr = " " + sign + match[4];
+        }
         return `${dirStr}/${spdStr}${tempStr}`;
     },
 
+    // ★ Phase 3: 目標高度に最も近い予報高度を見つけるエンジン
     getClosestAlt(forecastObj, targetAltStr) {
         if (!forecastObj || Object.keys(forecastObj).length === 0) return null;
         if (!targetAltStr || targetAltStr === '---') return null;
         
+        // "FL340" や "34000" を数値に変換
         let targetNum = parseInt(targetAltStr.replace(/\D/g, ''));
         if (targetAltStr.includes('FL') || targetNum < 1000) targetNum *= 100; 
         
@@ -1249,16 +1260,32 @@ const app = {
         for (let i = 1; i < alts.length; i++) {
             let diff = Math.abs(targetNum - alts[i]);
             if (diff < minDiff) { closest = alts[i]; minDiff = diff; } 
-            else if (diff === minDiff) { if (alts[i] > closest) closest = alts[i]; } 
+            else if (diff === minDiff) { if (alts[i] > closest) closest = alts[i]; } // 差が同じなら高い方を優先
         }
         return String(closest);
     },
 
     update(i, field, val) {
+        // ★ Phase 3: 高度変更時の自動反映ロジック
         if (field === 'actualAlt' && val !== '') { 
             let cleanVal = val.toUpperCase().replace(/^FL/, '').trim(); 
             val = /^\d{2,3}$/.test(cleanVal) ? cleanVal + "00" : cleanVal; 
+            
+            const wp = this.state.waypoints[i];
+            if (wp.forecast && Object.keys(wp.forecast).length > 0) {
+                const closestAlt = this.getClosestAlt(wp.forecast, val);
+                if (closestAlt) {
+                    const rawData = wp.forecast[closestAlt];
+                    if (rawData && rawData !== "---") {
+                        const decodedStr = this.formatWindTemp(rawData); // 例: "230/123 -44"
+                        const parts = decodedStr.split(' ');
+                        if (parts.length >= 1) wp.actualZwind = parts[0]; // 風向風速を自動入力
+                        if (parts.length >= 2) wp.actualTmp = parts[1];   // 気温を自動入力
+                    }
+                }
+            }
         }
+
         this.state.waypoints[i][field] = val; 
         if(i === 0 && field === 'actualTime') { this.state.times.tkof = val; this.renderTimes(); }
         this.calculate(); this.render();
@@ -1269,26 +1296,8 @@ const app = {
         this.state.waypoints.forEach((wp, i) => {
             if (wp.actualAlt !== '') { wp.estAltDisplay = wp.actualAlt; cAlt = wp.actualAlt; oAlt = wp.plannedAlt; }
             else { if (cAlt !== null && wp.plannedAlt === oAlt) wp.estAltDisplay = cAlt; else { cAlt = null; oAlt = null; wp.estAltDisplay = wp.plannedAlt; } }
-            
-            // ★ 今回の修正: そのWPTの「推測高度」に合わせて、動的に予測風・気温を算出する
-            let autoWind = wp.plannedZwind;
-            let autoTmp = wp.plannedTmp;
-            
-            if (wp.forecast && Object.keys(wp.forecast).length > 0) {
-                const closestAlt = this.getClosestAlt(wp.forecast, wp.estAltDisplay);
-                if (closestAlt) {
-                    const rawData = wp.forecast[closestAlt];
-                    if (rawData && rawData !== "---") {
-                        const decodedStr = this.formatWindTemp(rawData); 
-                        const parts = decodedStr.split(' ');
-                        if (parts.length >= 1) autoWind = parts[0];
-                        if (parts.length >= 2) autoTmp = parts[1];
-                    }
-                }
-            }
-            
-            wp.estZwindDisplay = wp.actualZwind !== '' ? wp.actualZwind : autoWind;
-            wp.estTmpDisplay = wp.actualTmp !== '' ? wp.actualTmp : autoTmp;
+            wp.estZwindDisplay = wp.actualZwind !== '' ? wp.actualZwind : wp.plannedZwind;
+            wp.estTmpDisplay = wp.actualTmp !== '' ? wp.actualTmp : wp.plannedTmp;
             
             let actFuelStr = this.state.fuelCalcBasis === 'TTL' ? (wp.actualFuelTTL || '') : (wp.actualFuelCALC || '');
             let actTimeStr = wp.actualTime || '';
@@ -1335,12 +1344,7 @@ const app = {
             this.state.waypoints.forEach((wp, i) => {
                 let tClass = (wp.timeDiff !== null) ? (wp.timeDiff > 0 ? 'diff-behind' : (wp.timeDiff < 0 ? 'diff-ahead' : '')) : '';
                 let fClass = (wp.fuelDiff !== null) ? (wp.fuelDiff > 0 ? 'diff-ahead' : (wp.fuelDiff < 0 ? 'diff-behind' : '')) : '';
-                
-                const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt;
-                // ★ 今回の修正: 推測風・推測気温が計画値から変わっていたら色を変える
-                const isWind = wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind;
-                const isTmp = wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp;
-                
+                const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt, isWind = wp.actualZwind !== '', isTmp = wp.actualTmp !== '';
                 const hasMemo = wp.memo && wp.memo.trim() !== '';
                 const hasTurb = wp.turbulence && wp.turbulence !== '';
                 let turbBadge = hasTurb ? `<br><span class="turb-indicator turb-${wp.turbulence} no-print">〰️ ${wp.turbulence}</span><span class="turb-indicator-print" style="display:none;">[〰️${wp.turbulence}]</span>` : '';
@@ -1394,19 +1398,20 @@ const app = {
                 const turbOptions = ['S', 'LM', 'L', 'LP', 'M'];
                 const turbButtonsHtml = turbOptions.map(t => `<button class="turb-btn turb-btn-${t} ${wp.turbulence === t ? 'active' : ''}" onclick="app.setTurb(${i}, '${t}')">${t}</button>`).join('');
 
+                // ★ Phase 3: バッジ生成とハイライトの適用
                 let fcstHtml = '';
                 if (wp.forecast && Object.keys(wp.forecast).length > 0) {
                     fcstHtml = '<div class="forecast-container no-print">';
                     const sortedAlts = Object.keys(wp.forecast).sort((a, b) => parseInt(a) - parseInt(b));
                     
-                    // ★ 今回の修正: バッジのハイライト基準を「推測高度」に変更
-                    const currentAltStr = wp.estAltDisplay;
+                    // 現在飛んでいる（または入力された）高度に最も近い高度を見つける
+                    const currentAltStr = wp.actualAlt !== '' ? wp.actualAlt : wp.plannedAlt;
                     const closestAlt = app.getClosestAlt(wp.forecast, currentAltStr);
 
                     sortedAlts.forEach(alt => {
-                        const flStr = 'FL' + String(parseInt(alt) / 100).padStart(3, '0');
+                        const flStr = 'FL' + String(parseInt(alt) / 100).padStart(3, '0'); // FL120表記
                         const displayVal = app.formatWindTemp(wp.forecast[alt]);
-                        const isCurrent = (alt === closestAlt);
+                        const isCurrent = (alt === closestAlt); // 一致すればハイライト
 
                         fcstHtml += `
                             <div class="wind-entry ${isCurrent ? 'highlight-alt' : ''}">
@@ -1435,13 +1440,10 @@ const app = {
             this.state.waypoints.forEach((wp, i) => {
                 const altEl = document.getElementById(`wp_${i}_alt`);
                 if (altEl && document.activeElement !== altEl) { altEl.value = wp.estAltDisplay; if (wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt) altEl.classList.add('input-modified'); else altEl.classList.remove('input-modified'); }
-                
-                // ★ 今回の修正: 再描画時も、風・気温が変わっていれば色を変える
                 const windEl = document.getElementById(`wp_${i}_wind`);
-                if (windEl && document.activeElement !== windEl) { windEl.value = wp.estZwindDisplay; if (wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind) windEl.classList.add('input-modified'); else windEl.classList.remove('input-modified'); }
-                
+                if (windEl && document.activeElement !== windEl) { windEl.value = wp.estZwindDisplay; if (wp.actualZwind !== '') windEl.classList.add('input-modified'); else windEl.classList.remove('input-modified'); }
                 const tmpEl = document.getElementById(`wp_${i}_tmp`);
-                if (tmpEl && document.activeElement !== tmpEl) { tmpEl.value = wp.estTmpDisplay; if (wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp) tmpEl.classList.add('input-modified'); else tmpEl.classList.remove('input-modified'); }
+                if (tmpEl && document.activeElement !== tmpEl) { tmpEl.value = wp.estTmpDisplay; if (wp.actualTmp !== '') tmpEl.classList.add('input-modified'); else tmpEl.classList.remove('input-modified'); }
 
                 const isaDevEl = document.getElementById(`wp_${i}_isaDev`);
                 if (isaDevEl) {

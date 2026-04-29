@@ -13,7 +13,7 @@ window.addEventListener('keydown', function(event) {
 });
 
 const app = {
-    version: 'v25.10.3',
+    version: 'v25.10.4',
     state: { 
         waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
         crew: [{ id: 1, duty: 'PIC', empNo: '42482', name: 'NORIYUKI ARAI', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
@@ -308,7 +308,7 @@ const app = {
     toHHMM(m) { let tm = Math.round(m); return String(Math.floor(tm/60)%24).padStart(2,'0') + String(tm%60).padStart(2,'0'); },
     diffMin(act, est) { let d = act - est; while(d > 720) d -= 1440; while(d < -720) d += 1440; return d; },
 
-    // 気象データデコード (ex: 7337M45 -> 230/137 -45)
+    // 気象データデコードエンジン (ex: 7337M45 -> 230/137 -45)
     formatWindTemp(raw) {
         if (!raw || raw === "---") return "---";
         const match = raw.match(/^(\d{2})(\d{2})([PM])?(\d{2})?$/);
@@ -369,7 +369,7 @@ const app = {
             if (wp.actualAlt !== '') { wp.estAltDisplay = wp.actualAlt; cAlt = wp.actualAlt; oAlt = wp.plannedAlt; }
             else { if (cAlt !== null && wp.plannedAlt === oAlt) wp.estAltDisplay = cAlt; else { cAlt = null; oAlt = null; wp.estAltDisplay = wp.plannedAlt; } }
             
-            // [2] ★ 修正: 計画高度から「ズレた場合のみ」予報データを引っ張ってくる（初期データの保護）
+            // [2] ★ 修正：計画高度から「ズレた場合のみ」予報データを引っ張ってくる（初期データの保護）
             let autoWind = wp.plannedZwind;
             let autoTmp = wp.plannedTmp;
             
@@ -435,7 +435,7 @@ const app = {
                 let tClass = (wp.timeDiff !== null) ? (wp.timeDiff > 0 ? 'diff-behind' : (wp.timeDiff < 0 ? 'diff-ahead' : '')) : '';
                 let fClass = (wp.fuelDiff !== null) ? (wp.fuelDiff > 0 ? 'diff-ahead' : (wp.fuelDiff < 0 ? 'diff-behind' : '')) : '';
                 
-                // ★ 変更を検知するフラグ
+                // 変更を検知するフラグ
                 const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt;
                 const isWind = wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind;
                 const isTmp = wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp;
@@ -461,14 +461,14 @@ const app = {
                         <td class="log-td col-wp sticky-col-wp" style="padding: 2px;"><div class="wp-cell" onclick="app.toggleMemo(${i})"><strong>${wp.name}</strong>${turbBadge}${hasMemo ? '<br><span style="font-size:11px;">📝</span>' : ''}</div></td>
                         <td class="log-td col-alt">
                             <div style="display:flex; flex-direction:column; align-items:center;">
-                                <input type="text" id="wp_${i}_alt" class="input-ref ${isAlt ? 'input-modified' : ''}" style="width: 100%; text-align: center; ${isAlt ? 'font-weight: bold;' : ''}" value="${wp.estAltDisplay}" onchange="app.update(${i}, 'actualAlt', this.value)">
-                                <span id="wp_${i}_alt_orig" style="font-size: 9px; color: var(--text-faint); text-decoration: line-through; line-height: 1; margin-top: 2px; ${isAlt ? '' : 'visibility: hidden;'}">${wp.plannedAlt}</span>
+                                <input type="text" id="wp_${i}_alt" class="input-ref ${isAlt ? 'input-modified' : ''}" style="width: 100%; text-align: center;" value="${wp.estAltDisplay}" onchange="app.update(${i}, 'actualAlt', this.value)">
+                                <span id="wp_${i}_alt_orig" style="font-size: 9px; color: var(--text-faint); text-decoration: line-through; line-height: 1; margin-top: 1px; ${isAlt ? '' : 'display: none;'}">${wp.plannedAlt}</span>
                             </div>
                         </td>
                         <td class="log-td col-wind"><div class="input-stacked">
-                            <input type="text" id="wp_${i}_wind" class="input-ref input-wind ${isWind ? 'input-modified' : ''}" style="${isWind ? 'font-weight: bold;' : ''}" value="${wp.estZwindDisplay}" onchange="app.update(${i}, 'actualZwind', this.value)">
+                            <input type="text" id="wp_${i}_wind" class="input-ref input-wind ${isWind ? 'input-modified' : ''}" value="${wp.estZwindDisplay}" onchange="app.update(${i}, 'actualZwind', this.value)">
                             <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <input type="text" id="wp_${i}_tmp" class="input-ref input-tmp ${isTmp ? 'input-modified' : ''}" style="${isTmp ? 'font-weight: bold;' : ''}" value="${wp.estTmpDisplay}" onchange="app.update(${i}, 'actualTmp', this.value)">
+                                <input type="text" id="wp_${i}_tmp" class="input-ref input-tmp ${isTmp ? 'input-modified' : ''}" value="${wp.estTmpDisplay}" onchange="app.update(${i}, 'actualTmp', this.value)">
                                 <span id="wp_${i}_isaDev" class="isa-dev-text">${currentIsaDevDisplay}</span>
                             </div>
                         </div></td>
@@ -544,18 +544,16 @@ const app = {
                     altEl.value = wp.estAltDisplay; 
                     if (wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt) {
                         altEl.classList.add('input-modified'); 
-                        altEl.style.fontWeight = 'bold';
                     } else {
                         altEl.classList.remove('input-modified');
-                        altEl.style.fontWeight = 'normal';
                     }
                 }
                 const altOrigEl = document.getElementById(`wp_${i}_alt_orig`);
                 if (altOrigEl) {
                     if (wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt) {
-                        altOrigEl.style.visibility = 'visible';
+                        altOrigEl.style.display = 'block';
                     } else {
-                        altOrigEl.style.visibility = 'hidden';
+                        altOrigEl.style.display = 'none';
                     }
                 }
                 
@@ -564,10 +562,8 @@ const app = {
                     windEl.value = wp.estZwindDisplay; 
                     if (wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind) {
                         windEl.classList.add('input-modified'); 
-                        windEl.style.fontWeight = 'bold';
                     } else {
                         windEl.classList.remove('input-modified');
-                        windEl.style.fontWeight = 'normal';
                     }
                 }
                 
@@ -576,10 +572,8 @@ const app = {
                     tmpEl.value = wp.estTmpDisplay; 
                     if (wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp) {
                         tmpEl.classList.add('input-modified'); 
-                        tmpEl.style.fontWeight = 'bold';
                     } else {
                         tmpEl.classList.remove('input-modified');
-                        tmpEl.style.fontWeight = 'normal';
                     }
                 }
 

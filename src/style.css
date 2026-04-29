@@ -569,3 +569,37 @@ html.theme-dark .wind-badge { background: #222; color: #888; border-color: #444;
 html.theme-dark .wind-data { background: #1a1a1a; color: #aaa; border-color: #444; }
 html.theme-dark .highlight-alt .wind-badge,
 html.theme-dark .highlight-alt .wind-data { font-weight: 900; color: #eee; }
+
+/* =========================================
+   フェーズ3修正: 青色ボックスの完全廃止と太字化
+   ========================================= */
+
+/* ① 入力欄（ALT/WIND/TMP）が変更された際の青色背景を消し、太文字にする */
+.input-modified {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    font-weight: 900 !important;
+    color: var(--text-color) !important;
+}
+
+/* 選択時（フォーカス時）は通常通り枠を出す */
+.input-ref:focus {
+    border: 1px solid var(--accent-color) !important;
+    background: var(--input-bg) !important;
+}
+
+/* ② 展開される予報バッジのハイライトも青色を廃止し、太文字にする */
+.highlight-alt .wind-badge,
+.highlight-alt .wind-data {
+    background: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    font-weight: 900 !important;
+    border-color: var(--border-color) !important;
+}
+
+/* ダークモード(NGT)用のバッジハイライト（太文字＋白文字） */
+html.theme-dark .highlight-alt .wind-badge,
+html.theme-dark .highlight-alt .wind-data {
+    background: var(--input-bg) !important;
+    color: #ffffff !important;
+}

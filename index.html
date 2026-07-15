@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NAVLOG">
+    
+    <title>NAVLOG Tracker V26.4.0</title>
+
+    <link rel="icon" href="data:,">
+    <link rel="apple-touch-icon" href="data:,">
+    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiTkFWTE9HIiwic2hvcnRfbmFtZSI6Ik5BVkxPRyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIn0=">
+
+    <script>
+        try {
+            if (localStorage.getItem('navlog_theme') === 'dark') {
+                document.documentElement.classList.add('theme-dark');
+            }
+        } catch (e) {}
+    </script>
+    
+    
+
+    <style>
+/**
+ * NAVLOG Tracker - style.css
+ * Version: v26.4.2
+ */
+
+/* ==========================================
+   1. VARIABLES & THEMES
+   ========================================== */
+:root {
+    --bg-color: #f0f2f5; --card-bg: #ffffff; --text-color: #2c3e50;
+    --text-muted: #555555; --text-faint: #888888; --primary-color: #1a252f;
+    --accent-color: #3498db; --danger-color: #e74c3c; --alert-text: #ff6b6b;
+    --success-color: #2ecc71; --border-color: #bdc3c7; --table-header-bg: #e8ecef;
+    --ahead-bg: #d4efdf; --ahead-color: #1e8449; --behind-bg: #fadbd8;
+    --behind-color: #c0392b; --modified-bg: #e1f5fe; --modified-text: #1a252f;
+    --drm-bg: #0c0c0c; --drm-text: #00ff41; --input-bg: #ffffff;
+    --input-border: #ccc; --actual-col-bg: #fff9e6; --memo-bg: #eef2f5;
+    --sb-height: 85px;
+    --warning-bg: #5c2a2a;
+}
+
+html.theme-dark {
+    --bg-color: #121212; --card-bg: #1c1c1e; --text-color: #d1d1d6;
+    --text-muted: #8e8e93; --text-faint: #636366; --primary-color: #2c2c2e;
+    --accent-color: #2980b9; --danger-color: #d32f2f; --alert-text: #ff5252;
+    --success-color: #27ae60; --border-color: #3a3a3c; --table-header-bg: #2c2c2e;
+    --ahead-bg: #1b4332; --ahead-color: #81c784; --behind-bg: #4a1c1c;
+    --behind-color: #e57373; --modified-bg: #1e3a5f; --modified-text: #64b5f6;
+    --drm-bg: #000000; --drm-text: #00e676; --input-bg: #2c2c2e;
+    --input-border: #48484a; --actual-col-bg: #24221d; --memo-bg: #2c2c2e;
+    --warning-bg: #5c2a2a;
+}
+
+/* ==========================================
+   2. BASE STYLES
+   ========================================== */
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body::before {
+    content: ""; position: fixed; top: 0; left: 0; right: 0;
+    height: env(safe-area-inset-top, 0px); background-color: var(--bg-color); z-index: 1001;
+}
+
+body {
+    font-family: -apple-system, sans-serif; background-color: var(--bg-color); color: var(--text-color);
+    padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom) 15px; line-height: 1.4; min-width: 1000px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+h1.default-title { font-size: 20px; margin-bottom: 10px; color: var(--primary-color); }
+
+/* ★追加: 通常時（画面表示時）は印刷用テキストエリアを隠す */
+#print-text-area {
+    display: none;
+}
+
+/* ==========================================
+   3. HEADER & STATUS BAR
+   ========================================== */
+body > div[style*="position: sticky"] {
+    top: env(safe-area-inset-top, 5px) !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    border-radius: 10px !important;
+}
+
+.print-header-container { display: block; width: 100%; }
+.print-left-col, .print-right-col { width: 100%; }
+
+.flight-header { 
+    background: var(--primary-color); 
+    color: white; 
+    border-radius: 10px 10px 0 0 !important; 
+    padding: 8px 15px !important; 
+    margin-bottom: 0 !important; 
+    box-shadow: none !important; 
+    border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+}
+.fh-title { font-size: 11px; color: #95a5a6; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; font-weight: bold; letter-spacing: 0.5px; }
+.fh-details { 
+    display: flex; justify-content: space-between; align-items: flex-start; 
+    flex-wrap: nowrap; gap: 10px; width: 100%; 
+}
+.fh-item { display: flex; flex-direction: column; white-space: nowrap; }
+.fh-val { font-size: 16px; font-weight: bold; font-family: 'SF Mono', Menlo, monospace; color: #fff; }
+
+.status-bar {
+    padding: 4px 10px !important; border-radius: 0 0 10px 10px !important; margin-bottom: 0 !important; margin-top: 0 !important;
+    background: var(--primary-color); color: white; box-shadow: none !important;
+    position: relative !important; top: auto !important; z-index: 1000; transform: translateZ(0);
+    transition: background-color 0.3s ease; min-height: auto !important;
+}
+.status-bar.status-warning { background-color: var(--warning-bg) !important; }
+.dest-warning-badge { font-size: 10px; font-weight: bold; color: white; background-color: var(--danger-color); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+
+.status-bar > div { gap: 8px !important; }
+.status-col { gap: 4px !important; }
+.status-section { display: flex; flex-direction: column; margin-bottom: 0 !important; }
+.status-title { display: block; font-size: 9px !important; opacity: 0.7; font-weight: bold; text-transform: uppercase; margin-bottom: 1px !important; text-align: left; }
+.status-content { margin-left: 15px; }
+.status-value { font-size: 22px; font-family: 'SF Mono', monospace; letter-spacing: -0.5px; color: #fff; font-weight: bold; line-height: 1; }
+.status-badge { padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; }
+
+.input-group-inline { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; }
+.input-label { font-size: 11px; font-weight: bold; color: #aed6f1; width: 35px; text-align: left; }
+.status-input { background: transparent; border: none; color: #fff; font-size: 13px !important; font-family: 'SF Mono', monospace; font-weight: bold; text-align: center; padding: 0 4px !important; outline: none; height: 22px !important; }
+.status-input::placeholder { color: rgba(255,255,255,0.3); }
+.status-input:focus { border-bottom: 1px solid #fff; }
+.input-time { width: 60px; }
+.fuel-input { width: 75px; }
+
+.status-btn-area { gap: 4px !important; }
+.panel-toggle-btn { padding: 4px 8px !important; font-size: 10px !important; }
+#sb-avail-fuel-container { padding: 3px 8px !important; gap: 2px !important; }
+#dropdownPanels { border-radius: 0 0 10px 10px !important; }
+
+/* ==========================================
+   4. PANELS (CREW & PFL, DRM)
+   ========================================== */
+.card-crew { background: var(--card-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
+.crew-header { background: var(--primary-color); padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+.crew-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
+.crew-content { padding: 10px; }
+.crew-table { width: auto; border-collapse: collapse; margin-left: 15px; }
+.crew-table th { font-size: 10px; color: var(--text-faint); text-align: center; padding: 4px 6px; }
+.crew-table td { padding: 4px 6px; text-align: center; vertical-align: middle; border: none; }
+
+.pfl-section { margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 15px; padding-left: 15px; }
+.pfl-header-controls { display: flex; margin-bottom: 8px; align-items: center; }
+.pfl-toggle-group { display: flex; background: rgba(0,0,0,0.1); border-radius: 6px; padding: 3px; }
+html.theme-dark .pfl-toggle-group { background: rgba(255,255,255,0.1); }
+.pfl-btn { background: transparent; color: var(--text-color); border: none; padding: 4px 12px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+.pfl-btn.active { background: var(--accent-color); color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.pfl-scroll-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
+.pfl-table { width: max-content; border-collapse: collapse; text-align: center; }
+.pfl-table th { font-size: 9px; color: var(--text-faint); padding: 0 4px 4px 4px; font-weight: normal; }
+.pfl-table td { padding: 0 2px; border: none; }
+.pfl-input { width: 55px; text-align: center; font-size: 12px; padding: 5px 2px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); border-radius: 4px; font-family: 'SF Mono', monospace; }
+.pfl-input:focus { border-color: var(--accent-color); outline: none; }
+.pfl-input.wide { width: 75px; }
+.pfl-input.narrow { width: 45px; }
+#pfl_day { width: 75px; }
+#pfl_reg { width: 65px; }
+
+.card-drm { background: var(--drm-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); overflow: hidden; }
+.drm-header { background: #222; padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+.drm-title { color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
+.drm-content { display: block; font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: var(--drm-text); padding: 15px; max-height: 350px; overflow: auto; -webkit-overflow-scrolling: touch; }
+
+/* ==========================================
+   5. DATA TABLE (NAVLOG)
+   ========================================== */
+.table-container {
+    background: var(--card-bg); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px;
+    position: relative; z-index: 10;
+}
+table { width: 100%; min-width: 970px; margin: 0 auto; table-layout: fixed; border-collapse: separate; border-spacing: 0; }
+
+.table-container th {
+    background: var(--table-header-bg); position: sticky; 
+    top: calc(env(safe-area-inset-top, 5px) + var(--sb-height)) !important;
+    z-index: 900; font-size: 11px; color: var(--text-muted); font-weight: bold; box-shadow: 0 2px 2px rgba(0,0,0,0.05);
+}
+
+.header-landscape { display: inline; }
+.header-portrait { display: none; }
+
+.sticky-col-wp { position: sticky; left: 0; background-color: var(--card-bg); z-index: 800; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+.table-container th.sticky-col-wp { background-color: var(--table-header-bg); z-index: 950; }
+.table-container th, .table-container td { padding: 8px 2px; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); text-align: center; font-size: 13px; vertical-align: middle; overflow: hidden; }
+
+.col-wp   { width: 90px; min-width: 90px; }
+.col-alt  { width: 80px; min-width: 80px; }
+.col-wind { width: 95px; min-width: 95px; }
+.col-mwtp { width: 70px; min-width: 70px; }
+.col-ctme { width: 95px; min-width: 95px; }
+.col-ztme { width: 70px; min-width: 70px; }
+.col-main { width: 90px; min-width: 90px; }
+.col-diff { width: 55px; min-width: 55px; }
+.col-actual { background-color: var(--actual-col-bg); }
+
+/* ==========================================
+   6. COMPONENTS (INPUTS, BUTTONS, NUMPAD, FORECAST, TURB)
+   ========================================== */
+.input-crew { width: 100%; padding: 6px; border: 1px solid var(--input-border); border-radius: 4px; font-size: 13px; text-align: center; background: var(--input-bg); color: var(--text-color); }
+.input-crew:focus { background: var(--card-bg); border-color: var(--accent-color); outline: none; }
+.input-crew-name { text-align: left !important; padding-left: 10px; }
+
+.input-ref { width: 100%; text-align: center; border: 1px dashed transparent; background: transparent; color: var(--text-color); font-size: 12px; padding: 2px; border-radius: 4px; box-sizing: border-box; }
+.input-ref:focus { border: 1px solid var(--accent-color) !important; background: var(--input-bg) !important; outline: none; }
+
+.input-modified { background-color: transparent !important; border-color: transparent !important; font-weight: 900 !important; color: #000000 !important; }
+html.theme-dark .input-modified { color: #ffffff !important; }
+
+.input-ref.input-wind { width: 75px !important; margin: 0 auto; }
+.input-ref.input-tmp { width: 36px !important; min-width: 36px !important; max-width: 36px !important; flex: 0 0 36px !important; padding: 2px 2px 2px 0 !important; text-align: right !important; }
+.isa-dev-text { font-size: 10px; color: var(--text-muted); text-align: left; white-space: nowrap; margin-left: 2px; flex: 0 0 auto; }
+
+.input-actual { width: 75px; height: 38px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 6px; font-size: 16px; font-weight: bold; background: var(--input-bg); color: var(--text-color); display: block; }
+.input-actual-half { width: 75px; height: 18px; margin: 0 auto; text-align: center; border: 1px solid var(--input-border); border-radius: 4px; font-size: 13px; font-weight: bold; background: var(--input-bg); color: var(--text-color); padding: 0; display: block; }
+.input-actual-half::placeholder { font-weight: normal; font-size: 10px; color: var(--text-faint); }
+
+input[readonly] { opacity: 1 !important; -webkit-text-fill-color: #000000 !important; background-color: #ffffff !important; border: 1px solid var(--input-border) !important; cursor: pointer; }
+html.theme-dark input[readonly] { -webkit-text-fill-color: #ffffff !important; background-color: #1a1a1a !important; border: 1px solid var(--border-color) !important; }
+
+input[type="number"]::-webkit-outer-spin-button, 
+input[type="number"]::-webkit-inner-spin-button { 
+    -webkit-appearance: none; 
+    appearance: none; 
+    margin: 0; 
+}
+input[type="number"] { -moz-appearance: textfield; }
+input, textarea, select { padding: 6px; border: 1px solid var(--input-border); border-radius: 4px; font-size: 14px; background-color: var(--input-bg); color: var(--text-color); }
+
+.input-stacked { display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; }
+.fuel-primary { font-size: 14px; font-weight: bold; }
+.fuel-secondary { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+.wp-cell { cursor: pointer; padding: 6px 2px; border-radius: 6px; user-select: none; display: block; }
+.wp-cell:active { background-color: var(--border-color); }
+.memo-textarea { width: 100%; border: 1px solid var(--input-border); border-radius: 4px; padding: 8px; font-size: 14px; font-family: inherit; resize: vertical; outline: none; background-color: var(--input-bg); color: var(--text-color); }
+.memo-textarea:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
+
+.strikethrough-est { text-decoration: line-through !important; color: var(--text-faint) !important; opacity: 0.6; }
+
+.card-footer { background: var(--card-bg); border-radius: 10px; padding: 12px; margin-bottom: 40px; }
+.config-panel { display: flex; gap: 15px; align-items: center; justify-content: space-between; }
+button { padding: 12px 18px; border: none; border-radius: 8px; background: var(--accent-color); color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
+.btn-danger { background: var(--danger-color); }
+.btn-secondary { background: #607d8b; }
+.btn-small { padding: 6px 10px; font-size: 12px; }
+.input-group { display: flex; flex-direction: column; gap: 5px; }
+.input-group label { font-size: 11px; font-weight: bold; color: var(--text-muted); }
+
+.settings-wrapper { display: flex; flex-wrap: wrap; gap: 15px; }
+.settings-group { flex: 1 1 250px; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.05); }
+html.theme-dark .settings-group { background: rgba(255,255,255,0.05); }
+h3.settings-group-title { font-size: 13px; font-weight: bold; color: var(--accent-color); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; text-transform: uppercase; margin-top: 0; }
+
+.clipboard-btn { display: block; width: 100%; background: #2980b9; color: white; padding: 25px; border-radius: 10px; text-align: center; font-weight: bold; font-size: 20px; cursor: pointer; box-shadow: 0 6px 12px rgba(41, 128, 185, 0.3); margin-bottom: 15px; border: none; }
+.clipboard-btn:active { background: #1c5980; transform: translateY(2px); box-shadow: 0 2px 6px rgba(41, 128, 185, 0.3); }
+.file-upload-btn { display: block; width: 100%; background: #7f8c8d; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 14px; cursor: pointer; border: none; }
+.altn-warning-badge { margin-left: 8px; font-size: 10px; font-weight: bold; color: var(--alert-text); background: rgba(255, 107, 107, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255, 107, 107, 0.4); white-space: nowrap; }
+
+.numpad-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: transparent; z-index: 9998; display: none; }
+.numpad-container { position: absolute; width: 220px; background: #1c1c1e; border-radius: 8px; padding: 8px; display: none; grid-template-columns: repeat(3, 1fr); gap: 6px; z-index: 9999; box-shadow: 0 5px 20px rgba(0,0,0,0.4); border: 1px solid #444; }
+.numpad-btn { height: 45px; background: #3a3a3c; color: #fff; border: none; border-radius: 6px; font-size: 20px; font-weight: bold; cursor: pointer; transition: background 0.1s; display: flex; align-items: center; justify-content: center; }
+.numpad-btn:active { background: #555; }
+.numpad-btn.btn-del { color: #ff453a; font-size: 20px; }
+.numpad-btn.btn-ent { background: #0a84ff; grid-column: span 3; height: 45px; font-size: 18px; letter-spacing: 2px; }
+.numpad-btn.btn-ent:active { background: #0060d1; }
+.numpad-display-info { display: none; }
+.numpad-active { outline: 2px solid #0a84ff !important; outline-offset: -2px; background-color: #e6f2ff !important; }
+html.theme-dark .numpad-active { background-color: #1c2a35 !important; }
+
+.forecast-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding: 8px; background: rgba(0, 0, 0, 0.03); border-radius: 6px; }
+.wind-entry { display: flex; align-items: stretch; font-family: 'SF Mono', monospace; font-size: 11px; }
+.wind-badge { background: var(--card-bg); color: var(--text-muted); padding: 2px 6px; border-radius: 4px 0 0 4px; font-weight: normal; min-width: 45px; text-align: center; border: 1px solid var(--border-color); border-right: none; display: flex; align-items: center; justify-content: center; }
+.wind-data { background: var(--input-bg); color: var(--text-color); padding: 2px 6px; border: 1px solid var(--border-color); border-radius: 0 4px 4px 0; min-width: 80px; text-align: center; display: flex; align-items: center; justify-content: center; }
+.highlight-alt .wind-badge, .highlight-alt .wind-data { background: var(--card-bg) !important; color: #000000 !important; font-weight: 900 !important; border-color: #000000 !important; }
+html.theme-dark .forecast-container { background: rgba(255, 255, 255, 0.02); }
+html.theme-dark .wind-badge { background: #222; color: #888; border-color: #444; }
+html.theme-dark .wind-data { background: #1a1a1a; color: #aaa; border-color: #444; }
+html.theme-dark .highlight-alt .wind-badge, html.theme-dark .highlight-alt .wind-data { background: var(--input-bg) !important; color: #ffffff !important; border-color: #ffffff !important; }
+
+.turb-btn { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+.turb-btn-S.active { background: #3498db; color: white; border-color: #3498db; }
+.turb-btn-LM.active { background: #2ecc71; color: white; border-color: #2ecc71; }
+.turb-btn-L.active { background: #f1c40f; color: #1a252f; border-color: #f1c40f; }
+.turb-btn-LP.active { background: #e67e22; color: white; border-color: #e67e22; }
+.turb-btn-M.active { background: #e74c3c; color: white; border-color: #e74c3c; }
+
+.turb-indicator { font-size: 10px; font-weight: bold; padding: 1px 4px; border-radius: 3px; display: inline-block; margin-top: 2px; }
+.turb-indicator.turb-S { color: #2980b9; background: rgba(52, 152, 219, 0.15); }
+.turb-indicator.turb-LM { color: #27ae60; background: rgba(46, 204, 113, 0.15); }
+.turb-indicator.turb-L { color: #d4ac0d; background: rgba(241, 196, 15, 0.15); }
+.turb-indicator.turb-LP { color: #d35400; background: rgba(230, 126, 34, 0.15); }
+.turb-indicator.turb-M { color: #c0392b; background: rgba(231, 76, 60, 0.15); }
+
+html.theme-dark .turb-btn { background: var(--input-bg); }
+html.theme-dark .turb-indicator.turb-S { color: #64b5f6; }
+html.theme-dark .turb-indicator.turb-LM { color: #81c784; }
+html.theme-dark .turb-indicator.turb-L { color: #fff176; }
+html.theme-dark .turb-indicator.turb-LP { color: #ffb74d; }
+html.theme-dark .turb-indicator.turb-M { color: #e57373; }
+
+/* ==========================================
+   7. MEDIA QUERIES (RESPONSIVE & PRINT)
+   ========================================== */
+@media screen and (max-width: 1000px), screen and (orientation: portrait) {
+    body { min-width: 810px; }
+    table { width: 780px; min-width: 780px; max-width: 780px; }
+    .col-wp   { width: 74px; min-width: 74px; max-width: 74px; }
+    .col-alt  { width: 60px; min-width: 60px; max-width: 60px; }
+    .col-wind { width: 70px; min-width: 70px; max-width: 70px; }
+    .col-mwtp { width: 55px; min-width: 55px; max-width: 55px; }
+    .col-ctme { width: 80px; min-width: 80px; max-width: 80px; }
+    .col-ztme { width: 55px; min-width: 55px; max-width: 55px; }
+    .col-main { width: 74px; min-width: 74px; max-width: 74px; }
+    .col-diff { width: 45px; min-width: 45px; max-width: 45px; }
+
+    .input-ref.input-wind { width: 55px !important; }
+    .input-ref.input-tmp { width: 32px !important; min-width: 32px !important; max-width: 32px !important; flex: 0 0 32px !important; font-size: 11px !important; padding: 2px 1px !important; }
+    .isa-dev-text { font-size: 9px; }
+
+    .input-actual { width: 65px; height: 35px; font-size: 14px; margin: 0 auto; display: block; }
+    .input-actual-half { width: 65px; font-size: 12px; margin: 0 auto; display: block; }
+
+    .fuel-primary { font-size: 13px; }
+    .fuel-secondary { font-size: 10px; }
+
+    .header-landscape { display: none; }
+    .header-portrait { display: inline; }
+    .fh-details {
+        display: grid !important;
+        grid-template-columns: repeat(5, auto) !important;
+        justify-content: space-between !important;
+        gap: 12px 10px !important;
+    }
+}
+
+@media print {
+    @page { size: A4 portrait; margin: 10mm; }
+    
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body > *:not(#print-text-area) { 
+        display: none !important; 
+    }
+
+    body {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+        min-width: 100% !important;
+    }
+
+    #print-text-area {
+        display: block !important;
+        width: 100% !important;
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+        font-family: 'SF Mono', Consolas, Menlo, monospace !important;
+        font-size: 11px !important;
+        line-height: 1.4 !important;
+        color: black !important;
+        background: transparent !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+    }
+}
+
+/* ================================================= */
+/* ★ パネル高さの最適化 ＆ 最下部の見切れ防止クッション */
+/* ================================================= */
+#dropdownPanels {
+    max-height: calc(100vh - 180px) !important;
+    overflow-y: auto !important;
+}
+
+.drm-content, #forecastInfoContent {
+    max-height: none !important;
+    padding-bottom: 100px !important; 
+}
+</style>
+</head>
+<body>
+
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V26.4.0</h1>
+
+    <div style="position: sticky; top: 0; z-index: 1000; background: var(--bg-color); border-bottom: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+        
+        <div class="flight-header" id="flightHeader" style="display: none; padding-top: 5px;">
+            <div class="fh-details">
+                <div class="fh-item"><span class="fh-label">FLIGHT</span><span class="fh-val" id="fh-flt">---</span></div>
+                <div class="fh-item"><span class="fh-label">DATE</span><span class="fh-val" id="fh-date">---</span></div>
+                <div class="fh-item"><span class="fh-label">REG</span><span class="fh-val" id="fh-reg">---</span></div>
+                <div class="fh-item"><span class="fh-label">ROUTE</span><span class="fh-val" id="fh-route">---</span></div>
+                <div class="fh-item"><span class="fh-label">ALTN</span><span class="fh-val" id="fh-altn">---</span></div>
+                <div class="fh-item"><span class="fh-label">TIME</span><span class="fh-val" id="fh-time">---</span></div>
+                <div class="fh-item"><span class="fh-label">B/T</span><span class="fh-val" id="fh-bt">---</span></div>
+                <div class="fh-item"><span class="fh-label">F/T</span><span class="fh-val" id="fh-ft">---</span></div>
+                <div class="fh-item"><span class="fh-label">TTL DIST</span><span class="fh-val" id="fh-dist">---</span></div>
+            </div>
+        </div>
+        
+        <div class="status-bar" id="statusBar" style="display:none;">
+            <div style="display: flex; gap: 20px; width: 100%; flex-wrap: wrap;">
+                
+                <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
+                    <div class="status-section">
+                        <span class="status-title">ACTUAL TIMES</span>
+                        <div class="status-content">
+                            <div class="time-inputs" style="display: grid; grid-template-columns: max-content max-content; gap: 8px;">
+                                <div class="input-group-inline"><span class="input-label">B/O</span><input type="text" id="time_bo" class="status-input input-time" maxlength="4" placeholder="----" readonly onclick="app.showNumpad(this, 'B/O TIME', 'time')" onchange="app.updateTime('bo', this.value)"></div>
+                                <div class="input-group-inline"><span class="input-label">B/I</span><input type="text" id="time_bi" class="status-input input-time" maxlength="4" placeholder="----" readonly onclick="app.showNumpad(this, 'B/I TIME', 'time')" onchange="app.updateTime('bi', this.value)"></div>
+                                <div class="input-group-inline"><span class="input-label">TKOF</span><input type="text" id="time_tkof" class="status-input input-time" maxlength="4" placeholder="----" readonly onclick="app.showNumpad(this, 'TKOF TIME', 'time')" onchange="app.updateTime('tkof', this.value)"></div>
+                                <div class="input-group-inline"><span class="input-label">LDG</span><input type="text" id="time_ldg" class="status-input input-time" maxlength="4" placeholder="----" readonly onclick="app.showNumpad(this, 'LDG TIME', 'time')" onchange="app.updateTime('ldg', this.value)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="status-section">
+                        <span class="status-title">EST. ARRIVAL (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
+                        <div class="status-content status-value-group" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                            <span id="sb-eta" class="status-value">--</span><span id="sb-eta-diff" class="status-badge"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div class="status-section">
+                            <span class="status-title">ACTUAL FUEL</span>
+                            <div class="status-content">
+                                <div class="fuel-inputs" style="display: grid; grid-template-columns: max-content max-content; gap: 8px;">
+                                    <div class="input-group-inline"><span class="input-label">FOB</span><input type="text" id="actFob" class="status-input fuel-input" readonly onclick="app.showNumpad(this, 'FOB', 'fuel')" onchange="app.updateActualFuel('fob', this.value)"></div>
+                                    <div class="input-group-inline"><span class="input-label">FOD</span><input type="text" id="actFod" class="status-input fuel-input" readonly onclick="app.showNumpad(this, 'FOD', 'fuel')" onchange="app.updateActualFuel('fod', this.value)"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="status-section">
+                            <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
+                            <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span id="sb-dest-fuel" class="status-value">--</span><span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span><span id="sb-dest-fuel-warning"></span>
+                            </div>
+                            <div id="sb-plan-fod-display" style="font-size: 14px; font-family: 'SF Mono', monospace; font-weight: normal; color: #e2e8f0; margin-left: 15px; margin-top: 4px; letter-spacing: 0.5px;"></div>
+                        </div>
+                    </div>
+                    <div class="status-section">
+                        <span class="status-title">AVAILABLE FUEL MARGIN</span>
+                        <div class="status-content" id="sb-avail-fuel-container" style="width: max-content; display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.15);"></div>
+                    </div>
+                </div>
+
+                <div class="status-btn-area" style="display: flex; flex-direction: column; gap: 8px; margin-left: auto; padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.2); justify-content: center;">
+                    <button id="btn_crewInfoCard" class="panel-toggle-btn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;" onclick="app.togglePanel('crewInfoCard')">👨‍✈️ CREW / LOG</button>
+                    <button id="btn_headerInfoCard" class="panel-toggle-btn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;" onclick="app.togglePanel('headerInfoCard')">📄 DRM</button>
+                    <button id="btn_forecastInfoCard" class="panel-toggle-btn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; display: none;" onclick="app.togglePanel('forecastInfoCard')">☁️ WINDS</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="dropdownPanels" style="position: absolute; top: 100%; left: 0; width: 100%;  overflow-y: auto; background: var(--bg-color); box-shadow: 0 10px 30px rgba(0,0,0,0.6); border-bottom: 2px solid var(--accent-color);">
+            
+            <div class="card-crew" id="crewInfoCard" style="display:none; border: none; border-radius: 0; margin: 0;">
+                <span id="crew-toggle-icon" style="display:none;"></span>
+                <div id="crewContentEl" class="crew-content" style="display:block; padding: 15px;">
+                    <table class="crew-table">
+                        <thead>
+                            <tr><th style="width: 40px;">T/O</th><th style="width: 40px;">LDG</th><th style="width: 90px;">DUTY</th><th style="width: 120px;">EMP NO</th><th style="width: 200px; text-align: left; padding-left: 10px;">NAME</th><th style="width: 90px;">RANK</th><th style="width: 40px;" class="no-print"></th></tr>
+                        </thead>
+                        <tbody id="crewTableBody"></tbody>
+                    </table>
+                    <div style="text-align: left; margin-top: 10px; margin-bottom: 15px;" class="no-print"><button class="btn-secondary btn-small" onclick="app.addCrew()">➕ 追加</button></div>
+                    <div class="pfl-section">
+                        <div class="pfl-header-controls no-print">
+                            <div class="pfl-toggle-group"><button id="btnPflDom" class="pfl-btn active" onclick="app.setPflToggle('domInt', 'DOM')">DOM</button><button id="btnPflInt" class="pfl-btn" onclick="app.setPflToggle('domInt', 'INT')">INT</button></div>
+                            <div class="pfl-toggle-group" style="margin-left: 10px;"><button id="btnPflPic" class="pfl-btn active" onclick="app.setPflToggle('activeDuty', 'PIC')">PIC</button><button id="btnPflSic" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'SIC')">SIC</button><button id="btnPflCop" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'COP')">COP</button></div>
+                            <div style="margin-left: auto;"><button class="btn-secondary btn-small" id="btnPflCsv" onclick="app.copyPflToCsv()" style="font-weight: bold;">📋 CSVコピー</button></div>
+                        </div>
+                        <div class="pfl-scroll-wrapper">
+                            <table class="pfl-table">
+                                <thead><tr><th>DAY</th><th>TYPE</th><th>REG</th><th>DEP</th><th>ARR</th><th>DEP TIME</th><th>ARR TIME</th><th>TKOF</th><th>LDG</th><th>FLT NUMBER</th><th>FLT TIME</th><th>PIC TIME</th><th>SIC TIME</th><th>NGT</th><th>COP TIME</th><th>NGT</th><th>IMC</th><th style="min-width: 30px;" class="no-print"></th><th>APCH TYPE</th></tr></thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="text" class="pfl-input" id="pfl_day" onchange="app.updatePfl('day', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_type" onchange="app.updatePfl('type', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_reg" onchange="app.updatePfl('reg', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_dep" onchange="app.updatePfl('dep', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_arr" onchange="app.updatePfl('arr', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_depTime" maxlength="4" readonly onclick="app.showNumpad(this, 'DEP TIME', 'time')" onchange="app.updatePfl('depTime', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_arrTime" maxlength="4" readonly onclick="app.showNumpad(this, 'ARR TIME', 'time')" onchange="app.updatePfl('arrTime', this.value)"></td>
+                                        <td><select class="pfl-input narrow" id="pfl_tkof" onchange="app.updatePfl('tkof', this.value)"><option value=""></option><option value="1">1</option><option value="N1">N1</option></select></td>
+                                        <td><select class="pfl-input narrow" id="pfl_ldg" onchange="app.updatePfl('ldg', this.value)"><option value=""></option><option value="1">1</option><option value="N1">N1</option></select></td>
+                                        <td><input type="text" class="pfl-input wide" id="pfl_fltNumber" onchange="app.updatePfl('fltNumber', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_fltTime" readonly onclick="app.showNumpad(this, 'FLT TIME', 'time')" onchange="app.updatePfl('fltTime', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_picTime" readonly onclick="app.showNumpad(this, 'PIC TIME', 'time')" onchange="app.updatePfl('picTime', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_sicTime" readonly onclick="app.showNumpad(this, 'SIC TIME', 'time')" onchange="app.updatePfl('sicTime', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_ngtPicSic" readonly onclick="app.showNumpad(this, 'NGT', 'time')" onchange="app.updatePfl('ngtPicSic', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_copTime" readonly onclick="app.showNumpad(this, 'COP TIME', 'time')" onchange="app.updatePfl('copTime', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_ngtCop" readonly onclick="app.showNumpad(this, 'NGT', 'time')" onchange="app.updatePfl('ngtCop', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_imc" readonly onclick="app.showNumpad(this, 'IMC', 'time')" onchange="app.updatePfl('imc', this.value, true)"></td>
+                                        <td class="no-print"></td>
+                                        <td><input type="text" class="pfl-input wide" id="pfl_apchType" onchange="app.updatePfl('apchType', this.value)"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-drm" id="headerInfoCard" style="display:none; border: none; border-radius: 0; margin: 0;">
+                <div class="drm-content" id="headerInfoContent" style="font-size: 15px; font-family: 'SF Mono', monospace; white-space: pre; overflow-x: auto; padding: 20px;"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="no-print" id="inputArea" style="background: transparent;">
+        
+        <button class="clipboard-btn" style="margin-bottom: 15px;" onclick="app.openPDFPicker()">
+            📄 PDFファイルから読み込む
+        </button>
+
+        <input type="file" id="webPdfInput" accept=".pdf" style="display: none;" onchange="app.handleWebPDFUpload(event)">
+
+        <button class="clipboard-btn" onclick="app.loadFromClipboard()">
+            📋 クリップボードから読み込む
+        </button>
+        
+        <div id="historyArea" style="margin-top: 25px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 10px; display: none;">
+            <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">🕒 最近のフライト履歴 (Crewを呼び出す)</div>
+            <div id="historyList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <span style="font-size: 12px; color: var(--text-faint); display: block; margin-bottom: 10px;">または手動でテキストファイルを選択</span>
+            <label for="fileInput" class="file-upload-btn">📁 ファイルを選択 (.txt)</label>
+            <input type="file" id="fileInput" accept=".txt" style="display: none;" onchange="app.handleFileUpload(event)">
+        </div>
+    </div>
+
+    <div class="table-container" id="tableContainer" style="display:none;">
+        <table>
+            <thead>
+                <tr>
+                    <th class="sticky-th col-wp sticky-col-wp">WP</th>
+                    <th class="sticky-th col-alt">ALT</th>
+                    <th class="sticky-th col-wind">
+                        <span class="header-landscape">WIND / TMP<br><span style="font-size:9px; font-weight:normal;">(ISA DEV)</span></span>
+                        <span class="header-portrait">WIND<br>TMP<br><span style="font-size:9px; font-weight:normal;">(ISA DEV)</span></span>
+                    </th>
+                    <th class="sticky-th col-mwtp">MW/TP<br>WSCP</th>
+                    <th class="sticky-th col-ctme">CTME/DIST<br><span style="font-weight:normal;opacity:0.6;">RTME/RDIS</span></th>
+                    <th class="sticky-th col-ztme">ZTME<br><span style="font-weight:normal;opacity:0.6;">(DIST)</span></th>
+                    <th class="sticky-th col-main">Est.Time</th>
+                    <th class="sticky-th col-main">Est.FUEL<br><span style="font-weight:normal;opacity:0.6;">(Plan)</span></th>
+                    <th class="sticky-th col-actual no-print col-main">Act.Time</th>
+                    <th class="sticky-th col-actual no-print col-main">Act.FUEL<br><span style="font-weight:normal;opacity:0.6;font-size:9px;">TTL/CALC</span></th>
+                    <th class="sticky-th col-diff">Time<br>Diff</th>
+                    <th class="sticky-th col-diff">Fuel<br>Diff</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="card-footer no-print" id="bottomControls" style="display:none;">
+        <div class="config-panel">
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-secondary" onclick="app.toggleSettings()">⚙️ 設定 (ALTN / RSV)</button>
+                <button class="btn-secondary" id="themeToggleBtn" onclick="app.toggleTheme()">🌙 NGT</button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="app.printNavlog()">🖨️ PDF</button>
+                <button class="btn-danger" onclick="app.resetData()">🗑️ リセット</button>
+            </div>
+        </div>
+        
+        <div id="settingsPanel" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+            <div class="settings-wrapper">
+                
+                <div class="settings-group">
+                    <h3 class="settings-group-title">ALTN Settings</h3>
+                    <div id="altnSettingsContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;"></div>
+                    <button class="btn-secondary btn-small" onclick="app.addAltn()">➕ ALTN 追加</button>
+                    
+                    <div class="input-group" style="margin-top: 15px;">
+                        <label>Margin Alert Threshold</label>
+                        <input type="text" id="alertThreshold" value="0" style="width: 100px;" readonly onclick="app.showNumpad(this, 'MARGIN ALERT', 'fuel')" onchange="app.saveConfig()">
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="settings-group-title">Table Settings</h3>
+                    <div class="input-group">
+                        <label>Fuel Diff Basis</label>
+                        <select id="fuelCalcBasis" style="width: 100px;" onchange="app.changeFuelBasis()">
+                            <option value="CALC">CALC</option>
+                            <option value="TTL">TTL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="settings-group-title">Dest Fuel Settings</h3>
+                    <div class="input-group">
+                        <label>Dest Fuel Warning Threshold</label>
+                        <input type="text" id="destFuelThreshold" value="0" style="width: 100px;" readonly onclick="app.showNumpad(this, 'DEST FUEL WARN', 'fuel')" onchange="app.saveConfig()">
+                    </div>
+                </div>
+
+            </div>
+            <div style="margin-top: 15px; text-align: right;">
+                <button onclick="app.toggleSettings()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="numpadOverlay" class="numpad-overlay" onclick="app.closeNumpad()"></div>
+    <div id="numpadContainer" class="numpad-container">
+        <div id="numpadInfo" class="numpad-display-info">INPUT VALUE</div>
+        <button class="numpad-btn" onclick="app.numpadInput('7')">7</button>
+        <button class="numpad-btn" onclick="app.numpadInput('8')">8</button>
+        <button class="numpad-btn" onclick="app.numpadInput('9')">9</button>
+        <button class="numpad-btn" onclick="app.numpadInput('4')">4</button>
+        <button class="numpad-btn" onclick="app.numpadInput('5')">5</button>
+        <button class="numpad-btn" onclick="app.numpadInput('6')">6</button>
+        <button class="numpad-btn" onclick="app.numpadInput('1')">1</button>
+        <button class="numpad-btn" onclick="app.numpadInput('2')">2</button>
+        <button class="numpad-btn" onclick="app.numpadInput('3')">3</button>
+        <button class="numpad-btn" onclick="app.numpadInput('.')">.</button>
+        <button class="numpad-btn" onclick="app.numpadInput('0')">0</button>
+        <button class="numpad-btn btn-del" onclick="app.numpadInput('DEL')">⌫</button>
+        <button class="numpad-btn btn-ent" onclick="app.closeNumpad()">ENT</button>
+    </div>
+
+    
+    
+    
+    
+    
+    
+<script>
+
+/* --- script.js --- */
+window.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter' || event.keyCode === 13) {
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
+            document.activeElement.blur();
+        }
+    }
+});
+
+const app = {
+    version: 'v26.4.4', // バージョン更新（FLIGHT SUMMARY追加、UTC統一）
+    state: { 
+        waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
+        crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
+        crewMemo: '', takeoffPilotId: null, landingPilotId: null, crewPanelOpen: false,
+        times: { bo: '', bi: '', tkof: '', ldg: '' }, actFob: '', actFod: '',
+        postFlightLog: null, activeInput: null, flightHistory: [],
+        rawForecastText: "",
+        activeNumpadTarget: null,
+        activeNumpadType: 'time'
+    },
+
+    printNavlog() {
+        let out = "=========================================================================\n";
+        out += "                      FLIGHT RECORD (DRM & NAVLOG)\n";
+        out += "=========================================================================\n\n";
+
+        // --- 1. DRM INFORMATION ---
+        out += "[ 1. DRM INFORMATION ]\n";
+        out += (this.state.headerInfo || "NO DRM DATA") + "\n\n";
+        out += "-------------------------------------------------------------------------\n\n";
+
+        // --- 2. NAVIGATION LOG ---
+        out += "[ 2. NAVIGATION LOG ]\n";
+        out += "WP       ALT   EST TIME / FUEL(PLAN)    ACT TIME / FUEL     DIFF (T/F)\n";
+        out += "-------------------------------------------------------------------------\n";
+
+        this.state.waypoints.forEach(wp => {
+            let name = (wp.name || "").padEnd(9, " ");
+            let alt = (wp.estAltDisplay || "").padEnd(6, " ");
+            
+            // EST
+            let estTime = (wp.estTimeDisplay || "--").padStart(5, " ");
+            let estFuel = wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : "--";
+            let planFuel = wp.plannedFuel !== null ? wp.plannedFuel.toFixed(1) : "--";
+            let estCombo = `${estFuel}(${planFuel})`;
+            let estStr = `${estTime}  / ${estCombo.padEnd(13, " ")}`.padEnd(25, " ");
+
+            // ACT
+            let actTime = (wp.actualTime && wp.actualTime.length === 4) ? wp.actualTime : "----";
+            let actFuelVal = this.state.fuelCalcBasis === 'TTL' ? wp.actualFuelTTL : wp.actualFuelCALC;
+            let actFuel = actFuelVal !== '' && actFuelVal !== undefined ? parseFloat(actFuelVal).toFixed(1) : "-----";
+            let actStr = `${actTime.padStart(5, " ")}  / ${actFuel.padEnd(6, " ")}`.padEnd(20, " ");
+
+            // DIFF
+            let tDiff = wp.timeDiff !== null ? (wp.timeDiff > 0 ? '+'+wp.timeDiff : (wp.timeDiff === 0 ? '±0' : wp.timeDiff)) : '---';
+            let fDiff = wp.fuelDiff !== null ? (wp.fuelDiff > 0 ? '+'+wp.fuelDiff.toFixed(1) : (wp.fuelDiff === 0 ? '±0.0' : wp.fuelDiff.toFixed(1))) : '----';
+            let diffStr = `${String(tDiff).padStart(4, " ")} / ${String(fDiff).padStart(6, " ")}`;
+
+            out += `${name}${alt}${estStr}${actStr}${diffStr}\n`;
+        });
+
+        out += "\n-------------------------------------------------------------------------\n";
+        
+        // --- 3. FLIGHT SUMMARY ---
+        out += "[ 3. FLIGHT SUMMARY ]\n";
+        
+        // 計画時間（STD/STA）からLocal時間（/1900Lなど）を正規表現で排除してUTC(Z)のみにする
+        let planTime = (this.state.flightMeta && this.state.flightMeta.time) ? this.state.flightMeta.time : "STD ----Z STA ----Z";
+        planTime = planTime.replace(/\/\d{4}L/g, ''); 
+        out += `${planTime}\n`;
+
+        // 実際の時間（Zを付与）
+        let tBo = (this.state.times.bo && this.state.times.bo.length >= 4) ? this.state.times.bo + "Z" : "----";
+        let tTkof = (this.state.times.tkof && this.state.times.tkof.length >= 4) ? this.state.times.tkof + "Z" : "----";
+        let tLdg = (this.state.times.ldg && this.state.times.ldg.length >= 4) ? this.state.times.ldg + "Z" : "----";
+        let tBi = (this.state.times.bi && this.state.times.bi.length >= 4) ? this.state.times.bi + "Z" : "----";
+        out += `ACTUAL TIMES:  B/O ${tBo}   TKOF ${tTkof}   LDG ${tLdg}   B/I ${tBi}\n\n`;
+
+        // 計画燃料（DRMから抽出）
+        let planFobMatch = this.state.headerInfo ? this.state.headerInfo.match(/FOB\s+\d{2}\/\d{2}\s+(\d+)/) : null;
+        let planFob = planFobMatch ? planFobMatch[1] + "LB" : "------LB";
+        let planFodMatch = this.state.headerInfo ? this.state.headerInfo.match(/FOD=(\d+)LB/) : null;
+        let planFod = planFodMatch ? planFodMatch[1] + "LB" : "------LB";
+        out += `PLAN FOB: ${planFob}   FOD ${planFod}\n`;
+
+        // 実際の燃料（LBを付与）
+        let aFob = this.state.actFob ? this.state.actFob + "LB" : "------LB";
+        let aFod = this.state.actFod ? this.state.actFod + "LB" : "------LB";
+        out += `ACTUAL FUEL :  FOB ${aFob}   FOD ${aFod}\n\n`;
+
+        out += "=========================================================================\n";
+
+        // --- CREW 情報 ---
+        let picName = "---", sicName = "---", picId = "---", sicId = "---";
+        const pic = this.state.crew.find(c => c.duty === 'PIC');
+        if (pic) { picName = pic.name || "---"; picId = pic.empNo || "---"; }
+        const sic = this.state.crew.find(c => c.duty === 'SIC' || c.duty === 'COP');
+        if (sic) { sicName = sic.name || "---"; sicId = sic.empNo || "---"; }
+
+        out += `CREW: PIC ${picId} ${picName}   /   SIC ${sicId} ${sicName}\n`;
+        out += "=========================================================================\n";
+
+        // HTMLの最下部にテキストをセットして印刷実行
+        let pre = document.getElementById('print-text-area');
+        if (!pre) {
+            pre = document.createElement('pre');
+            pre.id = 'print-text-area';
+            document.body.appendChild(pre);
+        }
+        pre.textContent = out;
+
+        // 同期的に印刷を呼び出してSafariのブロックを回避
+        window.print();
+    },
+    
+    // --- ★追加: Swift側のPDFファイル選択画面を開く ---
+    openPDFPicker() {
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.pdfPickerHandler) {
+            window.webkit.messageHandlers.pdfPickerHandler.postMessage('pickPDF');
+        } else {
+            alert("この機能はiPad(Swift)のネイティブアプリ環境でのみ動作します。\nブラウザ環境の場合は「ファイルを選択」をご利用ください。");
+        }
+    },
+
+    // --- ★追加: Swift側から抽出されたテキストを受け取って処理する ---
+    loadFromSwiftPDF(text) {
+        if (!text || text.trim() === '') {
+            alert("PDFからテキストを抽出できませんでした。");
+            return;
+        }
+        
+        try {
+            // Noriさんの環境で動いている最強の解析関数に丸投げ！
+            this.processData(text);
+        } catch (e) {
+            console.error(e);
+            alert("PDFの解析中にエラーが発生しました: " + e.message);
+        }
+    },
+    
+    init() {
+        const titleEl = document.getElementById('defaultTitle');
+        if (titleEl) titleEl.textContent = `✈️ NAVLOG Tracker ${this.version}`;
+
+        const saved = localStorage.getItem('navlog_v25_data');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            this.state = { ...this.state, ...parsed };
+            if (!this.state.altns || this.state.altns.length === 0) this.state.altns = [{name:'', fuel:0, rsv:0}];
+            if (!this.state.fuelCalcBasis) this.state.fuelCalcBasis = 'CALC';
+            if (this.state.destFuelThreshold === undefined) this.state.destFuelThreshold = 0;
+            if (!this.state.times) this.state.times = { bo: '', bi: '', tkof: '', ldg: '' };
+            if (this.state.actFob === undefined) this.state.actFob = '';
+            if (this.state.actFod === undefined) this.state.actFod = '';
+            if (this.state.crewMemo === undefined) this.state.crewMemo = ''; 
+            if (this.state.rawForecastText === undefined) this.state.rawForecastText = ''; 
+            if (!this.state.crew || this.state.crew.length === 0) {
+                this.state.crew = [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }];
+            }
+            if (!this.state.flightHistory) this.state.flightHistory = [];
+
+            this.state.waypoints.forEach(wp => {
+                if (wp.actualFuel !== undefined) { wp.actualFuelCALC = wp.actualFuel; wp.actualFuelTTL = ''; delete wp.actualFuel; }
+                if (wp.isaDevNum === undefined) wp.isaDevNum = null;
+                if (wp.isaTmp === undefined) wp.isaTmp = null;
+                if (wp.mwtp === undefined) wp.mwtp = '---';
+                if (wp.wscp === undefined) wp.wscp = '---';
+                if (wp.turbulence === undefined) wp.turbulence = '';
+            });
+        }
+        
+        if (!this.state.postFlightLog) {
+            this.state.postFlightLog = {
+                domInt: 'DOM', activeDuty: 'PIC', day: '', type: 'B767', reg: '', dep: '', arr: '', fltNumber: '',
+                depTime: '', arrTime: '', tkof: '', ldg: '', fltTime: '', picTime: '', sicTime: '', ngtPicSic: '', copTime: '', ngtCop: '', imc: '', apchType: ''
+            };
+        }
+
+        this.renderSettings();
+        if (this.state.headerInfo) {
+            document.getElementById('headerInfoContent').textContent = this.state.headerInfo;
+        }
+        if (this.state.flightMeta) this.renderFlightMeta();
+        
+        if (this.state.waypoints.length > 0) this.showMainUI();
+        else if (this.renderFlightHistory) this.renderFlightHistory(); 
+        
+        this.setupFocusScrollBehavior();
+        this.updateThemeButton();
+        window.addEventListener('resize', () => this.updateStickyHeight());
+
+        if (!document.getElementById('app-version-display')) {
+            const vDiv = document.createElement('div'); vDiv.id = 'app-version-display'; vDiv.className = 'no-print';
+            vDiv.style.cssText = 'position: fixed; bottom: 5px; right: 10px; font-size: 10px; color: var(--text-faint); z-index: 9999; pointer-events: none; opacity: 0.5; font-family: "SF Mono", monospace;';
+            vDiv.textContent = this.version; document.body.appendChild(vDiv);
+        }
+    },
+
+    showMainUI() {
+        document.getElementById('statusBar').style.display = 'flex';
+        document.getElementById('bottomControls').style.display = 'block';
+        document.getElementById('inputArea').style.display = 'none';
+        
+        ['crewInfoCard', 'headerInfoCard', 'forecastInfoCard'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+            const btn = document.getElementById('btn_' + id);
+            if (btn) btn.style.background = 'rgba(255,255,255,0.1)';
+        });
+        
+        document.body.style.overflow = '';
+
+        this.renderForecastCard();
+        this.state.crewPanelOpen = false;
+
+        if(this.updateCrewPanelUI) this.updateCrewPanelUI();
+        if(this.renderCrew) this.renderCrew();
+        this.renderTimes();
+        if(this.renderActualFuel) this.renderActualFuel(); 
+        if(this.renderPostFlightLog) this.renderPostFlightLog();
+        this.renderCrewMemo();
+        document.getElementById('tableBody').innerHTML = ''; 
+        this.render();
+    },
+
+    setupFocusScrollBehavior() {
+        document.addEventListener('focusin', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                app.state.activeInput = e.target; setTimeout(() => app.adjustScrollForInput(e.target), 300);
+            }
+        });
+        document.addEventListener('focusout', () => { app.state.activeInput = null; });
+    },
+
+    adjustScrollForInput(el) {
+        if (!el) return;
+        const header = document.getElementById('flightHeader');
+        const headerHeight = (header && header.parentElement) ? header.parentElement.offsetHeight : 0;
+        const th = document.querySelector('.table-container th');
+        const thHeight = th ? th.offsetHeight : 0;
+        const headerOffset = headerHeight + thHeight + 20;
+        const rect = el.getBoundingClientRect(), visualViewport = window.visualViewport;
+        if (rect.top < headerOffset) window.scrollBy({ top: rect.top - headerOffset, behavior: 'smooth' });
+        else if (visualViewport && rect.bottom > visualViewport.height) window.scrollBy({ top: rect.bottom - visualViewport.height + 10, behavior: 'smooth' });
+    },
+
+    toggleTheme() {
+        const isDark = document.documentElement.classList.toggle('theme-dark');
+        localStorage.setItem('navlog_theme', isDark ? 'dark' : 'light'); this.updateThemeButton();
+    },
+    
+    updateThemeButton() {
+        const btn = document.getElementById('themeToggleBtn');
+        if(btn) btn.innerHTML = document.documentElement.classList.contains('theme-dark') ? '☀️ DAY' : '🌙 NGT';
+    },
+
+    updateStickyHeight() {
+        const header = document.getElementById('flightHeader');
+        if (header && header.parentElement) {
+            document.documentElement.style.setProperty('--sb-height', header.parentElement.offsetHeight + 'px');
+        }
+    },
+
+    scrollToRow(index) {
+        const row = document.getElementById(`row-${index}`);
+        if (row) {
+            const header = document.getElementById('flightHeader');
+            const headerHeight = (header && header.parentElement) ? header.parentElement.offsetHeight : 85;
+            const offset = headerHeight + (document.querySelector('.table-container th').offsetHeight || 30) + 15; 
+            window.scrollTo({ top: row.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
+        }
+    },
+
+    toggleSettings() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; },
+
+    togglePanel(panelId) {
+        const panels = ['crewInfoCard', 'headerInfoCard', 'forecastInfoCard'];
+        let anyOpen = false;
+
+        panels.forEach(id => {
+            const el = document.getElementById(id);
+            const btn = document.getElementById('btn_' + id);
+            if (!el) return;
+            if (id === panelId) {
+                const isHidden = (el.style.display === 'none');
+                el.style.display = isHidden ? 'block' : 'none';
+                if (btn) btn.style.background = isHidden ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)';
+                
+                if (id === 'crewInfoCard' && isHidden) {
+                    const contentEl = document.getElementById('crewContentEl');
+                    if (contentEl) contentEl.style.display = 'block';
+                }
+                if (isHidden) anyOpen = true;
+
+            } else {
+                el.style.display = 'none';
+                const otherBtn = document.getElementById('btn_' + id);
+                if (otherBtn) otherBtn.style.background = 'rgba(255,255,255,0.1)';
+            }
+        });
+
+        if (anyOpen) {
+            app.lockedScrollY = window.scrollY; 
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${app.lockedScrollY}px`;
+            document.body.style.width = '100%';
+        } else {
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            window.scrollTo(0, app.lockedScrollY || 0); 
+        }
+    },
+
+    renderSettings() {
+        const container = document.getElementById('altnSettingsContainer'); container.innerHTML = '';
+        document.getElementById('alertThreshold').value = this.state.alertThreshold || 0;
+        const destThEl = document.getElementById('destFuelThreshold'); if (destThEl) destThEl.value = this.state.destFuelThreshold || 0;
+        const basisEl = document.getElementById('fuelCalcBasis'); if(basisEl) basisEl.value = this.state.fuelCalcBasis || 'CALC';
+
+        this.state.altns.forEach((altn, idx) => {
+            const div = document.createElement('div'); div.className = 'input-group';
+            div.innerHTML = `
+                <label style="font-size: 10px;">ALTN ${idx + 1} (AP / Fuel / RSV)</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="altnName_${idx}" style="width: 55px; text-transform: uppercase;" placeholder="AP" value="${altn.name}" onchange="app.saveAltnConfig()">
+                    <input type="text" id="altnFuel_${idx}" style="width: 65px;" placeholder="ALTN" value="${altn.fuel || ''}" readonly onclick="app.showNumpad(this, 'ALTN FUEL', 'fuel')" onchange="app.saveAltnConfig()">
+                    <input type="text" id="altnRsv_${idx}" style="width: 65px;" placeholder="RSV" value="${altn.rsv || ''}" readonly onclick="app.showNumpad(this, 'ALTN RSV', 'fuel')" onchange="app.saveAltnConfig()">
+                    <button class="btn-danger btn-small" onclick="app.removeAltn(${idx})">✖</button>
+                </div>`;
+            container.appendChild(div);
+        });
+    },
+
+    addAltn() { this.state.altns.push({name:'', fuel:0, rsv:0}); this.renderSettings(); this.saveConfig(); },
+    removeAltn(idx) { this.state.altns.splice(idx, 1); this.renderSettings(); this.saveConfig(); },
+    saveAltnConfig() {
+        this.state.altns.forEach((altn, idx) => {
+            const nameEl = document.getElementById(`altnName_${idx}`);
+            if(nameEl) {
+                altn.name = nameEl.value.toUpperCase(); 
+                altn.fuel = parseFloat(document.getElementById(`altnFuel_${idx}`).value) || 0; 
+                altn.rsv = parseFloat(document.getElementById(`altnRsv_${idx}`).value) || 0;
+            }
+        });
+        this.saveConfig();
+    },
+    changeFuelBasis() { this.state.fuelCalcBasis = document.getElementById('fuelCalcBasis').value; this.saveConfig(); if(this.calculate) this.calculate(); this.render(); },
+    
+    saveConfig() {
+        this.state.alertThreshold = parseFloat(document.getElementById('alertThreshold').value) || 0;
+        this.state.destFuelThreshold = parseFloat(document.getElementById('destFuelThreshold').value) || 0;
+        if(this.syncCrewToHistory) this.syncCrewToHistory();
+        try { localStorage.setItem('navlog_v25_data', JSON.stringify(this.state)); } catch(e){}
+        if(this.renderStatusBar) this.renderStatusBar(); 
+    },
+
+    updateTime(field, val) {
+        if (this.sanitizeTimeInput) val = this.sanitizeTimeInput(val);
+        this.state.times[field] = val;
+        
+        if ((field === 'bo' || field === 'bi') && this.calcPflTimes) this.calcPflTimes();
+        if (field === 'tkof' && this.state.waypoints.length > 0) { this.state.waypoints[0].actualTime = val; if(this.calculate) this.calculate(); this.render(); }
+        else this.saveConfig();
+        
+        this.renderTimes();
+    },
+    
+    renderTimes() { ['bo', 'bi', 'tkof', 'ldg'].forEach(f => { const el = document.getElementById('time_' + f); if (el && document.activeElement !== el) el.value = this.state.times[f] || ''; }); },
+
+    renderFlightMeta() {
+        document.getElementById('defaultTitle').style.display = 'none';
+        document.getElementById('flightHeader').style.display = 'block';
+        document.getElementById('fh-flt').textContent = this.state.flightMeta.flt;
+        document.getElementById('fh-date').textContent = this.state.flightMeta.date;
+        document.getElementById('fh-reg').textContent = this.state.flightMeta.reg;
+        document.getElementById('fh-route').textContent = `${this.state.flightMeta.dep} ➔ ${this.state.flightMeta.dest}`;
+        document.getElementById('fh-altn').textContent = this.state.flightMeta.altn;
+        document.getElementById('fh-time').textContent = this.state.flightMeta.time;
+        document.getElementById('fh-bt').textContent = this.state.flightMeta.bt || "---";
+        document.getElementById('fh-ft').textContent = this.state.flightMeta.ft || "---";
+        document.getElementById('fh-dist').textContent = (this.state.flightMeta.dist !== "---" ? this.state.flightMeta.dist + " NM" : "---");
+    },
+
+    renderForecastCard() {
+        const headerCard = document.getElementById('headerInfoCard');
+        if (!headerCard) return; 
+        
+        let card = document.getElementById('forecastInfoCard');
+        if (!card) {
+            card = document.createElement('div');
+            card.id = 'forecastInfoCard';
+            card.className = 'card-drm no-print';
+            card.style.display = 'none';
+            card.style.margin = '0';
+            card.style.border = 'none';
+            card.style.borderRadius = '0';
+            card.innerHTML = `<div id="forecastInfoContent" class="drm-content" style="font-size: 15px; font-family: 'SF Mono', monospace; white-space: pre; overflow-x: auto; padding: 20px;"></div>`;
+            headerCard.parentNode.insertBefore(card, headerCard.nextSibling);
+        }
+        
+        const btn = document.getElementById('btn_forecastInfoCard');
+        if (this.state.rawForecastText && this.state.rawForecastText.trim() !== '') {
+            card.style.display = 'none';
+            document.getElementById('forecastInfoContent').textContent = this.state.rawForecastText;
+            if(btn) btn.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+            if(btn) btn.style.display = 'none';
+        }
+    },
+
+    renderCrewMemo() {
+        const crewContent = document.getElementById('crewContentEl'); if (!crewContent) return;
+        let container = document.getElementById('crew_memo_container');
+        if (!container) {
+            container = document.createElement('div'); container.id = 'crew_memo_container';
+            container.style.cssText = 'margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px; padding-left: 15px; padding-right: 15px;';
+            container.innerHTML = `<div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 5px;">📝 FLIGHT MEMO</div><textarea id="crew_memo" class="memo-textarea" rows="3" placeholder="フライト全体に関するメモを入力..." onchange="app.updateCrewMemo(this.value)"></textarea>`;
+            crewContent.appendChild(container);
+        }
+        const textarea = document.getElementById('crew_memo');
+        if (textarea && document.activeElement !== textarea) textarea.value = this.state.crewMemo || '';
+        if (!this.state.crewMemo || this.state.crewMemo.trim() === '') container.classList.add('no-print'); else container.classList.remove('no-print');
+    },
+
+    updateCrewMemo(val) { this.state.crewMemo = val; this.saveConfig(); this.renderCrewMemo(); },
+
+    createWP(name, alt, tmp, zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, fuel, isaDevVal = '', mwtp = '---', wscp = '---') {
+        let isaDevNum = null, isaTmp = null;
+        if (isaDevVal !== '' && tmp !== '---') { isaDevNum = parseInt(isaDevVal, 10); isaTmp = parseInt(tmp, 10) - isaDevNum; }
+        return {
+            name, plannedAlt: alt, actualAlt: '', estAltDisplay: alt, plannedTmp: tmp, actualTmp: '', estTmpDisplay: tmp,
+            plannedZwind: zwind, actualZwind: '', estZwindDisplay: zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel: fuel,
+            isaDevNum, isaTmp, mwtp, wscp, calcIsaDev: null, 
+            actualTime: '', actualFuelTTL: '', actualFuelCALC: '', calcEstTimeMin: null, calcEstFuel: null, estTimeDisplay: '', estFuelDisplay: 0, timeDiff: null, fuelDiff: null,
+            cumDist: 0, rdis: 0, memo: '', memoOpen: false, turbulence: '', forecast: null
+        };
+    },
+
+    update(i, field, val) {
+        if (field === 'actualAlt' && val !== '') { 
+            let cleanVal = val.toUpperCase().replace(/^FL/, '').trim(); 
+            val = /^\d{2,3}$/.test(cleanVal) ? cleanVal + "00" : cleanVal; 
+        }
+        
+        if (field === 'actualTime' && this.sanitizeTimeInput) val = this.sanitizeTimeInput(val);
+        if ((field === 'actualFuelTTL' || field === 'actualFuelCALC') && this.sanitizeFuelInput) val = this.sanitizeFuelInput(val);
+
+        this.state.waypoints[i][field] = val; 
+        if(i === 0 && field === 'actualTime') { this.state.times.tkof = val; this.renderTimes(); }
+        if(this.calculate) this.calculate(); 
+        this.render();
+    },
+
+    toggleMemo(i) { this.state.waypoints[i].memoOpen = !this.state.waypoints[i].memoOpen; this.saveConfig(); document.getElementById('tableBody').innerHTML = ''; this.render(); },
+    
+    updateMemo(i, val) { 
+        this.state.waypoints[i].memo = val; this.saveConfig(); 
+        const tr = document.getElementById(`memo-row-${i}`);
+        if(tr) { if(val && val.trim() !== '') tr.classList.add('has-content'); else tr.classList.remove('has-content'); }
+    },
+
+    setTurb(i, val) {
+        const memoEl = document.getElementById(`wp_${i}_memo`); if (memoEl) { this.state.waypoints[i].memo = memoEl.value; }
+        if (this.state.waypoints[i].turbulence === val) { this.state.waypoints[i].turbulence = ''; } else { this.state.waypoints[i].turbulence = val; }
+        this.saveConfig(); document.getElementById('tableBody').innerHTML = ''; this.render();
+    },
+
+    render() {
+        const tbody = document.getElementById('tableBody'); if (!tbody) return;
+        const isAlreadyRendered = tbody.children.length > 0 && tbody.children.length === this.state.waypoints.length * 2;
+
+        if (!isAlreadyRendered) {
+            tbody.innerHTML = '';
+            this.state.waypoints.forEach((wp, i) => {
+                let tClass = (wp.timeDiff !== null) ? (wp.timeDiff > 0 ? 'diff-behind' : (wp.timeDiff < 0 ? 'diff-ahead' : '')) : '';
+                let fClass = (wp.fuelDiff !== null) ? (wp.fuelDiff > 0 ? 'diff-ahead' : (wp.fuelDiff < 0 ? 'diff-behind' : '')) : '';
+                
+                const isAlt = wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt;
+                const isWind = wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind;
+                const isTmp = wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp;
+                
+                const hasMemo = wp.memo && wp.memo.trim() !== '';
+                const hasTurb = wp.turbulence && wp.turbulence !== '';
+                let turbBadge = hasTurb ? `<br><span class="turb-indicator turb-${wp.turbulence} no-print">〰️ ${wp.turbulence}</span><span class="turb-indicator-print" style="display:none;">[〰️${wp.turbulence}]</span>` : '';
+
+                let currentIsaDevDisplay = '()';
+                if (wp.calcIsaDev !== undefined && wp.calcIsaDev !== null) {
+                    currentIsaDevDisplay = `(${wp.calcIsaDev >= 0 ? '+' : ''}${wp.calcIsaDev})`;
+                }
+
+                const timeStrikeClass = (wp.actualTime && wp.actualTime.length === 4) ? 'strikethrough-est' : '';
+                let actFuelStr = app.state.fuelCalcBasis === 'TTL' ? (wp.actualFuelTTL || '') : (wp.actualFuelCALC || '');
+                const fuelStrikeClass = (actFuelStr !== '') ? 'strikethrough-est' : '';
+
+                const tr = document.createElement('tr'); tr.id = `row-${i}`;
+                
+                tr.innerHTML = `
+                        <td class="log-td col-wp sticky-col-wp" style="padding: 2px;"><div class="wp-cell" onclick="app.toggleMemo(${i})"><strong>${wp.name}</strong>${turbBadge}${hasMemo ? '<br><span style="font-size:11px;">📝</span>' : ''}</div></td>
+                        <td class="log-td col-alt">
+                            <div style="display:flex; flex-direction:column; align-items:center;">
+                                <input type="text" id="wp_${i}_alt" class="input-ref ${isAlt ? 'input-modified' : ''}" style="width: 100%; text-align: center;" value="${wp.estAltDisplay}" onchange="app.update(${i}, 'actualAlt', this.value)">
+                                <span id="wp_${i}_alt_orig" style="font-size: 9px; color: var(--text-faint); text-decoration: line-through; line-height: 1; margin-top: 1px; ${isAlt ? '' : 'display: none;'}">${wp.plannedAlt}</span>
+                            </div>
+                        </td>
+                        <td class="log-td col-wind"><div class="input-stacked">
+                            <input type="text" id="wp_${i}_wind" class="input-ref input-wind ${isWind ? 'input-modified' : ''}" value="${wp.estZwindDisplay}" onchange="app.update(${i}, 'actualZwind', this.value)">
+                            <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                                <input type="text" id="wp_${i}_tmp" class="input-ref input-tmp ${isTmp ? 'input-modified' : ''}" value="${wp.estTmpDisplay}" onchange="app.update(${i}, 'actualTmp', this.value)">
+                                <span id="wp_${i}_isaDev" class="isa-dev-text">${currentIsaDevDisplay}</span>
+                            </div>
+                        </div></td>
+                        <td class="log-td col-mwtp">
+                            <div style="font-size: 13px; font-weight: normal; white-space: nowrap;">${wp.mwtp}</div>
+                            <div style="font-size: 11px; color: var(--text-faint);">${wp.wscp}</div>
+                        </td>
+                        <td class="log-td col-ctme" style="white-space: nowrap;">${wp.ctme} / ${wp.cumDist}<br><span style="color: var(--text-faint); font-size:10px;">${wp.rtme} / ${wp.rdis}</span></td>
+                        <td class="log-td col-ztme" style="white-space: nowrap;">${wp.ztmeDisplay}<br><span style="color: var(--text-faint); font-size:10px;">(${wp.dist})</span></td>
+                        <td class="log-td col-main ${timeStrikeClass}" style="font-size:15px; font-weight:bold;" id="wp_${i}_estTime">${wp.estTimeDisplay}</td>
+                        <td class="log-td col-main" id="wp_${i}_estFuel_td"><div class="fuel-primary ${fuelStrikeClass}" id="wp_${i}_estFuel">${wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--'}</div><div class="fuel-secondary">(${wp.plannedFuel.toFixed(1)})</div></td>
+                        <td class="log-td col-actual no-print col-main"><input type="text" id="wp_${i}_actTime" class="input-actual" maxlength="4" value="${wp.actualTime || ''}" ${(i === 0) ? 'readonly' : `readonly onclick="app.showNumpad(this, 'ACT TIME', 'time')"`} onchange="app.update(${i}, 'actualTime', this.value)"></td>
+                        <td class="log-td col-actual no-print col-main">
+                        <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
+                            <input type="text" id="wp_${i}_actFuelTTL" class="input-actual-half" placeholder="TTL" value="${wp.actualFuelTTL || ''}" readonly onclick="app.showNumpad(this, 'TTL FUEL', 'fuel')" onchange="app.update(${i}, 'actualFuelCALC', this.value)">
+                            <input type="text" id="wp_${i}_actFuelCALC" class="input-actual-half" placeholder="CALC" value="${wp.actualFuelCALC || ''}" readonly onclick="app.showNumpad(this, 'CALC FUEL', 'fuel')" onchange="app.update(${i}, 'actualFuelCALC', this.value)">
+                        </div>
+                    </td>
+                    <td class="log-td col-diff ${tClass}" id="wp_${i}_timeDiff">${wp.timeDiff !== null ? (wp.timeDiff > 0 ? '+'+wp.timeDiff : wp.timeDiff) : ''}</td>
+                    <td class="log-td col-diff ${fClass}" id="wp_${i}_fuelDiff">${wp.fuelDiff !== null ? (wp.fuelDiff > 0 ? '+'+wp.fuelDiff.toFixed(1) : wp.fuelDiff.toFixed(1)) : ''}</td>
+                `;
+                tbody.appendChild(tr);
+
+                const memoTr = document.createElement('tr');
+                memoTr.id = `memo-row-${i}`;
+                memoTr.style.display = wp.memoOpen ? 'table-row' : 'none';
+                memoTr.className = hasMemo ? 'memo-row has-content' : 'memo-row';
+                
+                const turbOptions = ['S', 'LM', 'L', 'LP', 'M'];
+                const turbButtonsHtml = turbOptions.map(t => `<button class="turb-btn turb-btn-${t} ${wp.turbulence === t ? 'active' : ''}" onclick="app.setTurb(${i}, '${t}')">${t}</button>`).join('');
+
+                let fcstHtml = '';
+                if (wp.forecast && Object.keys(wp.forecast).length > 0) {
+                    fcstHtml = '<div class="forecast-container no-print">';
+                    const sortedAlts = Object.keys(wp.forecast).sort((a, b) => parseInt(a) - parseInt(b));
+                    
+                    const currentAltStr = wp.estAltDisplay;
+                    const closestAlt = (this.getClosestAlt) ? this.getClosestAlt(wp.forecast, currentAltStr) : sortedAlts[0];
+
+                    sortedAlts.forEach(alt => {
+                        const flStr = 'FL' + String(parseInt(alt) / 100).padStart(3, '0');
+                        const displayVal = (this.formatWindTemp) ? this.formatWindTemp(wp.forecast[alt]) : wp.forecast[alt];
+                        const isCurrent = (alt === closestAlt);
+
+                        fcstHtml += `
+                            <div class="wind-entry ${isCurrent ? 'highlight-alt' : ''}">
+                                <div class="wind-badge">${flStr}</div>
+                                <div class="wind-data">${displayVal}</div>
+                            </div>`;
+                    });
+                    fcstHtml += '</div>';
+                } else {
+                    fcstHtml = '<div class="no-print" style="font-size: 10px; color: var(--text-faint); margin-bottom: 8px; font-style: italic;">(No forecast data available for this point)</div>';
+                }
+
+                memoTr.innerHTML = `
+                    <td colspan="12" style="padding: 8px; background-color: var(--memo-bg);">
+                        ${fcstHtml}
+                        <div class="no-print" style="display: flex; gap: 5px; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-right: 5px;">〰️ TURB</span>
+                            ${turbButtonsHtml}
+                        </div>
+                        <textarea id="wp_${i}_memo" class="memo-textarea" rows="2" placeholder="${wp.name} に関するメモを入力..." onchange="app.updateMemo(${i}, this.value)">${wp.memo || ''}</textarea>
+                    </td>
+                `;
+                tbody.appendChild(memoTr);
+            });
+        } else {
+            this.state.waypoints.forEach((wp, i) => {
+                const altEl = document.getElementById(`wp_${i}_alt`);
+                if (altEl && document.activeElement !== altEl) { 
+                    altEl.value = wp.estAltDisplay; 
+                    if (wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt) {
+                        altEl.classList.add('input-modified'); 
+                    } else {
+                        altEl.classList.remove('input-modified');
+                    }
+                }
+                const altOrigEl = document.getElementById(`wp_${i}_alt_orig`);
+                if (altOrigEl) {
+                    if (wp.actualAlt !== '' || wp.estAltDisplay !== wp.plannedAlt) {
+                        altOrigEl.style.display = 'block';
+                    } else {
+                        altOrigEl.style.display = 'none';
+                    }
+                }
+                
+                const windEl = document.getElementById(`wp_${i}_wind`);
+                if (windEl && document.activeElement !== windEl) { 
+                    windEl.value = wp.estZwindDisplay; 
+                    if (wp.actualZwind !== '' || wp.estZwindDisplay !== wp.plannedZwind) {
+                        windEl.classList.add('input-modified'); 
+                    } else {
+                        windEl.classList.remove('input-modified');
+                    }
+                }
+                
+                const tmpEl = document.getElementById(`wp_${i}_tmp`);
+                if (tmpEl && document.activeElement !== tmpEl) { 
+                    tmpEl.value = wp.estTmpDisplay; 
+                    if (wp.actualTmp !== '' || wp.estTmpDisplay !== wp.plannedTmp) {
+                        tmpEl.classList.add('input-modified'); 
+                    } else {
+                        tmpEl.classList.remove('input-modified');
+                    }
+                }
+
+                const isaDevEl = document.getElementById(`wp_${i}_isaDev`);
+                if (isaDevEl) {
+                    let currentIsaDevDisplay = '()';
+                    if (wp.calcIsaDev !== undefined && wp.calcIsaDev !== null) {
+                        currentIsaDevDisplay = `(${wp.calcIsaDev >= 0 ? '+' : ''}${wp.calcIsaDev})`;
+                    }
+                    isaDevEl.textContent = currentIsaDevDisplay;
+                }
+
+                const estTimeEl = document.getElementById(`wp_${i}_estTime`);
+                if (estTimeEl) { estTimeEl.textContent = wp.estTimeDisplay; if (wp.actualTime && wp.actualTime.length === 4) estTimeEl.classList.add('strikethrough-est'); else estTimeEl.classList.remove('strikethrough-est'); }
+                const estFuelEl = document.getElementById(`wp_${i}_estFuel`);
+                if (estFuelEl) {
+                    estFuelEl.textContent = wp.estFuelDisplay !== null ? wp.estFuelDisplay.toFixed(1) : '--';
+                    let actFuelStr = app.state.fuelCalcBasis === 'TTL' ? (wp.actualFuelTTL || '') : (wp.actualFuelCALC || '');
+                    if (actFuelStr !== '') estFuelEl.classList.add('strikethrough-est'); else estFuelEl.classList.remove('strikethrough-est');
+                }
+
+                const actTimeEl = document.getElementById(`wp_${i}_actTime`); if (actTimeEl && document.activeElement !== actTimeEl) actTimeEl.value = wp.actualTime || '';
+                const actFuelTTLEl = document.getElementById(`wp_${i}_actFuelTTL`); if (actFuelTTLEl && document.activeElement !== actFuelTTLEl) actFuelTTLEl.value = wp.actualFuelTTL || '';
+                const actFuelCALCEl = document.getElementById(`wp_${i}_actFuelCALC`); if (actFuelCALCEl && document.activeElement !== actFuelCALCEl) actFuelCALCEl.value = wp.actualFuelCALC || '';
+
+                const timeDiffEl = document.getElementById(`wp_${i}_timeDiff`);
+                if (timeDiffEl) { timeDiffEl.textContent = wp.timeDiff !== null ? (wp.timeDiff > 0 ? '+'+wp.timeDiff : wp.timeDiff) : ''; timeDiffEl.className = `log-td col-diff ${(wp.timeDiff !== null) ? (wp.timeDiff > 0 ? 'diff-behind' : (wp.timeDiff < 0 ? 'diff-ahead' : '')) : ''}`; }
+                const fuelDiffEl = document.getElementById(`wp_${i}_fuelDiff`);
+                if (fuelDiffEl) { fuelDiffEl.textContent = wp.fuelDiff !== null ? (wp.fuelDiff > 0 ? '+'+wp.fuelDiff.toFixed(1) : wp.fuelDiff.toFixed(1)) : ''; fuelDiffEl.className = `log-td col-diff ${(wp.fuelDiff !== null) ? (wp.fuelDiff > 0 ? 'diff-ahead' : (wp.fuelDiff < 0 ? 'diff-behind' : '')) : ''}`; }
+            });
+        }
+        
+        if(this.renderStatusBar) this.renderStatusBar();
+        document.getElementById('tableContainer').style.display = 'block';
+    },
+
+    resetData() {
+        if (!confirm("フライトデータをリセットして初期画面に戻りますか？\n（※Crew情報を引き継ぎたい場合は、初期画面の履歴から選択してください）")) return;
+        const oldHistory = JSON.parse(JSON.stringify(this.state.flightHistory));
+        this.state = { 
+            waypoints: [], altns: [{name:'', fuel:0, rsv:0}], alertThreshold: 0, destFuelThreshold: 0, headerInfo: "", flightMeta: null, fuelCalcBasis: 'CALC',
+            crew: [{ id: 1, duty: 'PIC', empNo: '', name: '', rank: 'CAP' }, { id: 2, duty: 'COP', empNo: '', name: '', rank: 'COP' }],
+            crewMemo: '', takeoffPilotId: null, landingPilotId: null, crewPanelOpen: true,
+            times: { bo: '', bi: '', tkof: '', ldg: '' }, actFob: '', actFod: '', postFlightLog: null, activeInput: null, flightHistory: oldHistory, rawForecastText: "",
+            activeNumpadTarget: null, activeNumpadType: 'time'
+        };
+        document.getElementById('flightHeader').style.display = 'none'; document.getElementById('headerInfoCard').style.display = 'none';
+        if (document.getElementById('forecastInfoCard')) document.getElementById('forecastInfoCard').style.display = 'none';
+        document.getElementById('crewInfoCard').style.display = 'none'; document.getElementById('tableContainer').style.display = 'none';
+        document.getElementById('statusBar').style.display = 'none'; document.getElementById('bottomControls').style.display = 'none';
+        document.getElementById('settingsPanel').style.display = 'none'; document.getElementById('defaultTitle').style.display = 'block';
+        document.getElementById('inputArea').style.display = 'block';
+        
+        document.body.style.overflow = '';
+
+        this.saveConfig(); this.renderSettings(); this.renderTimes(); 
+        if(this.renderActualFuel) this.renderActualFuel(); 
+        if(this.renderFlightHistory) this.renderFlightHistory(); 
+        if (this.renderPostFlightLog) this.renderPostFlightLog();
+    },
+
+    showNumpad(el, title, type) {
+        if (this.state.activeNumpadTarget) {
+            this.state.activeNumpadTarget.classList.remove('numpad-active');
+        }
+        
+        this.state.activeNumpadTarget = el;
+        this.state.activeNumpadType = type;
+        el.classList.add('numpad-active');
+        
+        document.getElementById('numpadOverlay').style.display = 'block';
+        const pad = document.getElementById('numpadContainer');
+        pad.style.visibility = 'hidden';
+        pad.style.display = 'grid';
+        
+        const rect = el.getBoundingClientRect();
+        const padWidth = pad.offsetWidth || 220; 
+        const padHeight = pad.offsetHeight || 220;
+        
+        let top = rect.bottom + window.scrollY + 5; 
+        let left = rect.left + window.scrollX;
+        
+        if (left + padWidth > window.innerWidth + window.scrollX) {
+            left = window.innerWidth + window.scrollX - padWidth - 5;
+        }
+        
+        if (rect.bottom + padHeight + 10 > window.innerHeight) {
+            top = rect.top + window.scrollY - padHeight - 5;
+            if (top < window.scrollY) {
+                top = rect.bottom + window.scrollY + 5;
+                window.scrollBy({ top: (rect.bottom + padHeight + 15) - window.innerHeight, behavior: 'smooth' });
+            }
+        }
+        
+        pad.style.position = 'absolute';
+        pad.style.top = top + 'px';
+        pad.style.left = left + 'px';
+        pad.style.transform = 'none'; 
+        pad.style.visibility = 'visible';
+        
+        el.blur(); 
+    },
+
+    closeNumpad() {
+        document.getElementById('numpadOverlay').style.display = 'none';
+        document.getElementById('numpadContainer').style.display = 'none';
+        if (this.state.activeNumpadTarget) {
+            this.state.activeNumpadTarget.classList.remove('numpad-active');
+            this.state.activeNumpadTarget.dispatchEvent(new Event('change'));
+        }
+        this.state.activeNumpadTarget = null;
+    },
+
+    numpadInput(val) {
+        const el = this.state.activeNumpadTarget;
+        if (!el) return;
+        if (val === 'DEL') { el.value = el.value.slice(0, -1); } else { el.value += val; }
+        
+        if (this.sanitizeTimeInput && this.state.activeNumpadType === 'time') {
+            el.value = this.sanitizeTimeInput(el.value);
+        } else if (this.sanitizeFuelInput && this.state.activeNumpadType === 'fuel') {
+            el.value = this.sanitizeFuelInput(el.value);
+        }
+    }
+};
+
+window.onload = () => app.init();
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Offline SW registered:', reg.scope))
+            .catch(err => console.log('SW registration failed:', err));
+    });
+}
+/* --- utils.js --- */
+// ====== utils.js ======
+// 汎用計算・フォーマット・気象解析ユーティリティ
+Object.assign(app, {
+    // ★追加: 時間入力のサニタイズ（数字と '+' のみ許可）
+    sanitizeTimeInput(val) {
+        if (!val) return '';
+        return String(val).replace(/[^0-9+]/g, '');
+    },
+
+    // ★追加: 燃料入力のサニタイズ（数字と '.' のみ許可、重複排除、先頭ドット補正）
+    sanitizeFuelInput(val) {
+        if (!val) return '';
+        let s = String(val).replace(/[^0-9.]/g, '');
+        // 小数点が複数ある場合は最初の1つだけ残す
+        const parts = s.split('.');
+        if (parts.length > 2) {
+            s = parts[0] + '.' + parts.slice(1).join('');
+        }
+        // 先頭が小数点なら0を補完
+        if (s.startsWith('.')) {
+            s = '0' + s;
+        }
+        return s;
+    },
+
+    parseLegTime(str) { if (!str || str === "---") return 0; const p = str.split('.'), h = parseInt(p[0], 10) || 0, m = parseInt(p[1], 10) || 0; return (h * 60) + m; },
+    formatLegTime(m) { return String(Math.floor(m / 60)).padStart(2, '0') + '.' + String(m % 60).padStart(2, '0'); },
+    toMin(s) { return parseInt(s.slice(0,2), 10)*60 + parseInt(s.slice(2,4), 10); },
+    toHHMM(m) { let tm = Math.round(m); return String(Math.floor(tm/60)%24).padStart(2,'0') + String(tm%60).padStart(2,'0'); },
+    diffMin(act, est) { let d = act - est; while(d > 720) d -= 1440; while(d < -720) d += 1440; return d; },
+
+    formatWindTemp(raw) {
+        if (!raw || raw === "---") return "---";
+        const match = raw.match(/^(\d{2})(\d{2})([PM])?(\d{2})?$/);
+        if (!match) return raw;
+        
+        let dirCode = parseInt(match[1], 10);
+        let spdCode = parseInt(match[2], 10);
+        
+        let dir, spd;
+        if (dirCode === 99) { dir = "VRB"; spd = spdCode; } 
+        else if (dirCode >= 50) { dir = (dirCode - 50) * 10; spd = spdCode + 100; } 
+        else { dir = dirCode * 10; spd = spdCode; }
+        
+        let dirStr = dir === "VRB" ? "VRB" : String(dir).padStart(3, '0');
+        let spdStr = String(spd).padStart(3, '0');
+        
+        let tempStr = "";
+        if (match[3] && match[4]) {
+            let sign = match[3] === 'M' ? '-' : '';
+            tempStr = " " + sign + match[4];
+        }
+        return `${dirStr}/${spdStr}${tempStr}`;
+    },
+
+    getAltFeet(altStr) {
+        if (!altStr || altStr === '---') return null;
+        let targetNum = parseInt(altStr.replace(/\D/g, ''));
+        if (isNaN(targetNum)) return null;
+        if (altStr.includes('FL') || targetNum < 1000) targetNum *= 100; 
+        return targetNum;
+    },
+
+    getISA(altFeet) {
+        if (altFeet >= 36089) return -56.5; 
+        return 15.0 - (0.0019812 * altFeet);
+    },
+
+    getClosestAlt(forecastObj, targetAltStr) {
+        if (!forecastObj || Object.keys(forecastObj).length === 0) return null;
+        const targetNum = this.getAltFeet(targetAltStr);
+        if (targetNum === null) return null;
+        
+        const alts = Object.keys(forecastObj).map(Number).sort((a, b) => a - b);
+        let closest = alts[0];
+        let minDiff = Math.abs(targetNum - closest);
+        
+        for (let i = 1; i < alts.length; i++) {
+            let diff = Math.abs(targetNum - alts[i]);
+            if (diff < minDiff) { closest = alts[i]; minDiff = diff; } 
+            else if (diff === minDiff) { if (alts[i] > closest) closest = alts[i]; } 
+        }
+        return String(closest);
+    }
+});
+/* --- fuel.js --- */
+// ====== fuel.js ======
+// 燃料・時間計算、ステータスバー表示ロジック
+Object.assign(app, {
+    updateActualFuel(field, val) { 
+        // ★保護：サニタイズ（安全装置）を実行
+        if (this.sanitizeFuelInput) val = this.sanitizeFuelInput(val);
+
+        if (field === 'fob') this.state.actFob = val; 
+        if (field === 'fod') this.state.actFod = val; 
+        this.saveConfig(); 
+        
+        // ★修正：UIへ補正された値を強制的に書き戻す
+        this.renderActualFuel();
+    },
+    
+    renderActualFuel() {
+        const fobEl = document.getElementById('actFob'); if (fobEl && document.activeElement !== fobEl) fobEl.value = this.state.actFob || '';
+        const fodEl = document.getElementById('actFod'); if (fodEl && document.activeElement !== fodEl) fodEl.value = this.state.actFod || '';
+    },
+
+    calculate() {
+        let pTimeMin = null, pFuel = null, cAlt = null, oAlt = null;
+        this.state.waypoints.forEach((wp, i) => {
+            if (wp.actualAlt !== '') { wp.estAltDisplay = wp.actualAlt; cAlt = wp.actualAlt; oAlt = wp.plannedAlt; }
+            else { if (cAlt !== null && wp.plannedAlt === oAlt) wp.estAltDisplay = cAlt; else { cAlt = null; oAlt = null; wp.estAltDisplay = wp.plannedAlt; } }
+            
+            let autoWind = wp.plannedZwind;
+            let autoTmp = wp.plannedTmp;
+            
+            if (wp.estAltDisplay !== wp.plannedAlt && wp.forecast && Object.keys(wp.forecast).length > 0) {
+                const closestAlt = this.getClosestAlt(wp.forecast, wp.estAltDisplay);
+                if (closestAlt) {
+                    const rawData = wp.forecast[closestAlt];
+                    if (rawData && rawData !== "---") {
+                        const decodedStr = this.formatWindTemp(rawData); 
+                        const parts = decodedStr.split(' ');
+                        if (parts.length >= 1) autoWind = parts[0];
+                        if (parts.length >= 2) autoTmp = parts[1];
+                    }
+                }
+            }
+            
+            wp.estZwindDisplay = wp.actualZwind !== '' ? wp.actualZwind : autoWind;
+            wp.estTmpDisplay = wp.actualTmp !== '' ? wp.actualTmp : autoTmp;
+            
+            const currentAltFeet = this.getAltFeet(wp.estAltDisplay);
+            if (currentAltFeet !== null && wp.estTmpDisplay && wp.estTmpDisplay !== '---') {
+                const currentTmpNum = parseInt(wp.estTmpDisplay, 10);
+                if (!isNaN(currentTmpNum)) {
+                    const isaTemp = this.getISA(currentAltFeet);
+                    wp.calcIsaDev = Math.round(currentTmpNum - isaTemp); 
+                } else {
+                    wp.calcIsaDev = null;
+                }
+            } else {
+                wp.calcIsaDev = null;
+            }
+            
+            let actFuelStr = this.state.fuelCalcBasis === 'TTL' ? (wp.actualFuelTTL || '') : (wp.actualFuelCALC || '');
+            let actTimeStr = wp.actualTime || '';
+
+            if (i === 0) { 
+                wp.calcEstTimeMin = (actTimeStr && actTimeStr.length === 4) ? this.toMin(actTimeStr) : null; 
+                wp.calcEstFuel = wp.plannedFuel; 
+            } else {
+                wp.calcEstTimeMin = pTimeMin !== null ? (pTimeMin + wp.ztmeMin) % 1440 : null;
+                wp.calcEstFuel = pFuel !== null ? Math.max(0, pFuel - (this.state.waypoints[i-1].plannedFuel - wp.plannedFuel)) : wp.plannedFuel;
+            }
+            wp.estTimeDisplay = wp.calcEstTimeMin !== null ? this.toHHMM(wp.calcEstTimeMin) : '--';
+            wp.estFuelDisplay = wp.calcEstFuel;
+            
+            wp.timeDiff = (actTimeStr && actTimeStr.length === 4 && wp.calcEstTimeMin !== null) ? this.diffMin(this.toMin(actTimeStr), wp.calcEstTimeMin) : null;
+            wp.fuelDiff = (actFuelStr !== '') ? parseFloat(actFuelStr) - wp.plannedFuel : null;
+            
+            pTimeMin = (actTimeStr && actTimeStr.length === 4) ? this.toMin(actTimeStr) : wp.calcEstTimeMin;
+            pFuel = actFuelStr !== '' ? parseFloat(actFuelStr) : wp.calcEstFuel;
+        });
+        this.saveConfig();
+    },
+
+    renderStatusBar() {
+        const wps = this.state.waypoints; if (!wps || wps.length === 0) return;
+        const last = wps[wps.length - 1];
+        let lastTimeIdx = -1, lastFuelIdx = -1;
+        for (let i = wps.length - 1; i >= 0; i--) {
+            if (lastTimeIdx === -1 && wps[i].actualTime && wps[i].actualTime.length === 4) lastTimeIdx = i;
+            let actFuelStr = this.state.fuelCalcBasis === 'TTL' ? (wps[i].actualFuelTTL || '') : (wps[i].actualFuelCALC || '');
+            if (lastFuelIdx === -1 && actFuelStr !== '') lastFuelIdx = i;
+        }
+
+        const elEtaLast = document.getElementById('sb-eta-last');
+        if (lastTimeIdx !== -1) { elEtaLast.textContent = `(Last: ${wps[lastTimeIdx].name})`; elEtaLast.style.display = 'inline'; elEtaLast.onclick = () => app.scrollToRow(lastTimeIdx); } else { elEtaLast.style.display = 'none'; }
+        const elFuelLast = document.getElementById('sb-fuel-last');
+        if (lastFuelIdx !== -1) { elFuelLast.textContent = `(Last: ${wps[lastFuelIdx].name})`; elFuelLast.style.display = 'inline'; elFuelLast.onclick = () => app.scrollToRow(lastFuelIdx); } else { elFuelLast.style.display = 'none'; }
+
+        const finalTimeMin = last.actualTime && last.actualTime.length === 4 ? this.toMin(last.actualTime) : last.calcEstTimeMin;
+        let lastActFuelStr = this.state.fuelCalcBasis === 'TTL' ? (last.actualFuelTTL || '') : (last.actualFuelCALC || '');
+        const finalFuel = lastActFuelStr !== '' ? parseFloat(lastActFuelStr) : last.calcEstFuel;
+
+        let etaDisp = '--', etaDiffDisp = '', etaClass = '';
+        if (finalTimeMin !== null && this.state.flightMeta) {
+            let timeOffset = 0;
+            if (this.state.flightMeta.time) { const match = this.state.flightMeta.time.match(/(?:STA|ETA)\s+(\d{4})Z\/(\d{4})L/); if (match) { timeOffset = this.toMin(match[2]) - this.toMin(match[1]); } }
+            let localTimeMin = (finalTimeMin + timeOffset + 2880) % 1440;
+            etaDisp = this.toHHMM(finalTimeMin) + 'Z/' + this.toHHMM(localTimeMin) + 'L';
+            if (this.state.flightMeta.sta) {
+                const staMin = this.toMin(this.state.flightMeta.sta); let diff = finalTimeMin - staMin;
+                while(diff > 720) diff -= 1440; while(diff < -720) diff += 1440;
+                if (diff < 0) { etaDiffDisp = `(${diff}m)`; etaClass = 'diff-ahead'; } else if (diff > 0) { etaDiffDisp = `(+${diff}m)`; etaClass = 'diff-behind'; } else { etaDiffDisp = '(On Time)'; }
+            }
+        }
+        document.getElementById('sb-eta').textContent = etaDisp;
+        const elEtaDiff = document.getElementById('sb-eta-diff'); elEtaDiff.textContent = etaDiffDisp; elEtaDiff.className = etaClass ? `status-badge ${etaClass}` : 'status-badge';
+        
+      
+        let destFuelDisp = finalFuel !== null ? finalFuel.toFixed(1) : '--', destFuelDiffDisp = '', destFuelClass = '';
+        if (finalFuel !== null) {
+            let diff = finalFuel - last.plannedFuel;
+            if (diff > 0) { destFuelDiffDisp = `(+${diff.toFixed(1)})`; destFuelClass = 'diff-ahead'; } else if (diff < 0) { destFuelDiffDisp = `(${diff.toFixed(1)})`; destFuelClass = 'diff-behind'; } else { destFuelDiffDisp = '(±0.0)'; }
+        }
+        document.getElementById('sb-dest-fuel').textContent = destFuelDisp;
+        const elFuelDiff = document.getElementById('sb-dest-fuel-diff'); elFuelDiff.textContent = destFuelDiffDisp; elFuelDiff.className = destFuelClass ? `status-badge ${destFuelClass}` : 'status-badge';
+
+        const planFodEl = document.getElementById('sb-plan-fod-display'); if (planFodEl && last) planFodEl.textContent = `Plan FOD: ${last.plannedFuel.toFixed(1)}`;
+
+        const sb = document.getElementById('statusBar'), warningEl = document.getElementById('sb-dest-fuel-warning');
+        if (finalFuel !== null && this.state.destFuelThreshold > 0 && finalFuel < this.state.destFuelThreshold) { sb.classList.add('status-warning'); if (warningEl) warningEl.innerHTML = '<span class="dest-warning-badge">⚠️ LOW FUEL</span>'; } 
+        else { sb.classList.remove('status-warning'); if (warningEl) warningEl.innerHTML = ''; }
+
+        const container = document.getElementById('sb-avail-fuel-container'); container.innerHTML = '';
+        let validAltnCount = 0;
+        if (finalFuel !== null) {
+            this.state.altns.forEach(altn => {
+                if (altn.name && altn.name.trim() !== '') {
+                    validAltnCount++; const totalReq = parseFloat(altn.fuel) + parseFloat(altn.rsv), avail = finalFuel - totalReq, isLow = avail < this.state.alertThreshold;
+                    const div = document.createElement('div'); div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.flexWrap = 'wrap'; div.style.marginBottom = '2px';
+                    div.innerHTML = `<span style="font-size: 14px; color: ${isLow ? 'var(--alert-text)' : '#f1c40f'};">[${altn.name}] ${avail.toFixed(1)}</span>${isLow ? `<span class="altn-warning-badge">⚠️ LOW FUEL</span>` : ''}<span style="font-size: 10px; font-weight: normal; margin-left: 8px; opacity: 0.7;">( [${altn.name}] ${totalReq.toFixed(1)} (= ALTN:${parseFloat(altn.fuel).toFixed(1)} + RSV:${parseFloat(altn.rsv).toFixed(1)}) )</span>`;
+                    container.appendChild(div);
+                }
+            });
+            if (validAltnCount === 0) {
+                const avail = finalFuel, isLow = avail < this.state.alertThreshold;
+                const div = document.createElement('div'); div.style.display = 'flex'; div.style.alignItems = 'center';
+                div.innerHTML = `<span style="font-size: 14px; color: ${isLow ? 'var(--alert-text)' : '#f1c40f'};">${avail.toFixed(1)}</span>${isLow ? `<span class="altn-warning-badge">⚠️ LOW FUEL</span>` : ''}`;
+                container.appendChild(div);
+            }
+        }
+
+        const etaEl = document.getElementById('sb-eta');
+        if (etaEl) { const etaSection = etaEl.closest('.status-section'); if (etaSection) etaSection.classList.add('no-print'); }
+        setTimeout(() => this.updateStickyHeight(), 50);
+    }
+});
+/* --- history.js --- */
+// ====== history.js ======
+// フライト履歴・データ管理ロジック
+Object.assign(app, {
+    saveFlightToHistory() {
+        if (!this.state.flightMeta || this.state.flightMeta.flt === "---") return;
+        const meta = this.state.flightMeta;
+        const entry = { date: meta.date, flt: meta.flt, dep: meta.dep, dest: meta.dest, crew: JSON.parse(JSON.stringify(this.state.crew)) };
+        this.state.flightHistory = this.state.flightHistory.filter(h => !(h.date === entry.date && h.flt === entry.flt));
+        this.state.flightHistory.unshift(entry);
+        if (this.state.flightHistory.length > 5) this.state.flightHistory.pop();
+    },
+
+    syncCrewToHistory() {
+        if (!this.state.flightMeta || this.state.flightMeta.flt === "---" || !this.state.flightHistory || this.state.flightHistory.length === 0) return;
+        const meta = this.state.flightMeta;
+        const idx = this.state.flightHistory.findIndex(h => h.date === meta.date && h.flt === meta.flt);
+        if (idx !== -1) this.state.flightHistory[idx].crew = JSON.parse(JSON.stringify(this.state.crew));
+    },
+
+    renderFlightHistory() {
+        const area = document.getElementById('historyArea'), list = document.getElementById('historyList');
+        if (!area || !list) return;
+        if (this.state.flightHistory.length === 0) { area.style.display = 'none'; return; }
+        area.style.display = 'block'; list.innerHTML = '';
+        this.state.flightHistory.forEach((h, idx) => {
+            const otherCrewNames = h.crew.map(c => c.name).filter(name => name !== '' && name.trim() !== '').join(', ');
+            const div = document.createElement('div');
+            div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);';
+            div.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+                    <div style="font-size: 13px; font-weight: bold;">📅 ${h.date} &nbsp; ✈️ ${h.flt} <span style="font-weight: normal; color: var(--text-faint); font-size: 11px;">(${h.dep} ➔ ${h.dest})</span></div>
+                    <div style="font-size: 11px; color: var(--accent-color);">👨‍✈️ Crew: ${otherCrewNames || '(未入力)'}</div>
+                </div>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    <button class="btn-secondary btn-small" onclick="app.applyCrewFromHistory(${idx})" style="padding: 5px 8px; font-size: 10px; white-space: nowrap;">[このCrewを適用]</button>
+                    <button class="btn-danger btn-small" onclick="app.deleteHistoryEntry(${idx})" style="padding: 5px 8px; font-size: 10px;" title="この履歴を削除">✖</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    },
+
+    applyCrewFromHistory(index) {
+        const h = this.state.flightHistory[index];
+        if (h && h.crew) {
+            this.state.crew = h.crew.map(c => ({ id: c.id, duty: c.duty, empNo: c.empNo, name: c.name, rank: c.rank }));
+            this.state.takeoffPilotId = null; this.state.landingPilotId = null;
+            this.saveConfig(); alert(`${h.flt} のCrew編成をセットしました。`);
+            if (this.renderCrew) this.renderCrew();
+        }
+    },
+
+    deleteHistoryEntry(index) { if (confirm("このフライト履歴を削除しますか？")) { this.state.flightHistory.splice(index, 1); this.saveConfig(); this.renderFlightHistory(); } },
+    clearFlightHistory() { if (confirm("保存されているフライト履歴(Crew情報)をすべて消去しますか？")) { this.state.flightHistory = []; this.saveConfig(); this.renderFlightHistory(); } }
+});
+/* --- crew.js --- */
+// ====== crew.js ======
+// appオブジェクトにCREW・PFL関連の機能を追加（拡張）します
+Object.assign(app, {
+    
+    toggleCrew() {
+        this.state.crewPanelOpen = !this.state.crewPanelOpen;
+        this.saveConfig();
+        this.updateCrewPanelUI();
+    },
+    
+    updateCrewPanelUI() {
+        const c = document.getElementById('crewContentEl');
+        const icon = document.getElementById('crew-toggle-icon');
+        if (this.state.crewPanelOpen) { c.style.display = 'block'; icon.textContent = '▼'; } 
+        else { c.style.display = 'none'; icon.textContent = '▶'; }
+    },
+
+    handleSelectChange(index, field, val) {
+        if (val === 'other') {
+            const input = prompt(`${field.toUpperCase()} を入力:`);
+            if (input !== null && input.trim() !== '') { this.state.crew[index][field] = input.trim().toUpperCase(); }
+        } else { this.state.crew[index][field] = val; }
+        this.saveConfig();
+        this.renderCrew();
+    },
+
+    renderCrew() {
+        const tbody = document.getElementById('crewTableBody'); 
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        this.state.crew.forEach((c, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="radio" name="takeoffPilot" value="${c.id}" ${this.state.takeoffPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('takeoff', ${c.id})"></td>
+                <td><input type="radio" name="landingPilot" value="${c.id}" ${this.state.landingPilotId === c.id ? 'checked' : ''} onchange="app.updateCrewPilot('landing', ${c.id})"></td>
+                <td>
+                    <select class="crew-input" onchange="app.handleSelectChange(${i}, 'duty', this.value)">
+                        <option value="PIC" ${c.duty === 'PIC' ? 'selected' : ''}>PIC</option>
+                        <option value="SIC" ${c.duty === 'SIC' ? 'selected' : ''}>SIC</option>
+                        <option value="COP" ${c.duty === 'COP' ? 'selected' : ''}>COP</option>
+                        <option value="OBS" ${c.duty === 'OBS' ? 'selected' : ''}>OBS</option>
+                        <option value="OPE" ${c.duty === 'OPE' ? 'selected' : ''}>OPE</option>
+                        <option value="other" ${!['PIC','SIC','COP','OBS','OPE'].includes(c.duty) ? 'selected' : ''}>${!['PIC','SIC','COP','OBS','OPE'].includes(c.duty) ? c.duty : '---'}</option>
+                    </select>
+                </td>
+                <td><input type="text" class="crew-input" value="${c.empNo}" onchange="app.updateCrew(${i}, 'empNo', this.value)"></td>
+                <td style="padding-left: 10px;"><input type="text" class="crew-input" style="text-align: left;" value="${c.name}" onchange="app.updateCrew(${i}, 'name', this.value)"></td>
+                <td>
+                    <select class="crew-input" onchange="app.handleSelectChange(${i}, 'rank', this.value)">
+                        <option value="CAP" ${c.rank === 'CAP' ? 'selected' : ''}>CAP</option>
+                        <option value="COP" ${c.rank === 'COP' ? 'selected' : ''}>COP</option>
+                        <option value="TR" ${c.rank === 'TR' ? 'selected' : ''}>TR</option>
+                        <option value="other" ${!['CAP','COP','TR'].includes(c.rank) ? 'selected' : ''}>${!['CAP','COP','TR'].includes(c.rank) ? c.rank : '---'}</option>
+                    </select>
+                </td>
+                <td class="no-print">
+                    ${i > 1 ? `<button class="btn-danger btn-small" onclick="app.removeCrew(${i})">✖</button>` : ''}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    },
+
+    updateCrew(index, field, val) {
+        this.state.crew[index][field] = val.toUpperCase();
+        this.saveConfig();
+    },
+
+    updateCrewPilot(type, id) {
+        if (type === 'takeoff') this.state.takeoffPilotId = id;
+        if (type === 'landing') this.state.landingPilotId = id;
+        this.saveConfig();
+    },
+
+    addCrew() {
+        const newId = this.state.crew.length > 0 ? Math.max(...this.state.crew.map(c => c.id)) + 1 : 1;
+        this.state.crew.push({ id: newId, duty: 'OBS', empNo: '', name: '', rank: 'COP' });
+        this.saveConfig();
+        this.renderCrew();
+    },
+
+    removeCrew(index) {
+        if (index <= 1) return;
+        const cId = this.state.crew[index].id;
+        if (this.state.takeoffPilotId === cId) this.state.takeoffPilotId = null;
+        if (this.state.landingPilotId === cId) this.state.landingPilotId = null;
+        this.state.crew.splice(index, 1);
+        this.saveConfig();
+        this.renderCrew();
+    },
+
+    setPflToggle(field, val) {
+        if(!this.state.postFlightLog) return;
+        this.state.postFlightLog[field] = val;
+        
+        if (field === 'domInt') {
+            document.getElementById('btnPflDom').classList.toggle('active', val === 'DOM');
+            document.getElementById('btnPflInt').classList.toggle('active', val === 'INT');
+            if (this.calcPflTimes) this.calcPflTimes();
+        } else if (field === 'activeDuty') {
+            document.getElementById('btnPflPic').classList.toggle('active', val === 'PIC');
+            document.getElementById('btnPflSic').classList.toggle('active', val === 'SIC');
+            document.getElementById('btnPflCop').classList.toggle('active', val === 'COP');
+            if (this.calcPflTimes) this.calcPflTimes();
+        }
+        this.saveConfig();
+    },
+
+    updatePfl(field, val, isDuration = false) {
+        if(!this.state.postFlightLog) return;
+        
+        // ★保護：時間関連フィールドの入力サニタイズを適用
+        if (isDuration || field === 'depTime' || field === 'arrTime') {
+            if (this.sanitizeTimeInput) val = this.sanitizeTimeInput(val);
+        }
+        
+        if (isDuration && val && !val.includes('+')) {
+            val = val.replace(/\D/g, ''); 
+            if (val.length <= 2) {
+                if (val.length > 0) val = "00+" + val.padStart(2, '0');
+            } else {
+                const hh = val.slice(0, -2).padStart(2, '0');
+                const mm = val.slice(-2);
+                val = hh + "+" + mm;
+            }
+        }
+        
+        this.state.postFlightLog[field] = val;
+        this.saveConfig();
+        
+        // ★修正：UIへ補正された値を強制的に書き戻す
+        this.renderPostFlightLog();
+    },
+
+    calcPflTimes() {
+        if(!this.state.postFlightLog) return;
+
+        const rawBo = this.state.times.bo;
+        const rawBi = this.state.times.bi;
+        
+        if (!rawBo || !rawBi || rawBo.length !== 4 || rawBi.length !== 4) {
+            this.state.postFlightLog.fltTime = '';
+            this.state.postFlightLog.picTime = '';
+            this.state.postFlightLog.sicTime = '';
+            this.state.postFlightLog.copTime = '';
+            this.state.postFlightLog.depTime = '';
+            this.state.postFlightLog.arrTime = '';
+            this.renderPostFlightLog();
+            return;
+        }
+
+        const bo = this.toMin(rawBo);
+        const bi = this.toMin(rawBi);
+
+        if (isNaN(bo) || isNaN(bi)) {
+            this.state.postFlightLog.fltTime = '';
+            this.state.postFlightLog.picTime = '';
+            this.state.postFlightLog.sicTime = '';
+            this.state.postFlightLog.copTime = '';
+            this.state.postFlightLog.depTime = '';
+            this.state.postFlightLog.arrTime = '';
+            this.renderPostFlightLog();
+            return;
+        }
+
+        let diff = bi - bo;
+        if (diff < 0) diff += 1440;
+
+        const hh = Math.floor(diff / 60).toString().padStart(2, '0');
+        const mm = (diff % 60).toString().padStart(2, '0');
+        const fltTimeStr = `${hh}+${mm}`;
+
+        this.state.postFlightLog.fltTime = fltTimeStr;
+        
+        const duty = this.state.postFlightLog.activeDuty;
+        if (duty === 'PIC') {
+            this.state.postFlightLog.picTime = fltTimeStr;
+            this.state.postFlightLog.sicTime = '';
+            this.state.postFlightLog.copTime = '';
+        } else if (duty === 'SIC') {
+            this.state.postFlightLog.picTime = '';
+            this.state.postFlightLog.sicTime = fltTimeStr;
+            this.state.postFlightLog.copTime = '';
+        } else if (duty === 'COP') {
+            this.state.postFlightLog.picTime = '';
+            this.state.postFlightLog.sicTime = '';
+            this.state.postFlightLog.copTime = fltTimeStr;
+        } else {
+            this.state.postFlightLog.picTime = '';
+            this.state.postFlightLog.sicTime = '';
+            this.state.postFlightLog.copTime = '';
+        }
+
+        const domInt = this.state.postFlightLog.domInt;
+        this.state.postFlightLog.depTime = this.convertZtoLocal(this.state.times.bo, domInt);
+        this.state.postFlightLog.arrTime = this.convertZtoLocal(this.state.times.bi, domInt);
+
+        this.saveConfig();
+        this.renderPostFlightLog();
+    },
+
+    convertZtoLocal(zTime, domInt) {
+        if (!zTime || zTime.length !== 4) return zTime;
+        if (domInt === 'INT') return zTime; 
+        let m = this.toMin(zTime) + 540; 
+        return this.toHHMM(m % 1440);
+    },
+
+    renderPostFlightLog() {
+        if(!this.state.postFlightLog) return;
+        
+        if (this.state.flightMeta) {
+            const pfl = this.state.postFlightLog;
+            const fm = this.state.flightMeta;
+            if (!pfl.day && fm.date) pfl.day = fm.date;
+            if (!pfl.reg && fm.reg) pfl.reg = fm.reg;
+            if (!pfl.dep && fm.dep) pfl.dep = fm.dep;
+            if (!pfl.arr && fm.dest) pfl.arr = fm.dest;
+            if (!pfl.fltNumber && fm.flt) pfl.fltNumber = fm.flt;
+        }
+
+        let printPfl = document.getElementById('print-pfl-container');
+        if (!printPfl) {
+            printPfl = document.createElement('div');
+            printPfl.id = 'print-pfl-container';
+            const section = document.querySelector('.pfl-section');
+            if (section) section.appendChild(printPfl);
+            
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @media screen { #print-pfl-container { display: none; } }
+                @media print {
+                    #print-pfl-container { display: block; width: 100%; margin-top: 10px; }
+                    .pfl-scroll-wrapper { display: none; }
+                    .pfl-header-controls { display: none; }
+                    .print-pfl-table { width: 100%; border-collapse: collapse; margin-bottom: 2mm; }
+                    .print-pfl-table th, .print-pfl-table td { font-size: 7px; border-bottom: 1px dashed black; text-align: center; padding: 2px; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        const pfl = this.state.postFlightLog;
+        
+        if (document.getElementById('btnPflDom')) {
+            document.getElementById('btnPflDom').classList.toggle('active', pfl.domInt === 'DOM');
+            document.getElementById('btnPflInt').classList.toggle('active', pfl.domInt === 'INT');
+            document.getElementById('btnPflPic').classList.toggle('active', pfl.activeDuty === 'PIC');
+            document.getElementById('btnPflSic').classList.toggle('active', pfl.activeDuty === 'SIC');
+            document.getElementById('btnPflCop').classList.toggle('active', pfl.activeDuty === 'COP');
+        }
+
+        const keys1 = ['day', 'type', 'reg', 'dep', 'arr', 'depTime', 'arrTime', 'tkof', 'ldg'];
+        const keys2 = ['fltNumber', 'fltTime', 'picTime', 'sicTime', 'ngtPicSic', 'copTime', 'ngtCop', 'imc', 'apchType'];
+        
+        const buildTr = (keys) => {
+            return `<tr>${keys.map(k => `<td>${pfl[k] || ''}</td>`).join('')}</tr>`;
+        };
+        const buildTh = (keys) => {
+            const labels = {
+                day:'DAY', type:'TYPE', reg:'REG', dep:'DEP', arr:'ARR', depTime:'DEP TIME', arrTime:'ARR TIME', tkof:'TKOF', ldg:'LDG',
+                fltNumber:'FLT NUMBER', fltTime:'FLT TIME', picTime:'PIC TIME', sicTime:'SIC TIME', ngtPicSic:'NGT(PIC/SIC)', copTime:'COP TIME', ngtCop:'NGT(COP)', imc:'IMC', apchType:'APCH TYPE'
+            };
+            return `<tr>${keys.map(k => `<th>${labels[k]}</th>`).join('')}</tr>`;
+        };
+
+        if (printPfl) {
+            printPfl.innerHTML = `
+                <table class="print-pfl-table">
+                    <thead>${buildTh(keys1)}</thead><tbody>${buildTr(keys1)}</tbody>
+                </table>
+                <table class="print-pfl-table">
+                    <thead>${buildTh(keys2)}</thead><tbody>${buildTr(keys2)}</tbody>
+                </table>
+            `;
+        }
+
+        const fields = ['day', 'type', 'reg', 'dep', 'arr', 'depTime', 'arrTime', 'tkof', 'ldg', 'fltNumber', 'fltTime', 'picTime', 'sicTime', 'ngtPicSic', 'copTime', 'ngtCop', 'imc', 'apchType'];
+        fields.forEach(f => {
+            const el = document.getElementById('pfl_' + f);
+            // activeElement（入力中）であっても、サニタイズされた値を確実に反映させる
+            if (el) el.value = pfl[f] || '';
+        });
+    },
+    
+    async copyPflToCsv() {
+        if(!this.state.postFlightLog) return;
+        const pfl = this.state.postFlightLog;
+        const picCrew = this.state.crew.find(c => c.duty === 'PIC');
+        const picName = picCrew ? picCrew.name : '';
+        
+        const fields = [
+            pfl.day, pfl.type, pfl.reg, pfl.dep, pfl.arr, pfl.depTime, pfl.arrTime, pfl.tkof, pfl.ldg, 
+            pfl.fltNumber, pfl.fltTime, pfl.picTime, pfl.sicTime, pfl.ngtPicSic, pfl.copTime, pfl.ngtCop, pfl.imc, pfl.apchType, picName
+        ];
+        
+        const csvString = fields.map(v => v || '').join(',');
+        
+        const btn = document.getElementById('btnPflCsv');
+        const originalText = btn.textContent;
+        
+        const successAction = () => {
+            btn.textContent = '✅ COPIED!';
+            btn.style.backgroundColor = 'var(--success-color)';
+            btn.style.color = '#fff';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+            }, 2000);
+        };
+
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(csvString);
+                successAction();
+            } catch (err) {
+                console.warn('Clipboard API failed, trying fallback...', err);
+                this.fallbackCopyTextToClipboard(csvString, successAction);
+            }
+        } else {
+            this.fallbackCopyTextToClipboard(csvString, successAction);
+        }
+    },
+
+    fallbackCopyTextToClipboard(text, successCallback) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.top = "0";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                successCallback();
+            } else {
+                alert("コピーに失敗しました。");
+            }
+        } catch (err) {
+            alert("コピーに失敗しました。手動でコピーしてください。");
+        }
+        document.body.removeChild(textArea);
+    }
+});
+/* --- parser.js --- */
+// ====== parser.js ======
+// NAVLOGのテキスト読み込み、およびパース（データ抽出）処理
+Object.assign(app, {
+    
+    // --- ★追加: エラー時に初期画面へ強制帰還する安全装置 ---
+    abortAndReturn(errorMessage) {
+        if (errorMessage) {
+            alert(errorMessage);
+        }
+        const elementsToHide = ['flightHeader', 'headerInfoCard', 'forecastInfoCard', 'crewInfoCard', 'tableContainer', 'statusBar', 'bottomControls', 'settingsPanel'];
+        elementsToHide.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        
+        const titleEl = document.getElementById('defaultTitle');
+        if (titleEl) titleEl.style.display = 'block';
+        
+        const inputArea = document.getElementById('inputArea');
+        if (inputArea) inputArea.style.display = 'block';
+        
+        document.body.style.overflow = '';
+    },
+
+    // --- ★修正: Swift(iPad)とWebブラウザを自動判別 ---
+    openPDFPicker() {
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.pdfPickerHandler) {
+            // iPadのSwiftネイティブ環境なら、Swift側にPDF選択画面を開かせる
+            window.webkit.messageHandlers.pdfPickerHandler.postMessage('pickPDF');
+        } else {
+            // Webブラウザ環境なら、HTMLの隠しファイル選択（PDF用）をクリックさせる
+            document.getElementById('webPdfInput').click();
+        }
+    },
+
+    // --- ★追加: WebブラウザでPDFが選ばれた時の処理（PDF.jsを使用） ---
+    // --- ★修正: WebブラウザでPDFが選ばれた時の処理（自動ダウンロード機能付き） ---
+    async handleWebPDFUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+            // ① PDF.jsライブラリが存在しない場合、ネットから「動的」にダウンロードしてくる最強の仕組み
+            if (!window.pdfjsLib) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
+
+            // ② 解析エンジンの裏方（Worker）をセット
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+            // ③ PDFの読み込みとテキスト抽出
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+            let fullText = "";
+
+            // 全ページをループ
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                
+                let lastY = -1;
+                let pageText = "";
+                
+                // 文字のY座標が変わったら改行するロジック
+                for (const item of textContent.items) {
+                    if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
+                        pageText += "\n";
+                    }
+                    pageText += item.str;
+                    lastY = item.transform[5];
+                }
+                fullText += pageText + "\n";
+            }
+            
+            // 抽出完了！いつもの最強パーサーに丸投げする
+            this.processData(fullText);
+            
+            // 連続で同じファイルを選べるように入力をリセット
+            event.target.value = '';
+            
+        } catch (e) {
+            console.error(e);
+            this.abortAndReturn("Web版でのPDF解析に失敗しました。\nファイルが破損しているか、通信環境が不安定な可能性があります。");
+            event.target.value = '';
+        }
+    },
+
+    // --- ★追加: SwiftからのPDF読み込み時 ---
+    loadFromSwiftPDF(text) {
+        if (!text || text.trim() === '') {
+            return alert("PDFからテキストを抽出できませんでした。");
+        }
+        try {
+            this.processData(text);
+        } catch (parseError) {
+            console.error(parseError);
+            this.abortAndReturn("PDFの解析中にエラーが発生しました。\n正しいNAVLOGのPDFか確認してください。");
+        }
+    },
+    
+    // --- 修正: エラー保護 ---
+    async loadFromClipboard() {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (!text || text.trim() === '') return alert("クリップボードが空です。");
+            
+            try {
+                this.processData(text);
+            } catch (parseError) {
+                console.error(parseError);
+                this.abortAndReturn("データの解析に失敗しました。\n関係ないテキストが含まれている可能性があります。");
+            }
+        } catch (err) {
+            alert("読み込みに失敗しました。ファイルを選択してください。");
+        }
+    },
+
+    // --- 修正: エラー保護 ---
+    handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => { 
+            try {
+                this.processData(e.target.result); 
+            } catch (parseError) {
+                console.error(parseError);
+                this.abortAndReturn("ファイルの解析に失敗しました。\n正しいNAVLOGデータか確認してください。");
+            }
+        };
+        reader.readAsText(file);
+    },
+
+    processData(text) {
+        // 全体を保護し、エラーがあれば上の呼び出し元（catch）に投げる
+        try {
+            this.extractFlightMeta(text);
+            this.extractAndFormatHeaderInfo(text);
+            
+            const waypoints = [];
+            const rdisMatch = text.match(/([A-Z]{4})\s+\(RDIS\)\s+(\d{3,4}\.\d)/);
+            if (rdisMatch) { waypoints.push(this.createWP(rdisMatch[1], "---", "---", "---", "00.00", "---", "0.00", 0, 0, parseFloat(rdisMatch[2]), "", "---", "---")); }
+            
+            const regex = /(?:\(\s*\d+\s*\)\s+(?:-\s*){4,6}(?:\(\s*(-?\d+)\s*\))?[\s\S]{1,150}?)?(\d{2}\.\d{2})\s+[NS]\d{5}[EW]\d{5,6}[\s\.]+(\d+\.\d{2})\s+(CLM|DEC|\d{5})?\s*(\d{3}\.\d)\s*([+-]\d{2}|\.{1,2})?\s*(\d{6}|\.{1,2})?\s*([\d\/]{5}|\.{1,2})?[\s\S]{1,150}?(\d{2}\.\d{2})\s+([A-Z0-9\-]+)\s+\.\s+(\d{3})\s+FL.*?(?:\s+|\/)(\d{2}|\.{1,2})\s*$/gm;
+            
+            let match;
+            while ((match = regex.exec(text)) !== null) {
+                const isaDevVal = match[1] ? match[1].replace(/\s+/g, '') : '';
+                const ctme = match[2];
+                const ztmeDisplay = match[3];
+                const ztmeMin = this.parseLegTime(ztmeDisplay);
+                const alt = match[4] || '---';
+                const plannedFuel = parseFloat(match[5]);
+                
+                const tmp = (match[6] && !match[6].includes('.')) ? match[6] : '---';
+                let zwind = '---'; 
+                if (match[7] && !match[7].includes('.')) zwind = match[7].substring(0,3) + '/' + match[7].substring(3,6);
+                const mwtp = (match[8] && !match[8].includes('.')) ? match[8] : '---';
+                const rtme = match[9];
+                const name = match[10]; 
+                const dist = parseInt(match[11], 10);
+                const wscp = (match[12] && !match[12].includes('.')) ? match[12] : '---';
+
+                waypoints.push(this.createWP(name, alt, tmp, zwind, ctme, rtme, ztmeDisplay, ztmeMin, dist, plannedFuel, isaDevVal, mwtp, wscp));
+            }
+            
+            // ★修正: データが0件の場合は強制帰還させる
+            if (waypoints.length <= 1) {
+                return this.abortAndReturn("データを抽出できませんでした。正しいNAVLOGテキストか確認してください。");
+            }
+            
+            if (waypoints.length > 1 && waypoints[1].rtme !== "---") {
+                const firstWpRtmeMin = this.parseLegTime(waypoints[1].rtme);
+                const firstWpZtmeMin = waypoints[1].ztmeMin;
+                waypoints[0].rtme = this.formatLegTime(firstWpRtmeMin + firstWpZtmeMin);
+            }
+
+            // =========================================================
+            // WINDS/TEMP ALOFT FCST 抽出・整形・紐付けロジック
+            // =========================================================
+            const fcstSection = text.split("-WINDS/TEMP ALOFT FCST")[1];
+            if (fcstSection) {
+                const lines = fcstSection.split('\n').map(l => l.trim());
+
+                let heights = [];
+                let allWptNames = [];
+                let allDataRows = [];
+                let isHeaderFound = false;
+                let fdDataLine = "";
+
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+
+                    if (line === '' || line === '_' || line.includes('ipobs-aps') || line.includes('token=') || line.includes('ページ')) {
+                        continue;
+                    }
+
+                    if (line.includes('FD DATA') || line.includes('BASED ON')) {
+                        fdDataLine = line;
+                        continue;
+                    }
+
+                    if (!isHeaderFound) {
+                        if (line.match(/^(\d{4,5}\s+)+\d{4,5}$/)) {
+                            heights = line.split(/\s+/);
+                            isHeaderFound = true;
+                        }
+                        continue;
+                    }
+
+                    let tokens = line.split(/\s+/).filter(t => t !== '');
+                    let rowData = [];
+
+                    for (let t of tokens) {
+                        if (/^\d{4}([PM]\d{2})?$/.test(t)) {
+                            rowData.push(t);
+                        } else {
+                            allWptNames.push(t);
+                        }
+                    }
+
+                    if (rowData.length > 0) {
+                        allDataRows.push(rowData);
+                    }
+                }
+
+                let formattedLines = [];
+                if (fdDataLine) formattedLines.push(fdDataLine);
+
+                if (heights.length > 0) {
+                    let str = "".padEnd(8, " ");
+                    heights.forEach(h => str += h.padStart(8, " "));
+                    formattedLines.push(str);
+                }
+
+                for (let i = 0; i < allDataRows.length; i++) {
+                    let wptName = allWptNames[i] || "???";
+                    if (wptName.length > 8) wptName = wptName.substring(0, 8); 
+                    let str = wptName.padEnd(8, " ");
+                    
+                    let rowData = allDataRows[i];
+                    rowData.forEach(d => str += d.padStart(8, " "));
+                    formattedLines.push(str);
+                }
+
+                this.state.rawForecastText = formattedLines.join('\n');
+
+                let fcstPointer = 0;
+                let matchedCount = 0;
+                waypoints.forEach((wp, wpIdx) => {
+                    if (wpIdx === 0) return; 
+                    let foundIdx = allWptNames.indexOf(wp.name, fcstPointer);
+                    if (foundIdx !== -1) {
+                        if (allDataRows[foundIdx]) {
+                            const rowValues = allDataRows[foundIdx];
+                            wp.forecast = {};
+                            heights.forEach((h, hIdx) => {
+                                wp.forecast[h] = rowValues[hIdx] || "---";
+                            });
+                            matchedCount++;
+                        }
+                        fcstPointer = foundIdx + 1;
+                    }
+                });
+                console.log(`[Phase 1] WIND/TEMP 紐付け完了: ${matchedCount} / ${allWptNames.length}`);
+            }
+            // =========================================================
+
+            let cumDist = 0;
+            waypoints.forEach(wp => { cumDist += wp.dist; wp.cumDist = cumDist; });
+            let totalRouteDist = cumDist;
+            waypoints.forEach(wp => { wp.rdis = totalRouteDist - wp.cumDist; });
+            
+            if (this.state.flightMeta) { this.state.flightMeta.dist = totalRouteDist; }
+            this.state.waypoints = waypoints;
+            if (this.state.flightMeta && this.state.flightMeta.altns && this.state.flightMeta.altns.length > 0) {
+                this.state.altns = this.state.flightMeta.altns;
+                this.renderSettings();
+            }
+            
+            document.getElementById('statusBar').style.display = 'flex';
+            document.getElementById('bottomControls').style.display = 'block';
+            document.getElementById('inputArea').style.display = 'none';
+            
+            if (this.showMainUI) this.showMainUI(); 
+
+            document.getElementById('tableBody').innerHTML = ''; 
+            this.calculate();
+            if(this.renderCrew) this.renderCrew();
+            this.renderTimes();
+            this.renderActualFuel();
+            if(this.renderPostFlightLog) this.renderPostFlightLog();
+            if(this.renderCrewMemo) this.renderCrewMemo();
+            
+            if(this.renderForecastCard) this.renderForecastCard();
+
+            this.render();
+            this.renderFlightMeta();
+
+            this.saveFlightToHistory();
+        } catch (e) {
+            throw e; // エラーが発生した場合は上位のcatchに投げる
+        }
+    },
+
+    extractFlightMeta(text) {
+        let meta = { flt: "---", date: "---", reg: "---", dep: "---", dest: "---", altn: "---", time: "---", sta: null, altns: [], bt: "---", ft: "---", dist: "---" };
+        const regMatch = text.match(/COMPUTED\s+\d{4}Z\s+([A-Z0-9\-]+)/); if (regMatch) meta.reg = regMatch[1];
+        const dateMatch = text.match(/\b(\d{2}[A-Z]{3}\d{2,4})\b/); if (dateMatch) meta.date = dateMatch[1];
+        const routeMatch = text.match(/^([A-Z0-9]+)\/\d{1,3}\/\d{1,3}\s+([A-Z0-9]{4})-([A-Z0-9]{4})\s+([A-Z0-9\/\s]+?)\s+((?:STD|ETD)\s+\d{4}Z\/\d{4}L\s+(?:STA|ETA)\s+\d{4}Z\/\d{4}L)/m);
+        if (routeMatch) {
+            meta.flt = routeMatch[1]; meta.dep = routeMatch[2]; meta.dest = routeMatch[3]; meta.altn = routeMatch[4].trim(); meta.time = routeMatch[5];
+            const staMatch = meta.time.match(/(?:STA|ETA)\s+(\d{4})Z/); if (staMatch) meta.sta = staMatch[1];
+        }
+        const btFtMatch = text.match(/B\/T\s+(\d{2}HR\d{2}MIN)\s+F\/T\s+(\d{2}HR\d{2}MIN)/); if (btFtMatch) { meta.bt = btFtMatch[1]; meta.ft = btFtMatch[2]; }
+        
+        let globalRsv = 0; const rsvMatch = text.match(/^RSV\s+\d{2}\/\d{2}\s+(\d+)/m); 
+        if (rsvMatch) { 
+            let val = parseFloat(rsvMatch[1]); 
+            globalRsv = val > 100 ? val / 1000 : val; 
+            if(globalRsv > 0) this.state.destFuelThreshold = globalRsv; 
+        }
+        
+        const altMatch = text.match(/^ALT\s+(.*)/m);
+        if (altMatch) {
+            const altnParts = altMatch[1].match(/([A-Z0-9]{4})\s+\d{2}\/\d{2}\s+(\d+)/g);
+            if (altnParts) altnParts.forEach(p => {
+                const m = p.match(/([A-Z0-9]{4})\s+\d{2}\/\d{2}\s+(\d+)/);
+                if (m) meta.altns.push({ name: m[1], fuel: parseFloat(m[2]) > 100 ? parseFloat(m[2])/1000 : parseFloat(m[2]), rsv: globalRsv });
+            });
+        }
+        this.state.flightMeta = meta; this.renderFlightMeta();
+
+        if (this.state.postFlightLog) {
+            this.state.postFlightLog.fltNumber = meta.flt !== "---" ? meta.flt : "";
+            this.state.postFlightLog.dep = meta.dep !== "---" ? meta.dep : "";
+            this.state.postFlightLog.arr = meta.dest !== "---" ? meta.dest : "";
+            this.state.postFlightLog.day = meta.date !== "---" ? meta.date : "";
+            this.state.postFlightLog.reg = meta.reg !== "---" ? meta.reg : "";
+            if(!this.state.postFlightLog.type) this.state.postFlightLog.type = "B767";
+        }
+    },
+
+    extractAndFormatHeaderInfo(text) {
+        let headerEndIndex = text.length; const rdisMatch = text.match(/([A-Z]{4})\s+\(RDIS\)\s+(\d{3}\.\d)/); if (rdisMatch) headerEndIndex = rdisMatch.index;
+        let rawHeader = text.substring(0, headerEndIndex); const lastNavLogIdx = rawHeader.lastIndexOf('NAVIGATION LOG'); if (lastNavLogIdx !== -1) rawHeader = rawHeader.substring(0, lastNavLogIdx);
+        let cleanedLines = [];
+        for (let line of rawHeader.split('\n')) {
+            const trimmed = line.trim();
+            if (trimmed.includes('ipobs-aps') || trimmed === '_' || trimmed.includes('token=') || /\d+\s*\/\s*\d+\s*ページ/.test(trimmed) || trimmed === '') continue;
+            cleanedLines.push(trimmed);
+        }
+        let formattedLines = [], inFuelPlan = false, inSummaryPlan = false, parenthesisDepth = 0;
+        for (let i = 0; i < cleanedLines.length; i++) {
+            let line = cleanedLines[i];
+            if (inFuelPlan && !line.includes('-FUEL PLAN')) {
+                const isKey = ['BOF','CON','RSV','ALT','TAX','REQ','PCF','EXT','FOB'].some(k => line.startsWith(k));
+                if (!isKey && !line.includes('TIME') && !line.startsWith('FOD=') && !line.startsWith('DIV') && !line.startsWith('TXI') && !line.startsWith('CRIT F') && !line.startsWith('CPT')) {
+                    formattedLines.push('----------------------------------------------------------------------'); inFuelPlan = false;
+                }
+            }
+            if (inSummaryPlan && !line.includes('-SUMMARY PLAN')) { if (!/^FL\d{3}/.test(line) && !line.includes('SPD')) { formattedLines.push('-------------------------------------------'); inSummaryPlan = false; } }
+            let isMajorHeader = false;
+            if (line.includes('JDP:') || line.includes('COMPANY CLEARANCE')) isMajorHeader = true;
+            else if (line.startsWith('-') && !line.startsWith('--') && parenthesisDepth === 0) isMajorHeader = true;
+            if (isMajorHeader && formattedLines.length > 0 && formattedLines[formattedLines.length - 1] !== '') formattedLines.push('');
+            let oC = (line.match(/\(/g) || []).length, cC = (line.match(/\)/g) || []).length; parenthesisDepth = Math.max(0, parenthesisDepth + (oC - cC));
+            if (line.includes('-SUMMARY PLAN')) { inSummaryPlan = true; formattedLines.push('■ SUMMARY PLAN'); continue; }
+            if (inSummaryPlan) {
+                if (line.includes('FL') && line.includes('SPD')) { formattedLines.push('     FL    SPD   TIME    FUEL    W/F    C/T\n-------------------------------------------'); continue; }
+                if (/^FL\d{3}/.test(line)) { let p = line.split(/\s+/); formattedLines.push((p[0]||"").padEnd(6,' ')+" "+(p[1]||"").padStart(4,' ')+"  "+(p[2]||"").padStart(5,' ')+"  "+(p[3]||"").padStart(7,' ')+"  "+(p[4]||"").padStart(5,' ')+"  "+(p[5]||"").padStart(5,' ')); continue; }
+                continue; 
+            }
+            if (line.includes('-FUEL PLAN')) { inFuelPlan = true; formattedLines.push('■ FUEL PLAN'); continue; }
+            if (inFuelPlan) {
+                if (line.includes('TIME') && line.includes('FUEL')) { formattedLines.push('     DEST   TIME   FUEL      DEST   TIME   FUEL      REMARKS\n----------------------------------------------------------------------'); continue; }
+                if (line.startsWith('FOD=') || line.startsWith('CPT') || line.startsWith('DIV') || line.startsWith('TXI') || line.startsWith('CRIT F')) { formattedLines.push(line); continue; }
+                const keyMatch = ['BOF','CON','RSV','ALT','TAX','REQ','PCF','EXT','FOB'].find(k => line.startsWith(k));
+                if (keyMatch) {
+                    let p = line.split(/\s+/), k = p[0], d1="", t1="", f1="", d2="", t2="", f2="", rm="";
+                    if (k==='BOF') { d1=p[1]; t1=p[2]; f1=p[3]; d2=p[4]; t2=p[5]; f2=p[6]; rm=p.slice(7).join(' '); }
+                    else if (k==='ALT') { d1=p[1]||""; t1=p[2]||""; f1=p[3]||""; if (p[4] && p[4].includes('/')) { d2="----"; t2=p[4]; f2=p[5]||""; } else { d2=p[4]||""; t2=p[5]||""; f2=p[6]||""; } }
+                    else if (k==='TAX') { f1=p[1]; f2=p[2]; } else { t1=p[1]; f1=p[2]; t2=p[3]; f2=p[4]; }
+                    formattedLines.push(`${k.padEnd(4, ' ')} ${(d1||"").padEnd(5, ' ')}  ${(t1||"").padStart(5, ' ')}  ${(f1||"").padStart(6, ' ')}   ${(d2||"").padEnd(5, ' ')}  ${(t2||"").padStart(5, ' ')}  ${(f2||"").padStart(6, ' ')}   ${rm}`);
+                    continue;
+                }
+            }
+            if (line.includes('COMPANY CLEARANCE')) formattedLines.push('■ ' + line); else formattedLines.push(line);
+        }
+        this.state.headerInfo = formattedLines.join('\n').trim();
+        if (this.state.headerInfo) { document.getElementById('headerInfoCard').style.display = 'block'; document.getElementById('headerInfoContent').textContent = this.state.headerInfo; }
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NAVLOG">
+    
+    <title>NAVLOG Tracker V26.4.0</title>
+
+    <link rel="icon" href="data:,">
+    <link rel="apple-touch-icon" href="data:,">
+    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiTkFWTE9HIiwic2hvcnRfbmFtZSI6Ik5BVkxPRyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIn0=">
+
+    <script>
+        try {
+            if (localStorage.getItem('navlog_theme') === 'dark') {
+                document.documentElement.classList.add('theme-dark');
+            }
+        } catch (e) {}
+    </script>
+    
+    
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1 class="default-title no-print" id="defaultTitle">✈️ NAVLOG Tracker V26.4.0</h1>
+
+    <div style="position: sticky; top: 0; z-index: 1000; background: var(--bg-color); border-bottom: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+        
+        <div class="flight-header" id="flightHeader" style="display: none; padding-top: 5px;">
+            <div class="fh-details">
+                <div class="fh-item"><span class="fh-label">FLIGHT</span><span class="fh-val" id="fh-flt">---</span></div>
+                <div class="fh-item"><span class="fh-label">DATE</span><span class="fh-val" id="fh-date">---</span></div>
+                <div class="fh-item"><span class="fh-label">REG</span><span class="fh-val" id="fh-reg">---</span></div>
+                <div class="fh-item"><span class="fh-label">ROUTE</span><span class="fh-val" id="fh-route">---</span></div>
+                <div class="fh-item"><span class="fh-label">ALTN</span><span class="fh-val" id="fh-altn">---</span></div>
+                <div class="fh-item"><span class="fh-label">TIME</span><span class="fh-val" id="fh-time">---</span></div>
+                <div class="fh-item"><span class="fh-label">B/T</span><span class="fh-val" id="fh-bt">---</span></div>
+                <div class="fh-item"><span class="fh-label">F/T</span><span class="fh-val" id="fh-ft">---</span></div>
+                <div class="fh-item"><span class="fh-label">TTL DIST</span><span class="fh-val" id="fh-dist">---</span></div>
+            </div>
+        </div>
+        
+        <div class="status-bar" id="statusBar" style="display:none;">
+            <div style="display: flex; gap: 20px; width: 100%; flex-wrap: wrap;">
+                
+                <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
+                    <div class="status-section">
+                        <span class="status-title">ACTUAL TIMES</span>
+                        <div class="status-content">
+                            <div class="time-inputs" style="display: grid; grid-template-columns: max-content max-content; gap: 8px;">
+                                <div class="input-group-inline"><span class="input-label">B/O</span><input type="text" id="time_bo" class="status-input input-time" maxlength="4" placeholder="----" readonly onclick="app.showNumpad(this, 'B/O TIME', 'time')" onchange="app.updateTime('bo', this.value)"></div>
+                                <div class="input-group-inline"><span class="input-label">B/I</span><input type="text" id="time_bi" class="status-input input-time" maxlength="4" placeholder="----" readonly onclick="app.showNumpad(this, 'B/I TIME', 'time')" onchange="app.updateTime('bi', this.value)"></div>
+                                <div class="input-group-inline"><span class="input-label">TKOF</span><input type="text" id="time_tkof" class="status-input input-time" maxlength="4" placeholder="----" readonly onclick="app.showNumpad(this, 'TKOF TIME', 'time')" onchange="app.updateTime('tkof', this.value)"></div>
+                                <div class="input-group-inline"><span class="input-label">LDG</span><input type="text" id="time_ldg" class="status-input input-time" maxlength="4" placeholder="----" readonly onclick="app.showNumpad(this, 'LDG TIME', 'time')" onchange="app.updateTime('ldg', this.value)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="status-section">
+                        <span class="status-title">EST. ARRIVAL (ETA) <span id="sb-eta-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
+                        <div class="status-content status-value-group" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                            <span id="sb-eta" class="status-value">--</span><span id="sb-eta-diff" class="status-badge"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div class="status-section">
+                            <span class="status-title">ACTUAL FUEL</span>
+                            <div class="status-content">
+                                <div class="fuel-inputs" style="display: grid; grid-template-columns: max-content max-content; gap: 8px;">
+                                    <div class="input-group-inline"><span class="input-label">FOB</span><input type="text" id="actFob" class="status-input fuel-input" readonly onclick="app.showNumpad(this, 'FOB', 'fuel')" onchange="app.updateActualFuel('fob', this.value)"></div>
+                                    <div class="input-group-inline"><span class="input-label">FOD</span><input type="text" id="actFod" class="status-input fuel-input" readonly onclick="app.showNumpad(this, 'FOD', 'fuel')" onchange="app.updateActualFuel('fod', this.value)"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="status-section">
+                            <span class="status-title">FUEL AT DEST <span id="sb-fuel-last" style="font-size: 10px; color: #aed6f1; cursor: pointer; display: none; text-decoration: underline; margin-left: 8px; text-transform: none;"></span></span>
+                            <div class="status-content status-value-group" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span id="sb-dest-fuel" class="status-value">--</span><span id="sb-dest-fuel-diff" class="status-badge" style="font-size: 14px;"></span><span id="sb-dest-fuel-warning"></span>
+                            </div>
+                            <div id="sb-plan-fod-display" style="font-size: 14px; font-family: 'SF Mono', monospace; font-weight: normal; color: #e2e8f0; margin-left: 15px; margin-top: 4px; letter-spacing: 0.5px;"></div>
+                        </div>
+                    </div>
+                    <div class="status-section">
+                        <span class="status-title">AVAILABLE FUEL MARGIN</span>
+                        <div class="status-content" id="sb-avail-fuel-container" style="width: max-content; display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.15);"></div>
+                    </div>
+                </div>
+
+                <div class="status-btn-area" style="display: flex; flex-direction: column; gap: 8px; margin-left: auto; padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.2); justify-content: center;">
+                    <button id="btn_crewInfoCard" class="panel-toggle-btn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;" onclick="app.togglePanel('crewInfoCard')">👨‍✈️ CREW / LOG</button>
+                    <button id="btn_headerInfoCard" class="panel-toggle-btn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;" onclick="app.togglePanel('headerInfoCard')">📄 DRM</button>
+                    <button id="btn_forecastInfoCard" class="panel-toggle-btn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; display: none;" onclick="app.togglePanel('forecastInfoCard')">☁️ WINDS</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="dropdownPanels" style="position: absolute; top: 100%; left: 0; width: 100%;  overflow-y: auto; background: var(--bg-color); box-shadow: 0 10px 30px rgba(0,0,0,0.6); border-bottom: 2px solid var(--accent-color);">
+            
+            <div class="card-crew" id="crewInfoCard" style="display:none; border: none; border-radius: 0; margin: 0;">
+                <span id="crew-toggle-icon" style="display:none;"></span>
+                <div id="crewContentEl" class="crew-content" style="display:block; padding: 15px;">
+                    <table class="crew-table">
+                        <thead>
+                            <tr><th style="width: 40px;">T/O</th><th style="width: 40px;">LDG</th><th style="width: 90px;">DUTY</th><th style="width: 120px;">EMP NO</th><th style="width: 200px; text-align: left; padding-left: 10px;">NAME</th><th style="width: 90px;">RANK</th><th style="width: 40px;" class="no-print"></th></tr>
+                        </thead>
+                        <tbody id="crewTableBody"></tbody>
+                    </table>
+                    <div style="text-align: left; margin-top: 10px; margin-bottom: 15px;" class="no-print"><button class="btn-secondary btn-small" onclick="app.addCrew()">➕ 追加</button></div>
+                    <div class="pfl-section">
+                        <div class="pfl-header-controls no-print">
+                            <div class="pfl-toggle-group"><button id="btnPflDom" class="pfl-btn active" onclick="app.setPflToggle('domInt', 'DOM')">DOM</button><button id="btnPflInt" class="pfl-btn" onclick="app.setPflToggle('domInt', 'INT')">INT</button></div>
+                            <div class="pfl-toggle-group" style="margin-left: 10px;"><button id="btnPflPic" class="pfl-btn active" onclick="app.setPflToggle('activeDuty', 'PIC')">PIC</button><button id="btnPflSic" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'SIC')">SIC</button><button id="btnPflCop" class="pfl-btn" onclick="app.setPflToggle('activeDuty', 'COP')">COP</button></div>
+                            <div style="margin-left: auto;"><button class="btn-secondary btn-small" id="btnPflCsv" onclick="app.copyPflToCsv()" style="font-weight: bold;">📋 CSVコピー</button></div>
+                        </div>
+                        <div class="pfl-scroll-wrapper">
+                            <table class="pfl-table">
+                                <thead><tr><th>DAY</th><th>TYPE</th><th>REG</th><th>DEP</th><th>ARR</th><th>DEP TIME</th><th>ARR TIME</th><th>TKOF</th><th>LDG</th><th>FLT NUMBER</th><th>FLT TIME</th><th>PIC TIME</th><th>SIC TIME</th><th>NGT</th><th>COP TIME</th><th>NGT</th><th>IMC</th><th style="min-width: 30px;" class="no-print"></th><th>APCH TYPE</th></tr></thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="text" class="pfl-input" id="pfl_day" onchange="app.updatePfl('day', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_type" onchange="app.updatePfl('type', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_reg" onchange="app.updatePfl('reg', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_dep" onchange="app.updatePfl('dep', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_arr" onchange="app.updatePfl('arr', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_depTime" maxlength="4" readonly onclick="app.showNumpad(this, 'DEP TIME', 'time')" onchange="app.updatePfl('depTime', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_arrTime" maxlength="4" readonly onclick="app.showNumpad(this, 'ARR TIME', 'time')" onchange="app.updatePfl('arrTime', this.value)"></td>
+                                        <td><select class="pfl-input narrow" id="pfl_tkof" onchange="app.updatePfl('tkof', this.value)"><option value=""></option><option value="1">1</option><option value="N1">N1</option></select></td>
+                                        <td><select class="pfl-input narrow" id="pfl_ldg" onchange="app.updatePfl('ldg', this.value)"><option value=""></option><option value="1">1</option><option value="N1">N1</option></select></td>
+                                        <td><input type="text" class="pfl-input wide" id="pfl_fltNumber" onchange="app.updatePfl('fltNumber', this.value)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_fltTime" readonly onclick="app.showNumpad(this, 'FLT TIME', 'time')" onchange="app.updatePfl('fltTime', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_picTime" readonly onclick="app.showNumpad(this, 'PIC TIME', 'time')" onchange="app.updatePfl('picTime', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_sicTime" readonly onclick="app.showNumpad(this, 'SIC TIME', 'time')" onchange="app.updatePfl('sicTime', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_ngtPicSic" readonly onclick="app.showNumpad(this, 'NGT', 'time')" onchange="app.updatePfl('ngtPicSic', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_copTime" readonly onclick="app.showNumpad(this, 'COP TIME', 'time')" onchange="app.updatePfl('copTime', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_ngtCop" readonly onclick="app.showNumpad(this, 'NGT', 'time')" onchange="app.updatePfl('ngtCop', this.value, true)"></td>
+                                        <td><input type="text" class="pfl-input narrow" id="pfl_imc" readonly onclick="app.showNumpad(this, 'IMC', 'time')" onchange="app.updatePfl('imc', this.value, true)"></td>
+                                        <td class="no-print"></td>
+                                        <td><input type="text" class="pfl-input wide" id="pfl_apchType" onchange="app.updatePfl('apchType', this.value)"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-drm" id="headerInfoCard" style="display:none; border: none; border-radius: 0; margin: 0;">
+                <div class="drm-content" id="headerInfoContent" style="font-size: 15px; font-family: 'SF Mono', monospace; white-space: pre; overflow-x: auto; padding: 20px;"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="no-print" id="inputArea" style="background: transparent;">
+        
+        <button class="clipboard-btn" style="margin-bottom: 15px;" onclick="app.openPDFPicker()">
+            📄 PDFファイルから読み込む
+        </button>
+
+        <input type="file" id="webPdfInput" accept=".pdf" style="display: none;" onchange="app.handleWebPDFUpload(event)">
+
+        <button class="clipboard-btn" onclick="app.loadFromClipboard()">
+            📋 クリップボードから読み込む
+        </button>
+        
+        <div id="historyArea" style="margin-top: 25px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 10px; display: none;">
+            <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">🕒 最近のフライト履歴 (Crewを呼び出す)</div>
+            <div id="historyList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <span style="font-size: 12px; color: var(--text-faint); display: block; margin-bottom: 10px;">または手動でテキストファイルを選択</span>
+            <label for="fileInput" class="file-upload-btn">📁 ファイルを選択 (.txt)</label>
+            <input type="file" id="fileInput" accept=".txt" style="display: none;" onchange="app.handleFileUpload(event)">
+        </div>
+    </div>
+
+    <div class="table-container" id="tableContainer" style="display:none;">
+        <table>
+            <thead>
+                <tr>
+                    <th class="sticky-th col-wp sticky-col-wp">WP</th>
+                    <th class="sticky-th col-alt">ALT</th>
+                    <th class="sticky-th col-wind">
+                        <span class="header-landscape">WIND / TMP<br><span style="font-size:9px; font-weight:normal;">(ISA DEV)</span></span>
+                        <span class="header-portrait">WIND<br>TMP<br><span style="font-size:9px; font-weight:normal;">(ISA DEV)</span></span>
+                    </th>
+                    <th class="sticky-th col-mwtp">MW/TP<br>WSCP</th>
+                    <th class="sticky-th col-ctme">CTME/DIST<br><span style="font-weight:normal;opacity:0.6;">RTME/RDIS</span></th>
+                    <th class="sticky-th col-ztme">ZTME<br><span style="font-weight:normal;opacity:0.6;">(DIST)</span></th>
+                    <th class="sticky-th col-main">Est.Time</th>
+                    <th class="sticky-th col-main">Est.FUEL<br><span style="font-weight:normal;opacity:0.6;">(Plan)</span></th>
+                    <th class="sticky-th col-actual no-print col-main">Act.Time</th>
+                    <th class="sticky-th col-actual no-print col-main">Act.FUEL<br><span style="font-weight:normal;opacity:0.6;font-size:9px;">TTL/CALC</span></th>
+                    <th class="sticky-th col-diff">Time<br>Diff</th>
+                    <th class="sticky-th col-diff">Fuel<br>Diff</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="card-footer no-print" id="bottomControls" style="display:none;">
+        <div class="config-panel">
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-secondary" onclick="app.toggleSettings()">⚙️ 設定 (ALTN / RSV)</button>
+                <button class="btn-secondary" id="themeToggleBtn" onclick="app.toggleTheme()">🌙 NGT</button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="app.printNavlog()">🖨️ PDF</button>
+                <button class="btn-danger" onclick="app.resetData()">🗑️ リセット</button>
+            </div>
+        </div>
+        
+        <div id="settingsPanel" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+            <div class="settings-wrapper">
+                
+                <div class="settings-group">
+                    <h3 class="settings-group-title">ALTN Settings</h3>
+                    <div id="altnSettingsContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;"></div>
+                    <button class="btn-secondary btn-small" onclick="app.addAltn()">➕ ALTN 追加</button>
+                    
+                    <div class="input-group" style="margin-top: 15px;">
+                        <label>Margin Alert Threshold</label>
+                        <input type="text" id="alertThreshold" value="0" style="width: 100px;" readonly onclick="app.showNumpad(this, 'MARGIN ALERT', 'fuel')" onchange="app.saveConfig()">
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="settings-group-title">Table Settings</h3>
+                    <div class="input-group">
+                        <label>Fuel Diff Basis</label>
+                        <select id="fuelCalcBasis" style="width: 100px;" onchange="app.changeFuelBasis()">
+                            <option value="CALC">CALC</option>
+                            <option value="TTL">TTL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="settings-group-title">Dest Fuel Settings</h3>
+                    <div class="input-group">
+                        <label>Dest Fuel Warning Threshold</label>
+                        <input type="text" id="destFuelThreshold" value="0" style="width: 100px;" readonly onclick="app.showNumpad(this, 'DEST FUEL WARN', 'fuel')" onchange="app.saveConfig()">
+                    </div>
+                </div>
+
+            </div>
+            <div style="margin-top: 15px; text-align: right;">
+                <button onclick="app.toggleSettings()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="numpadOverlay" class="numpad-overlay" onclick="app.closeNumpad()"></div>
+    <div id="numpadContainer" class="numpad-container">
+        <div id="numpadInfo" class="numpad-display-info">INPUT VALUE</div>
+        <button class="numpad-btn" onclick="app.numpadInput('7')">7</button>
+        <button class="numpad-btn" onclick="app.numpadInput('8')">8</button>
+        <button class="numpad-btn" onclick="app.numpadInput('9')">9</button>
+        <button class="numpad-btn" onclick="app.numpadInput('4')">4</button>
+        <button class="numpad-btn" onclick="app.numpadInput('5')">5</button>
+        <button class="numpad-btn" onclick="app.numpadInput('6')">6</button>
+        <button class="numpad-btn" onclick="app.numpadInput('1')">1</button>
+        <button class="numpad-btn" onclick="app.numpadInput('2')">2</button>
+        <button class="numpad-btn" onclick="app.numpadInput('3')">3</button>
+        <button class="numpad-btn" onclick="app.numpadInput('.')">.</button>
+        <button class="numpad-btn" onclick="app.numpadInput('0')">0</button>
+        <button class="numpad-btn btn-del" onclick="app.numpadInput('DEL')">⌫</button>
+        <button class="numpad-btn btn-ent" onclick="app.closeNumpad()">ENT</button>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="utils.js"></script>
+    <script src="fuel.js"></script>
+    <script src="history.js"></script>
+    <script src="crew.js"></script>
+    <script src="parser.js"></script>
+</body>
+</html>

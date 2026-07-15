@@ -1,0 +1,47 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'build.py'
+  workflow_dispatch:
+
+# ★追加: Node.js 20非推奨警告を消すための環境変数
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+# 権限は必ずこの位置（jobsの外）に記述
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run build script
+        run: python build.py
+
+      - name: Force Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          git add index.html
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-build: Merge to single index.html [skip ci]"
+            git push origin main
+          fi
